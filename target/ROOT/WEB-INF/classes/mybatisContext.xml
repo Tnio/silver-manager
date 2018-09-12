@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+	PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+	<settings>
+		<setting name="lazyLoadingEnabled" value="false" />
+	</settings>
+	<typeAliases>
+		<typeAlias alias="AbnormalOrder" type="com.silverfox.finance.domain.AbnormalOrder" />
+		<typeAlias alias="Activity" type="com.silverfox.finance.domain.Activity" />
+		<typeAlias alias="Attachment" type="com.silverfox.finance.domain.Attachment" />
+		<typeAlias alias="Admin" type="com.silverfox.finance.domain.Admin" />
+		<typeAlias alias="AppVersion" type="com.silverfox.finance.domain.AppVersion" />
+		<typeAlias alias="CardBin" type="com.silverfox.finance.domain.CardBin" />
+		<typeAlias alias="BaobaoOrder" type="com.silverfox.finance.domain.BaobaoOrder" />
+		<typeAlias alias="Bonus" type="com.silverfox.finance.domain.Bonus" />
+		<typeAlias alias="BonusStrategy" type="com.silverfox.finance.domain.BonusStrategy" />
+		<typeAlias alias="Channel" type="com.silverfox.finance.domain.Channel" />
+		<typeAlias alias="ChannelVisitLog" type="com.silverfox.finance.domain.ChannelVisitLog" />
+		<typeAlias alias="CellphoneAttribution" type="com.silverfox.finance.domain.CellphoneAttribution" />
+		<typeAlias alias="CellphoneLog" type="com.silverfox.finance.domain.CellphoneLog" />
+		<typeAlias alias="ChannelOrder" type="com.silverfox.finance.domain.ChannelOrder" />
+		<typeAlias alias="Coupon" type="com.silverfox.finance.domain.Coupon" />
+		<typeAlias alias="CouponActivity" type="com.silverfox.finance.domain.CouponActivity" />
+		<typeAlias alias="CouponActivityLog" type="com.silverfox.finance.domain.CouponActivityLog" />
+		<typeAlias alias="CouponExchange" type="com.silverfox.finance.domain.CouponExchange" />
+		<typeAlias alias="CouponCardLog" type="com.silverfox.finance.domain.CouponCardLog" />
+		<typeAlias alias="CouponVip" type="com.silverfox.finance.domain.CouponVip" />
+		<typeAlias alias="Customer" type="com.silverfox.finance.domain.Customer" />
+		<typeAlias alias="CustomerAuthorisation" type="com.silverfox.finance.domain.CustomerAuthorisation" />
+		<typeAlias alias="CustomerBalanceLog" type="com.silverfox.finance.domain.CustomerBalanceLog" />
+		<typeAlias alias="CustomerBank" type="com.silverfox.finance.domain.CustomerBank" />
+		<typeAlias alias="CustomerBalanceLog" type="com.silverfox.finance.domain.CustomerBalanceLog" />
+		<typeAlias alias="CustomerCoupon" type="com.silverfox.finance.domain.CustomerCoupon" />
+		<typeAlias alias="CustomerDonationLog" type="com.silverfox.finance.domain.CustomerDonationLog" />
+		<typeAlias alias="CustomerGoodsOrder" type="com.silverfox.finance.domain.CustomerGoodsOrder" />
+		<typeAlias alias="CustomerInviteCouponLog" type="com.silverfox.finance.domain.CustomerInviteCouponLog" />
+		<typeAlias alias="CustomerLotteryLog" type="com.silverfox.finance.domain.CustomerLotteryLog" />
+		<typeAlias alias="CustomerMessage" type="com.silverfox.finance.domain.CustomerMessage" />
+		<typeAlias alias="CustomerOrder" type="com.silverfox.finance.domain.CustomerOrder" />
+		<typeAlias alias="CustomerSigninLog" type="com.silverfox.finance.domain.CustomerSigninLog" />
+		<typeAlias alias="CustomerSigninPrizeLog" type="com.silverfox.finance.domain.CustomerSigninPrizeLog" />
+		<typeAlias alias="CustomerSilverLog" type="com.silverfox.finance.domain.CustomerSilverLog" />
+		<typeAlias alias="DispatchingLog" type="com.silverfox.finance.domain.DispatchingLog" />
+		<typeAlias alias="DispatchingBonusLog" type="com.silverfox.finance.domain.DispatchingBonusLog" />
+		<typeAlias alias="DispatchingCouponRule" type="com.silverfox.finance.domain.DispatchingCouponRule" />
+		<typeAlias alias="EarnSilver" type="com.silverfox.finance.domain.EarnSilver" />
+		<typeAlias alias="EBankLog" type="com.silverfox.finance.domain.EBankLog" />
+		<typeAlias alias="Faq" type="com.silverfox.finance.domain.Faq" />
+		<typeAlias alias="Feedback" type="com.silverfox.finance.domain.Feedback" />
+		<typeAlias alias="Guarantee" type="com.silverfox.finance.domain.Guarantee" />
+		<typeAlias alias="Goods" type="com.silverfox.finance.domain.Goods" />
+		<typeAlias alias="GoodsCouponCode" type="com.silverfox.finance.domain.GoodsCouponCode" />
+		<typeAlias alias="GoodsExchangeOrder" type="com.silverfox.finance.domain.GoodsExchangeOrder" />
+		<typeAlias alias="Idfa" type="com.silverfox.finance.domain.Idfa" />
+		<typeAlias alias="InviteActivity" type="com.silverfox.finance.domain.InviteActivity" />
+		<typeAlias alias="InviteActivityLog" type="com.silverfox.finance.domain.InviteActivityLog" />
+		<typeAlias alias="InviteActivityRule" type="com.silverfox.finance.domain.InviteActivityRule" />
+		<typeAlias alias="InviterReward" type="com.silverfox.finance.domain.InviterReward" />
+		<typeAlias alias="Lender" type="com.silverfox.finance.domain.Lender" />
+		<typeAlias alias="LogLogin" type="com.silverfox.finance.domain.LogLogin" />
+		<typeAlias alias="LogOperation" type="com.silverfox.finance.domain.LogOperation" />
+		<typeAlias alias="LogPayment" type="com.silverfox.finance.domain.LogPayment" />
+		<typeAlias alias="Lottery" type="com.silverfox.finance.domain.Lottery" />
+		<typeAlias alias="LotteryPrize" type="com.silverfox.finance.domain.LotteryPrize" />
+		<typeAlias alias="MerchantOrder" type="com.silverfox.finance.domain.MerchantOrder" />
+		<typeAlias alias="Merchant" type="com.silverfox.finance.domain.Merchant" />
+		<typeAlias alias="NewsMaterial" type="com.silverfox.finance.domain.NewsMaterial" />
+		<typeAlias alias="NewsBulletin" type="com.silverfox.finance.domain.NewsBulletin" />
+		<typeAlias alias="PaymentOut" type="com.silverfox.finance.domain.PaymentOut" />
+		<typeAlias alias="PayBank" type="com.silverfox.finance.domain.PayBank" />
+		<typeAlias alias="PictrueLibrary" type="com.silverfox.finance.domain.PictrueLibrary" />
+		<typeAlias alias="Product" type="com.silverfox.finance.domain.Product" />
+		<typeAlias alias="ProductDetail" type="com.silverfox.finance.domain.ProductDetail"/>
+		<typeAlias alias="ProductCategory" type="com.silverfox.finance.domain.ProductCategory" />
+		<typeAlias alias="ProductContract" type="com.silverfox.finance.domain.ProductContract" />
+		<typeAlias alias="ProductProtocol" type="com.silverfox.finance.domain.ProductProtocol" />
+		
+		<typeAlias alias="Project" type="com.silverfox.finance.domain.Project" />
+		<typeAlias alias="PushMessage" type="com.silverfox.finance.domain.PushMessage" />
+        <typeAlias alias="RaceLog" type="com.silverfox.finance.domain.RaceLog" />
+		<typeAlias alias="Resource" type="com.silverfox.finance.domain.Resource" />
+		<typeAlias alias="Role" type="com.silverfox.finance.domain.Role" />
+		<typeAlias alias="RoleResource" type="com.silverfox.finance.domain.RoleResource" />
+		<typeAlias alias="RuleCoupon" type="com.silverfox.finance.domain.RuleCoupon" />
+		<typeAlias alias="Signature" type="com.silverfox.finance.domain.Signature" />
+		<typeAlias alias="SignIn" type="com.silverfox.finance.domain.SignIn" />
+		<typeAlias alias="SignInPrize" type="com.silverfox.finance.domain.SignInPrize" />
+		<typeAlias alias="SilverStrategy" type="com.silverfox.finance.domain.SilverStrategy" />
+		<typeAlias alias="SmsChannel" type="com.silverfox.finance.domain.SmsChannel" />
+		<typeAlias alias="SmsTemplate" type="com.silverfox.finance.domain.SmsTemplate" />
+		<typeAlias alias="User" type="com.silverfox.finance.domain.User" />
+		<typeAlias alias="UserBank" type="com.silverfox.finance.domain.UserBank" />
+		<typeAlias alias="UnionPayVoucher" type="com.silverfox.finance.domain.UnionPayVoucher" />
+		<typeAlias alias="UnionPayCNCode" type="com.silverfox.finance.domain.UnionPayCNCode" />
+		<typeAlias alias="VipLevelChangeLog" type="com.silverfox.finance.domain.VipLevelChangeLog" />
+		
+		<typeAlias alias="BonusRecordEntity" type="com.silverfox.finance.entity.BonusRecordEntity" />
+		<typeAlias alias="CouponStatisticsEntity" type="com.silverfox.finance.entity.CouponStatisticsEntity" />
+		<typeAlias alias="CouponVipEntity" type="com.silverfox.finance.entity.CouponVipEntity" />
+		<typeAlias alias="EarningEntity" type="com.silverfox.finance.entity.EarningEntity" />
+		<typeAlias alias="EsignEntity" type="com.silverfox.finance.entity.EsignEntity" />
+		<typeAlias alias="InviterRecordEntity" type="com.silverfox.finance.entity.InviterRecordEntity" />
+		<typeAlias alias="LoanEntity" type="com.silverfox.finance.entity.LoanEntity" />
+		<typeAlias alias="OpexEntity" type="com.silverfox.finance.entity.OpexEntity" />
+		<typeAlias alias="PayProductEntity" type="com.silverfox.finance.entity.PayProductEntity" />
+		<typeAlias alias="PaybackCalenderEntity" type="com.silverfox.finance.entity.PaybackCalenderEntity" />
+		<typeAlias alias="ProductTradeEntity" type="com.silverfox.finance.entity.ProductTradeEntity" />
+		<typeAlias alias="ReceivablesEntity" type="com.silverfox.finance.entity.ReceivablesEntity" />
+		<typeAlias alias="ReinvestEntity" type="com.silverfox.finance.entity.ReinvestEntity" />
+		<typeAlias alias="StatisticsEntity" type="com.silverfox.finance.entity.StatisticsEntity" />
+		<typeAlias alias="UserEntity" type="com.silverfox.finance.entity.UserEntity" />
+		<typeAlias alias="InviterRewardEntity" type="com.silverfox.finance.entity.InviterRewardEntity" />
+		<typeAlias alias="VipLevelChangeLogEntity" type="com.silverfox.finance.entity.VipLevelChangeLogEntity" />
+		<typeAlias alias="InviteesEntity" type="com.silverfox.finance.entity.InviteesEntity" />
+		<typeAlias alias="InviterEntity" type="com.silverfox.finance.entity.InviterEntity" />
+		<typeAlias alias="UninvestEntity" type="com.silverfox.finance.entity.UninvestEntity" />
+		<typeAlias alias="LostUserEntity" type="com.silverfox.finance.entity.LostUserEntity" />
+	</typeAliases>
+	
+	<mappers>
+		<package name="com.silverfox.finance.orm" />
+	</mappers>
+</configuration>

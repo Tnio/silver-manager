@@ -1,0 +1,543 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.LotteryDao" >
+    <resultMap id="LotteryMap" type="Lottery" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="name" property="name" jdbcType="VARCHAR" />
+        <result column="category" property="category" jdbcType="VARCHAR" />
+        <result column="begin" property="begin" jdbcType="VARCHAR" />
+        <result column="end" property="end" jdbcType="VARCHAR" />
+        <result column="frequency" property="frequency" jdbcType="INTEGER" />
+        <result column="silver_cost" property="silverCost" jdbcType="INTEGER" />
+        <result column="status" property="status" jdbcType="INTEGER" />
+        <result column="scene" property="scene" jdbcType="INTEGER" />
+        <result column="total_number" property="totalNumber" jdbcType="INTEGER" />
+        <result column="share_get_silver" property="shareGetSilver" jdbcType="INTEGER" />
+        <result column="share_maximum_silver" property="shareMaximumSilver" jdbcType="INTEGER" />
+    </resultMap>
+    <resultMap id="JoinPrizeMap" type="LotteryPrize" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="lottery_id" property="lotteryId" jdbcType="INTEGER" />
+        <result column="prize_name" property="prizeName" jdbcType="VARCHAR" />
+        <result column="category" property="category" jdbcType="VARCHAR" />
+        <result column="limited_number" property="limitedNumber" jdbcType="INTEGER" />
+        <result column="silver_quantity" property="silverQuantity" jdbcType="INTEGER" />
+        <result column="surplus_quantity" property="surplusQuantity" jdbcType="INTEGER" />
+        <result column="requirement" property="requirement" jdbcType="INTEGER" />
+        <association property="coupon" javaType="Coupon">
+            <id column="coupon_id" property="id" jdbcType="INTEGER" />
+            <result column="amount" property="amount" jdbcType="VARCHAR" />
+        </association>
+    </resultMap>
+    <resultMap id="detailMap" type="CustomerLotteryLog">
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="silver_cost" property="silverCost" jdbcType="INTEGER"/>
+        <association property="user" javaType="User">
+            <result column="user_cellphone" property="cellphone" jdbcType="VARCHAR" />
+        </association>
+        <association property="lotteryPrize" javaType="LotteryPrize">
+            <result column="lottery_prize_name" property="prizeName" jdbcType="VARCHAR" />
+            <result column="category" property="category" jdbcType="VARCHAR" />
+            <result column="silver_quantity" property="silverQuantity" jdbcType="INTEGER" />
+            <association property="coupon" javaType="Coupon">
+                <id column="coupon_id" property="id" jdbcType="INTEGER" />
+                <result column="amount" property="amount" jdbcType="VARCHAR" />
+            </association>
+        </association>
+    </resultMap>
+    <sql id="columns" >
+        id, name, category, begin, end, status, scene, frequency, silver_cost, total_number, share_get_silver, share_maximum_silver
+    </sql>
+    <sql id="prizes_columns" >
+        lp.id id, prize_name, surplus_quantity, lp.category category, lottery_id, limited_number, silver_quantity, requirement, cn.id coupon_id, cn.amount amount
+    </sql>
+    <sql id="details">
+        ld.id, ld.silver_cost, c.cellphone user_cellphone, lp.prize_name lottery_prize_name, lp.category, lp.silver_quantity, ld.create_time,
+        cn.id coupon_id, cn.amount
+    </sql>
+    <select id="queryForList" resultMap="LotteryMap">
+        select
+        <include refid="columns" />
+        from lottery order by IF(`status` = 0 or status = 3, 0, 1), id desc
+        <choose>
+            <when test="offset > 0 and size > 0">
+                <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+            </when>
+            <when test="size > 0">
+                <![CDATA[
+      limit 0, #{size}
+      ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+	    limit 0, 15
+	  ]]>
+            </otherwise>
+        </choose>
+    </select>
+    <select id="queryForCount" resultType="int">
+        select count(id) from lottery
+    </select>
+    <select id="selectById" parameterType="java.lang.Integer" resultMap="LotteryMap">
+        select
+        <include refid="columns" />
+        from lottery where id = #{id,jdbcType=INTEGER}
+    </select>
+    <select id="duplicate" resultType="int">
+        select count(id) from lottery where name = #{name,jdbcType=VARCHAR}
+        <if test="id > 0">
+            and id != #{id,jdbcType=INTEGER}
+        </if>
+    </select>
+    <select id="count" resultType="int">
+        select count(id) from lottery where status = #{enable,jdbcType=INTEGER} and scene = #{scene,jdbcType=TINYINT}
+    </select>
+    <select id="queryDetailForList" resultMap="detailMap">
+        select ld.id, ld.silver_cost, ur.cellphone user_cellphone, ld.lottery_prize_name, ld.category, ld.silver_quantity, ld.create_time,
+        ld.coupon_id, ld.amount
+        from (select ld.id, ld.silver_cost,  lp.prize_name lottery_prize_name, lp.category, lp.silver_quantity, ld.create_time,
+        cn.id coupon_id, cn.amount, ld.user_id
+        from customer_lottery_log ld
+        left join lottery_prize lp on ld.lottery_prize_id = lp.id
+        left join coupon cn on cn.id = lp.coupon_id
+        <where>
+            lp.lottery_id = #{lotteryId}
+            <if test="cellphone != null">
+                and ld.user_id = (select id from user where cellphone = #{cellphone})
+            </if>
+            <if test="prizeId != 0 ">
+                <if test="prizeId == -1">
+                    and lp.category = 4
+                </if>
+                <if test="prizeId > 0">
+                    and lp.id = #{prizeId}
+                </if>
+            </if>
+            <if test="beginTime != null and endTime != null">
+                and ld.create_time >= #{beginTime} and #{endTime} >= ld.create_time
+            </if>
+        </where>
+        order by create_time desc
+        <choose>
+            <when test="offset > 0 and size > 0">
+                <![CDATA[
+	      limit #{offset}, #{size}
+	      ]]>
+            </when>
+            <when test="size > 0">
+                <![CDATA[
+	      limit 0, #{size}
+	      ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+		  ]]>
+            </otherwise>
+        </choose>) ld
+        left join user ur on ur.id = ld.user_id
+        <!-- select  <include refid="details"/>
+        from customer_lottery_log ld
+        left join lottery_prize lp on ld.lottery_prize_id = lp.id
+        left join lottery l on lp.lottery_id = l.id
+        left join coupon cn on cn.id = lp.coupon_id
+        left join user c on ld.account = c.account
+        <where>
+            l.id = #{lotteryId}
+            <if test="cellphone != null">
+                and c.cellphone = #{cellphone}
+            </if>
+            <if test="prizeId != 0 ">
+              <if test="prizeId == -1">
+                  and lp.category = 4
+              </if>
+              <if test="prizeId > 0">
+                  and lp.id = #{prizeId}
+              </if>
+            </if>
+            <if test="beginTime != null and endTime != null">
+                and ld.create_time >= #{beginTime} and #{endTime} >= ld.create_time
+            </if>
+        </where>
+        order by create_time desc
+        <choose>
+            <when test="offset > 0 and size > 0">
+            <![CDATA[
+            limit #{offset}, #{size}
+            ]]>
+            </when>
+            <when test="size > 0">
+            <![CDATA[
+            limit 0, #{size}
+            ]]>
+            </when>
+            <otherwise>
+            <![CDATA[
+            ]]>
+            </otherwise>
+        </choose> -->
+    </select>
+    <!-- <select id="queryDetailForListByAccount" resultMap="detailMap">
+        select  <include refid="details"/>
+        from customer_lottery_log ld
+        left join lottery_prize lp on ld.lottery_prize_id = lp.id
+        left join coupon cn on cn.id = lp.coupon_id
+        left join user c on ld.account = c.account
+        <where>
+            lp.category != 4 and c.account = #{account}
+        </where>
+    </select> -->
+    <select id="queryGetSilvers" resultType="java.lang.Integer">
+        select sum(lp.silver_quantity)
+        from customer_lottery_log ld
+        left join lottery_prize lp on ld.lottery_prize_id = lp.id
+        <where>
+            lp.lottery_id = #{lotteryId}
+            and lp.category = 1
+            <if test="cellphone != null">
+                and ld.user_id = (select id from user where cellphone = #{cellphone})
+            </if>
+            <if test="prizeId > 0">
+                and lp.id = #{prizeId}
+            </if>
+            <if test="beginTime != null and endTime != null">
+                and ld.create_time >= #{beginTime} and #{endTime} >= ld.create_time
+            </if>
+        </where>
+    </select>
+    <select id="queryGetCoupons" resultType="int">
+        select count(ld.id)
+        from customer_lottery_log ld
+        left join lottery_prize lp on ld.lottery_prize_id = lp.id
+        <where>
+            lp.lottery_id = #{lotteryId}
+            and lp.category = 2
+            <if test="cellphone != null">
+                and ld.user_id = (select id from user where cellphone = #{cellphone})
+            </if>
+            <if test="prizeId > 0">
+                and lp.id = #{prizeId}
+            </if>
+            <if test="beginTime != null and endTime != null">
+                and ld.create_time >= #{beginTime} and #{endTime} >= ld.create_time
+            </if>
+        </where>
+    </select>
+    <select id="queryCostSilvers" resultType="java.lang.Integer">
+        select sum(ld.silver_cost)
+        from customer_lottery_log ld
+        left join lottery_prize lp on ld.lottery_prize_id = lp.id
+        <where>
+            lp.lottery_id = #{lotteryId}
+            <if test="cellphone != null">
+                and ld.user_id = (select id from user where cellphone = #{cellphone})
+            </if>
+            <if test="prizeId != 0 ">
+                <if test="prizeId == -1">
+                    and lp.category = 4
+                </if>
+                <if test="prizeId > 0">
+                    and lp.id = #{prizeId}
+                </if>
+            </if>
+            <if test="beginTime != null and endTime != null">
+                and ld.create_time >= #{beginTime} and #{endTime} >= ld.create_time
+            </if>
+        </where>
+    </select>
+    <select id="queryDetailForCount" resultType="int">
+        select count(ld.id)
+        from customer_lottery_log ld
+        left join lottery_prize lp on ld.lottery_prize_id = lp.id
+        <where>
+            lp.lottery_id = #{lotteryId}
+            <if test="cellphone != null">
+                and ld.user_id = (select id from user where cellphone = #{cellphone})
+            </if>
+            <if test="prizeId != 0 ">
+                <if test="prizeId == -1">
+                    and lp.category = 4
+                </if>
+                <if test="prizeId > 0">
+                    and lp.id = #{prizeId}
+                </if>
+            </if>
+            <if test="beginTime != null and endTime != null">
+                and ld.create_time >= #{beginTime} and #{endTime} >= ld.create_time
+            </if>
+        </where>
+    </select>
+    <!-- <select id="queryDetailForCountByAccount" resultType="int">
+        select count(ld.id)
+        from customer_lottery_log ld
+        left join lottery_prize lp on ld.lottery_prize_id = lp.id
+        <where>
+           lp.lottery_id = #{lotteryId}
+              and ld.account = #{account}
+        </where>
+    </select>
+    <select id="queryDetailForCountByTime" resultType="int">
+        select count(id)
+        from customer_silver_log
+        <where>
+            channel= #{channelId}
+            <if test="account != null">
+              and account = #{account}
+            </if>
+            <if test="beginDate != null and endDate != null">
+                and (DATE_FORMAT(create_time,'%Y-%m-%d') >= #{beginDate} and #{endDate} >= DATE_FORMAT(create_time,'%Y-%m-%d'))
+            </if>
+        </where>
+    </select>
+    <select id="selectTodayDetail" resultType="int">
+      select count(ld.id)
+      from customer_lottery_log ld
+      left join user c on ld.account = c.account
+      where c.account = #{account} and DATE_FORMAT(ld.create_time,'%Y-%m-%d') = #{systemDate}
+    </select>
+    <select id="countCollectWordByAccount" resultType="int">
+        select COUNT(cll.id) from customer_lottery_log cll left join lottery_prize lp on cll.lottery_prize_id = lp.id
+      where lp.prize_name = '集字活动“金”字' and cll.account=#{account}
+    </select> -->
+    <insert id="insertDetail" parameterType="CustomerLotteryLog">
+        insert into customer_lottery_log
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="user != null and user.id > 0">
+                user_id,
+            </if>
+            <if test="lotteryPrize != null and lotteryPrize.id > 0">
+                lottery_prize_id,
+            </if>
+            <if test="silverCost > 0">
+                silver_cost,
+            </if>
+            <if test="createTime != null">
+                create_time
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="user != null and user.id > 0">
+                #{user.id,jdbcType=VARCHAR},
+            </if>
+            <if test="lotteryPrize != null and lotteryPrize.id > 0">
+                #{lotteryPrize.id,jdbcType=INTEGER},
+            </if>
+            <if test="silverCost > 0">
+                #{silverCost,jdbcType=INTEGER},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP}
+            </if>
+        </trim>
+    </insert>
+    <insert id="insert" parameterType="Lottery" useGeneratedKeys="true" keyProperty="id">
+        insert into lottery
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="name != null" >
+                name,
+            </if>
+            <if test="category != null" >
+                category,
+            </if>
+            <if test="begin != null" >
+                begin,
+            </if>
+            <if test="end != null" >
+                end,
+            </if>
+            <if test="frequency > 0 " >
+                frequency,
+            </if>
+            <if test="silverCost > 0" >
+                silver_cost,
+            </if>
+            <if test="totalNumber > 0" >
+                total_number,
+            </if>
+            <if test="shareGetSilver > 0" >
+                share_get_silver,
+            </if>
+            <if test="shareMaximumSilver > 0" >
+                share_maximum_silver,
+            </if>
+            <if test="scene > 0" >
+                scene
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="name != null" >
+                #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="category != null" >
+                #{category,jdbcType=VARCHAR},
+            </if>
+            <if test="begin != null" >
+                #{begin,jdbcType=VARCHAR},
+            </if>
+            <if test="end != null" >
+                #{end,jdbcType=VARCHAR},
+            </if>
+            <if test="frequency > 0" >
+                #{frequency,jdbcType=INTEGER},
+            </if>
+            <if test="silverCost > 0" >
+                #{silverCost,jdbcType=INTEGER},
+            </if>
+            <if test="totalNumber > 0" >
+                #{totalNumber,jdbcType=INTEGER},
+            </if>
+            <if test="shareGetSilver > 0" >
+                #{shareGetSilver,jdbcType=INTEGER},
+            </if>
+            <if test="shareMaximumSilver > 0" >
+                #{shareMaximumSilver,jdbcType=INTEGER},
+            </if>
+            <if test="scene > 0" >
+                #{scene,jdbcType=TINYINT}
+            </if>
+        </trim>
+    </insert>
+    <update id="update" parameterType="Lottery" useGeneratedKeys="true" keyProperty="id" >
+        update lottery
+        <set >
+            <if test="name != null" >
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="category != null" >
+                category = #{category,jdbcType=VARCHAR},
+            </if>
+            <if test="begin != null" >
+                begin = #{begin,jdbcType=VARCHAR},
+            </if>
+            <if test="end != null" >
+                end = #{end,jdbcType=VARCHAR},
+            </if>
+            <if test="frequency != null" >
+                frequency = #{frequency,jdbcType=INTEGER},
+            </if>
+            <if test="silverCost > 0" >
+                silver_cost = #{silverCost,jdbcType=INTEGER},
+            </if>
+            <if test="totalNumber > 0" >
+                total_number = #{totalNumber,jdbcType=INTEGER},
+            </if>
+            <if test="shareGetSilver > 0" >
+                share_get_silver = #{shareGetSilver,jdbcType=INTEGER},
+            </if>
+            <if test="shareMaximumSilver > 0" >
+                share_maximum_silver = #{shareMaximumSilver,jdbcType=INTEGER},
+            </if>
+            <if test="scene > 0" >
+                scene = #{scene,jdbcType=TINYINT}
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <delete id="delete" parameterType="java.lang.Integer" >
+        delete from lottery where id = #{id,jdbcType=INTEGER}
+    </delete>
+    <select id="countParticipateTimeByLotteryId" parameterType="java.lang.Integer" resultType="int">
+        select COUNT(id) from customer_lottery_log where lottery_prize_id in (
+        select id from lottery_prize where lottery_id = #{id,jdbcType=INTEGER}
+        )
+    </select>
+    <select id="countParticipatePeoplesByLotteryId" parameterType="java.lang.Integer" resultType="int">
+        select count(distinct(user_id)) from customer_lottery_log where lottery_prize_id in (
+        select id from lottery_prize where lottery_id = #{id,jdbcType=INTEGER}
+        )
+    </select>
+    <select id="countConsumeLottery" resultType="java.lang.Integer">
+        select sum(IF(quantity>0,quantity,0)) from (
+        select (count(id)- #{shareGetSilver,jdbcType=INTEGER} ) quantity from customer_lottery_log where lottery_prize_id in (
+        select id from lottery_prize where lottery_id = #{id,jdbcType=INTEGER}
+        ) GROUP BY user_id
+        ) cll
+    </select>
+    <select id="selectPrizeById" parameterType="java.lang.Integer" resultMap="JoinPrizeMap">
+        select
+        <include refid="prizes_columns" />
+        from lottery_prize lp
+        left join coupon cn on lp.coupon_id=cn.id
+        where lottery_id = #{lotteryId,jdbcType=INTEGER} order by lp.id
+    </select>
+    <select id="selectLastestPrizeDetailById" parameterType="java.lang.Integer" resultMap="detailMap">
+        select <include refid="details"/>
+        from customer_lottery_log ld
+        left join lottery_prize lp on ld.lottery_prize_id = lp.id
+        left join coupon cn on cn.id = lp.coupon_id
+        left join user c on ld.user_id = c.id
+        where lp.lottery_id = #{lotteryId} and lp.category != 4
+        order by ld.id desc limit 5
+    </select>
+    <select id="selectRotaryPrize" resultMap="JoinPrizeMap">
+        select
+        <include refid="prizes_columns" />
+        from lottery_prize lp
+        left join coupon cn on lp.coupon_id=cn.id
+        where lottery_id = (select id from lottery where
+        status = 1 and category = 2 ORDER BY audit_time desc limit 1)
+    </select>
+    <select id="queryLotteryLogForCount" resultType="int">
+        select count(id)
+        from customer_lottery_log where lottery_prize_id in
+        (select id from lottery_prize where lottery_id = (select id from lottery where
+        status = 1 and category = 2 ORDER BY audit_time desc limit 1))
+    </select>
+    <select id="selectCurrentLottery" resultMap="LotteryMap">
+        select <include refid="columns" />
+        from lottery where
+        status = 1 and category = 2 and scene=#{scene} ORDER BY audit_time desc limit 1
+    </select>
+    <insert id="insertPrizeBatch"  parameterType="java.util.List">
+        insert into lottery_prize (prize_name,
+        category, lottery_id,
+        limited_number, surplus_quantity,
+        silver_quantity, requirement, coupon_id)
+        values
+        <foreach collection="prizes" item="prize" index="index" separator="," >
+            (#{prize.prizeName}, #{prize.category}, #{prize.lotteryId}, #{prize.limitedNumber}, #{prize.surplusQuantity}, #{prize.silverQuantity},
+            #{prize.requirement}, #{prize.coupon.id})
+        </foreach>
+    </insert>
+    <update id="updatePrize" parameterType="LotteryPrize">
+        update lottery_prize
+        <set >
+            <if test="prizeName != null" >
+                prize_name = #{prizeName,jdbcType=VARCHAR},
+            </if>
+            <if test="category >= 0">
+                category = #{category,jdbcType=INTEGER},
+            </if>
+            <if test="lotteryId > 0 ">
+                lottery_id = #{lotteryId,jdbcType=VARCHAR},
+            </if>
+            <if test="coupon != null and coupon.id > 0" >
+                coupon_id = #{coupon.id,jdbcType=INTEGER},
+            </if>
+            <if test="limitedNumber > 0 ">
+                limited_number = #{limitedNumber,jdbcType=INTEGER},
+            </if>
+            <if test="surplusQuantity > 0 ">
+                surplus_quantity = #{surplusQuantity,jdbcType=INTEGER},
+            </if>
+            <if test="silverQuantity > 0" >
+                silver_quantity = #{silverQuantity,jdbcType=INTEGER},
+            </if>
+            <if test="requirement > 0" >
+                requirement = #{requirement,jdbcType=INTEGER}
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="decrSurplusQuantity">
+        update lottery_prize set surplus_quantity = surplus_quantity - 1 where surplus_quantity > 0 and id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="audit">
+        update lottery set status = #{status,jdbcType=TINYINT}, audit_time = now() where id = #{id,jdbcType=INTEGER}
+    </update>
+    <delete id="deletePrizeById" parameterType="java.lang.Integer" >
+        delete from lottery_prize where lottery_id = #{lotteryId,jdbcType=INTEGER}
+    </delete>
+</mapper>

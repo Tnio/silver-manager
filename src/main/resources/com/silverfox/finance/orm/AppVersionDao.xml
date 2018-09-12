@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.AppVersionDao" >
+  <resultMap id="ResultMap" type="AppVersion" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="version" property="version" jdbcType="VARCHAR" />
+    <result column="content" property="content" jdbcType="VARCHAR" />
+    <result column="url" property="url" jdbcType="VARCHAR" />
+    <result column="type" property="type" jdbcType="VARCHAR" />
+    <result column="status" property="status" jdbcType="TINYINT" />
+    <result column="patch_no" property="patchNO" jdbcType="TINYINT" />
+    <result column="patch_url" property="patchUrl" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="columns" >
+	id, version, content, url, type, status, patch_no, patch_url
+  </sql>
+  <select id="queryForList" resultMap="ResultMap">
+    select 
+    <include refid="columns" />
+    from app_version
+    <where>
+        <if test="version != null">
+            and version like '%${version}%'
+        </if>
+        <if test="content != null">
+            and content like '%${content}%'
+        </if>
+    </where>
+    ORDER BY id DESC
+    <choose>
+	  <when test="offset > 0 and size > 0">
+      <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+	  </when>
+	  <when test="size > 0">
+      <![CDATA[
+      limit 0, #{size}
+      ]]>
+	  </when>
+	  <otherwise>
+	  <![CDATA[
+	  limit 0, 15
+	  ]]>
+	  </otherwise>
+	</choose>
+  </select>
+  <select id="queryForCount" resultType="int">
+  	select count(id) from app_version
+  	<where>
+        <if test="version != null">
+            and version like '%${version}%'
+        </if>
+        <if test="content != null">
+            and content like '%${content}%'
+        </if>
+    </where>
+  </select>
+  <select id="selectById" parameterType="java.lang.Integer" resultMap="ResultMap">
+    select 
+    <include refid="columns" />
+    from app_version
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectPatchNoByVersion" parameterType="java.lang.String" resultType="java.lang.Short">
+    select patch_no from app_version where version = #{version,jdbcType=VARCHAR} ORDER BY patch_no DESC LIMIT 1
+  </select>
+  <select id="duplicate" resultType="int">
+    select count(id) from app_version 
+    <where>
+      <if test="version != null">
+      	version = #{version,jdbcType=VARCHAR}
+      </if>
+      <if test="id > 0">
+        and id != #{id,jdbcType=INTEGER}
+      </if>
+    </where>
+  </select>
+  <select id="selectLatestAppVersion" resultMap="ResultMap">
+    select
+      <include refid="columns"/>
+    from app_version where status =1 and URL LIKE '%${appExtension}' and URL NOT RLIKE 'vest' ORDER BY id DESC LIMIT 0,1
+  </select>
+  <select id="selectLatestVestAppVersion" resultMap="ResultMap">
+    select
+      <include refid="columns"/>
+    from app_version where status =1 and URL LIKE '%${appExtension}' and URL RLIKE 'vest' ORDER BY id DESC LIMIT 0,1
+  </select>
+  <select id="countByVersionAndType" resultType="int">
+	select count(id) from app_version
+	<where>
+		status = 1 and URL NOT RLIKE 'vest'
+	  <if test="version != null">
+	    and REPLACE(version,".","") > #{version,jdbcType=VARCHAR}
+	  </if>
+	  <if test="type != null">
+	    and type= #{type,jdbcType=INTEGER}
+	  </if>
+	  
+	</where>
+  </select>
+  <select id="countVestByVersionAndType" resultType="int">
+	select count(id) from app_version
+	<where>
+		status = 1 and URL RLIKE 'vest'
+	  <if test="version != null">
+	    and REPLACE(version,".","") > #{version,jdbcType=VARCHAR}
+	  </if>
+	  <if test="type != null">
+	    and type= #{type,jdbcType=INTEGER}
+	  </if>
+	  
+	</where>
+  </select>
+  <insert id="insert" parameterType="AppVersion">
+    insert into app_version
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="version != null" >
+        version,
+      </if>
+      <if test="content != null" >
+        content,
+      </if>
+      <if test="url != null" >
+        url,
+      </if>
+      <if test="type != null" >
+        type,
+      </if>
+      <if test="patchNO > 0" >
+        patch_no,
+      </if>
+      <if test="patchUrl != null" >
+        patch_url
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="version != null" >
+        #{version,jdbcType=VARCHAR},
+      </if>
+      <if test="content != null" >
+        #{content,jdbcType=VARCHAR},
+      </if>
+      <if test="url != null" >
+        #{url,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null" >
+        #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="patchNO > 0" >
+        #{patchNO,jdbcType=TINYINT},
+      </if>
+      <if test="patchUrl != null" >
+        #{patchUrl,jdbcType=VARCHAR}
+      </if>
+    </trim>
+  </insert>
+  <update id="update" parameterType="AppVersion" >
+    update app_version
+    <set >
+      <if test="version != null" >
+        version = #{version,jdbcType=VARCHAR},
+      </if>
+      <if test="content != null" >
+        content = #{content,jdbcType=VARCHAR},
+      </if>
+      <if test="url != null" >
+        url = #{url,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null" >
+        type = #{type,jdbcType=VARCHAR}
+      </if>
+      <if test="patchNO > 0" >
+        patch_no = #{patchNO,jdbcType=TINYINT},
+      </if>
+      <if test="patchUrl != null" >
+        patch_url = #{patchUrl,jdbcType=VARCHAR}
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="enable">
+  	update app_version set status = #{status,jdbcType=TINYINT} where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

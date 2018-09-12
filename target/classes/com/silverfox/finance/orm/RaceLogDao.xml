@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.RaceLogDao" >
+    <resultMap type="RaceLog" id="resultMap">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="cellphone" property="cellphone" jdbcType="VARCHAR"/>
+        <result column="join_code" property="joinCode" jdbcType="INTEGER"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="mark" property="mark" jdbcType="INTEGER"/>
+        <result column="winning" property="winning" jdbcType="SMALLINT"/>
+        <result column="random" property="random" jdbcType="INTEGER"/>
+        <association property="goods" javaType="Goods">
+            <id column="goods_id" property="id" jdbcType="INTEGER" />
+            <result column="goods_name" property="name" jdbcType="VARCHAR"/>
+        </association>
+    </resultMap>
+
+    <sql id="columns">
+        ir.id, ir.name, ir.cellphone, ir.join_code, ir.create_time, ir.mark, ir.winning, ir.goods_id, g.name goods_name
+    </sql>
+    <select id="queryForList" resultMap="resultMap">
+        select <include refid="columns"></include> from race_log ir left join goods g on g.id = ir.goods_id
+        <where>
+            <if test="goodsId > 0">
+                ir.goods_id = #{goodsId}
+            </if>
+            <if test="cellphone != null">
+                and ir.cellphone = #{cellphone}
+            </if>
+        </where>
+        order by winning DESC, join_code DESC
+        <choose>
+            <when test="offset > 0 and size > 0">
+                <![CDATA[
+		     limit #{offset}, #{size}
+		     ]]>
+            </when>
+            <when test="size > 0">
+                <![CDATA[
+		     limit 0, #{size}
+		     ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+		   limit 0, 15
+		  ]]>
+            </otherwise>
+        </choose>
+    </select>
+    <select id="queryForCount" resultType="int">
+        select count(ir.id) from race_log ir
+        <where>
+            <if test="goodsId > 0">
+                ir.goods_id = #{goodsId}
+            </if>
+            <if test="cellphone != null">
+                and ir.cellphone = #{cellphone}
+            </if>
+        </where>
+    </select>
+    <update id="update">
+        update race_log set winning = 1 where goods_id = #{goodsId} and join_code = #{winCode}
+    </update>
+</mapper>

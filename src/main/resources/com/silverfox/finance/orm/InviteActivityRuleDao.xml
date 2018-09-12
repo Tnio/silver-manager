@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.InviteActivityRuleDao" >
+   <resultMap id="ResultMap" type="InviteActivityRule" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="invite_activity_id" property="inviteActivityId" jdbcType="INTEGER" />
+    <result column="start_period" property="startPeriod" jdbcType="TINYINT" />
+    <result column="end_period" property="endPeriod" jdbcType="TINYINT" />    
+    <result column="interest" property="interest" jdbcType="DOUBLE" />
+    <result column="budget_amount" property="budgetAmount" jdbcType="DOUBLE" />
+    <result column="use_amount" property="useAmount" jdbcType="DOUBLE" />
+  </resultMap>
+  
+   <resultMap id="logMap" type="InviteActivityLog" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="invite_activity_id" property="inviteActivityId" jdbcType="INTEGER" />
+    <result column="invite_activity_rule_id" property="inviteActivityRuleId" jdbcType="INTEGER" />
+    <result column="reg_time" property="regTime" jdbcType="TIMESTAMP" />
+    <result column="grant_time" property="grantTime" jdbcType="TIMESTAMP" />    
+    <result column="buy_amount" property="buyAmount" jdbcType="INTEGER" />
+    <result column="finance_period" property="financePeriod" jdbcType="INTEGER" />
+    <result column="coupon_amount" property="couponAmount" jdbcType="DOUBLE" />
+    <association property="user" javaType="User">
+		<id column="user_id" property="id" />
+		<result column="user_cellphone" property="cellphone" />
+	</association>
+	<association property="customer" javaType="Customer">
+		<id column="customer_id" property="id" />
+		<result column="invite_cellphone" property="cellphone" />
+	</association>
+  </resultMap>
+  <sql id="columns" >
+    id, invite_activity_id, start_period, end_period, interest, budget_amount, use_amount
+  </sql>
+  <sql id="logColumns" >
+    ial.id, ial.invite_activity_id, invite_activity_rule_id, reg_time, grant_time, buy_amount, finance_period, coupon_amount, 
+	ial.user_id, ur.cellphone user_cellphone, ial.invitee_user_id customer_id, cr.cellphone invite_cellphone
+  </sql>
+  <select id="queryForLogCount" resultType="int">
+  	select count(ial.id) 
+  	from invite_activity_log ial left join user ur on ial.user_id = ur.id
+	left join customer cr on ial.invitee_user_id = cr.id
+	<where>
+   	   <if test="activityId > 0">
+           invite_activity_id = #{activityId}
+       </if>
+       <if test="inviteCellphone != null and inviteCellphone != ''">
+           and cr.cellphone = ${inviteCellphone}        	
+       </if>
+       <if test="cellphone != null and cellphone != ''">
+           and ur.cellphone = ${cellphone}        	
+       </if>
+       <if test="period > 0">
+           and finance_period = #{period}        	
+       </if>
+       <if test="beginTime != null and endTime != null">
+	        and ial.${type} BETWEEN #{beginTime} and #{endTime}
+	   </if>
+    </where>
+  </select>
+   <select id="queryForLogList" resultMap="logMap">
+    select 
+    <include refid="logColumns" />
+    from invite_activity_log ial left join user ur on ial.user_id = ur.id
+	left join customer cr on ial.invitee_user_id = cr.id
+	<where>
+   	   <if test="activityId > 0">
+           invite_activity_id = #{activityId}
+       </if>
+       <if test="inviteCellphone != null and inviteCellphone != ''">
+           and cr.cellphone = ${inviteCellphone}        	
+       </if>
+       <if test="cellphone != null and cellphone != ''">
+           and ur.cellphone = ${cellphone}        	
+       </if>
+       <if test="period > 0">
+           and finance_period = #{period}        	
+       </if>
+       <if test="beginTime != null and endTime != null">
+	        and ial.${type} BETWEEN #{beginTime} and #{endTime}
+	   </if>
+    </where>
+    <choose>
+	  <when test="offset > 0 and size > 0">
+      <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+	  </when>
+	  <when test="size > 0">
+      <![CDATA[
+      limit 0, #{size}
+      ]]>
+	  </when>
+	  <otherwise>
+	  <![CDATA[
+	    limit 0, 15
+	  ]]>
+	  </otherwise>
+	</choose>
+  </select>
+   <select id="selectRuleByActivityId" resultMap="ResultMap">
+  	select 
+    <include refid="columns" />
+    from invite_activity_rule where invite_activity_id = #{activityId,jdbcType=INTEGER}
+  </select>
+  <insert id="insertInviteRuleBatch"  parameterType="java.util.List">
+	insert into invite_activity_rule (invite_activity_id, start_period, end_period, interest, budget_amount) values
+	<foreach collection="rules" item="rule" index="index" separator="," >
+      (#{rule.inviteActivityId}, #{rule.startPeriod}, #{rule.endPeriod}, #{rule.interest}, #{rule.budgetAmount})    
+    </foreach>
+  </insert>
+  <update id="updateInviteRule" parameterType="InviteActivityRule" >
+    update invite_activity_rule
+    <set>
+      <if test="inviteActivityId > 0" >
+        invite_activity_id = #{inviteActivityId,jdbcType=INTEGER},
+      </if>
+      <if test="startPeriod >= 0" >
+        start_period = #{startPeriod,jdbcType=TINYINT},
+      </if>
+      <if test="endPeriod >= 0" >
+        end_period = #{endPeriod,jdbcType=TINYINT},
+      </if>
+      <if test="interest >= 0" >
+        interest = #{interest,jdbcType=DOUBLE},
+      </if>
+      <if test="budgetAmount >= 0" >
+        budget_amount = #{budgetAmount,jdbcType=DOUBLE},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.CardBinDao" >
+    <select id="selectByPrefix" resultType="CardBin">
+        select id, bank_code bankCode, bank_name bankName, card_prefix cardPrefix
+        from card_bin
+        where card_prefix = #{prefix,jdbcType=VARCHAR} limit 1
+    </select>
+</mapper>

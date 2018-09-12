@@ -1,0 +1,529 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.CouponDao" >
+    <resultMap id="ResultMap" type="Coupon" >
+    	<id column="id" property="id" jdbcType="INTEGER" />
+    	<result column="category" property="category" jdbcType="TINYINT" />
+		<result column="name" property="name" jdbcType="VARCHAR" />
+		<result column="amount" property="amount" jdbcType="INTEGER" />
+		<result column="condition" property="condition" jdbcType="VARCHAR" />
+		<result column="life_cycle" property="lifeCycle" jdbcType="TINYINT" />
+		<result column="expires_point" property="expiresPoint" jdbcType="VARCHAR" />
+		<result column="amount_category" property="amountCategory" jdbcType="INTEGER" /> 
+		<result column="money_limit" property="moneyLimit" jdbcType="INTEGER" />
+		<result column="trade_amount" property="tradeAmount" jdbcType="INTEGER" />
+		<result column="finance_period" property="financePeriod" jdbcType="INTEGER" />
+		<result column="increase_days" property="increaseDays" jdbcType="INTEGER" />
+		<result column="remark" property="remark" jdbcType="VARCHAR" />
+		<result column="use_scene" property="useScene" jdbcType="VARCHAR" />
+		<result column="donation" property="donation" jdbcType="INTEGER" />
+    </resultMap>
+    <resultMap id="StatisticsMap" type="StatisticsEntity" >
+    	<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="name" property="name" jdbcType="VARCHAR" />
+		<result column="amount" property="amount" jdbcType="VARCHAR" />
+		<result column="quantity" property="quantity" jdbcType="INTEGER" /> 
+		<result column="source" property="source" jdbcType="INTEGER" /> 
+		<result column="useCondition" property="useCondition" jdbcType="INTEGER" /> 
+		<result column="financePeriod" property="financePeriod" jdbcType="INTEGER" />
+		<result column="increase_days" property="increaseDays" jdbcType="INTEGER" />
+		<result column="usedQuantity" property="usedQuantity" jdbcType="INTEGER" /> 
+		<result column="totalAmount" property="totalAmount" jdbcType="DOUBLE" /> 
+		<result column="usedAmount" property="usedAmount" jdbcType="DOUBLE" />
+    </resultMap>
+    <resultMap  id="AggregateMap" type="CouponStatisticsEntity">
+        <result column="userId" property="userId" jdbcType="INTEGER"/>
+	    <result column="cellphone" property="cellphone" jdbcType="VARCHAR"/>
+	    <result column="total_money" property="totalMoney" jdbcType="DOUBLE"/>
+	    <result column="used_money" property="usedMoney" jdbcType="DOUBLE"/>    
+	    <result column="inviter" property="inviter" jdbcType="INTEGER"/>
+	    <result column="trade" property="trade" jdbcType="INTEGER"/>       
+    </resultMap>
+     <resultMap id="StatisticsSourceMap" type="StatisticsEntity" >
+    	<id column="source" property="source" jdbcType="INTEGER" />
+		<result column="name" property="name" jdbcType="VARCHAR" />
+		<result column="amount" property="amount" jdbcType="VARCHAR" />
+		<result column="quantity" property="quantity" jdbcType="INTEGER" /> 
+		<result column="usedQuantity" property="usedQuantity" jdbcType="INTEGER" /> 
+		<result column="totalAmount" property="totalAmount" jdbcType="DOUBLE" /> 
+		<result column="usedAmount" property="usedAmount" jdbcType="DOUBLE" />
+    </resultMap>
+    <sql id="column" >
+    	cn.id, cn.category, cn.name, cn.amount, cn.condition, cn.life_cycle, cn.expires_point, 
+    	cn.amount_category, cn.money_limit, cn.trade_amount, cn.finance_period, cn.increase_days,
+    	cn.remark, cn.donation, cn.use_scene
+	</sql>
+	<sql id="baseColumn" >
+    	cn.id, cn.category, cn.name, cn.amount, cn.remark, cn.donation 
+	</sql>
+	<sql id="statisticsColumn" >
+		c.id, c.name, cc.amount,c.quantity, COUNT(cc.id) usedQuantity
+	</sql>
+	<select id="canDisable" resultType="int">
+	  SELECT count(id) from goods where category in (0, 1) and virtual_goods = #{couponId}
+	  UNION
+	  SELECT count(id) from bonus_strategy where coupon_id = #{couponId}
+	  UNION
+	  SELECT count(id) from channel where coupon_id = #{couponId}
+	</select>
+	<select id="selectDispatchingBonusLogCoupon" resultMap="ResultMap">
+      select <include refid="baseColumn" />  from coupon cn where FIND_IN_SET(cn.id,(select coupon_id from dispatching_bonus_log dl where dl.id = #{dispatchingBonusLogId}))
+    </select>
+	<select id="queryCoupons" resultMap="ResultMap">
+		select <include refid="column" /> from coupon cn
+		<where>
+			cn.id in (${couponIds})
+			<if test="category >= 0">
+				and category = #{category}
+			</if>
+		</where>
+	</select>
+	<select id="queryForListInviterRecord" resultType="InviterRecordEntity">
+		select u.register_time createTime , c.cellphone cellphone,  c.first_trade_time firstTradeTime 
+		from customer c left join user u on c.id = u.id
+		<where>
+		    u.inviter_phone = #{cellphone}
+		</where> 
+		<choose>
+		    <when test="offset > 0 and size > 0">
+		        <![CDATA[ limit #{offset}, #{size} ]]>
+		    </when>
+		    <when test="size > 0">
+		        <![CDATA[ limit 0, #{size} ]]>
+		    </when>
+		    <otherwise>
+			    <![CDATA[ limit 0, 15 ]]>
+		    </otherwise>
+	    </choose>
+	</select>
+	<select id="queryForCountInviterRecord" resultType="int">
+		select count(c.id) from customer c 
+		left join user u on c.id = u.id
+		where u.inviter_phone = #{cellphone}
+	</select>
+	<select id="queryForCountCustomerAggregate" resultType="int">
+		select count(id)
+		from customer_coupon 
+		where cumulative = 1
+		<if test="cellphone != null">
+			and user_id = (select id from user where cellphone = #{cellphone})
+		</if>
+	</select>
+	<select id="queryForCountBonusRecord" resultType="int">
+		select count(cl.id) from customer_invite_coupon_log cl left join customer_coupon cc on cl.customer_coupon_id = cc.id where cc.user_id = #{customerId}  
+	</select>
+	<select id="queryForListBonusRecord" resultType="BonusRecordEntity">
+		select cc.user_id userId, cl.create_time createTime, cl.amount, pt.name productName, cl.cellphone
+		from customer_invite_coupon_log cl left join customer_coupon cc on cl.customer_coupon_id = cc.id 
+		left join customer_order co on co.order_no = cl.order_no
+		left join product pt on co.product_id = pt.id 
+		<where>
+		    cc.user_id = #{customerId}
+		</where> 
+		<choose>
+		    <when test="offset > 0 and size > 0">
+		        <![CDATA[ limit #{offset}, #{size} ]]>
+		    </when>
+		    <when test="size > 0">
+		        <![CDATA[ limit 0, #{size} ]]>
+		    </when>
+		    <otherwise>
+			    <![CDATA[ limit 0, 15 ]]>
+		    </otherwise>
+	    </choose>
+	</select>
+	<select id="queryForListCustomerAggregate" resultMap="AggregateMap">
+	    <if test="cellphone != null">
+	       <![CDATA[  select c.id userId, c.cellphone, (cn.amount-cl.used) total_money, cl.used used_money, cc.inviter, cc.trade
+			from (select id, user_id, amount from customer_coupon where cumulative = 1 and user_id = (select id from user where cellphone = #{cellphone})) cn 
+			left join customer c on cn.user_id = c.id
+			left join (select customer_coupon_id, sum(if(amount < 0, amount, 0) ) used from  customer_invite_coupon_log GROUP BY customer_coupon_id) cl on cn.id = cl.customer_coupon_id
+			left join (select inviter_phone, count(id) inviter, sum(first_trade_time > '2015-01-01 00:00') trade from user where inviter_phone != '' GROUP BY inviter_phone) cc on c.cellphone = cc.inviter_phone
+	    	]]>
+	    </if>
+	    <if test="cellphone == null">
+	    	<if test="sort != null and sort != '' ">
+	    	    <if test="sort == 'usedMoney' ">
+	    	       SELECT ur.id userId, ur.cellphone,  (cn.amount-tp.used) total_money, tp.used used_money, cc.inviter, cc.trade
+					from (select customer_coupon_id, sum(if(0 > amount, amount, 0) ) used 
+					from  customer_invite_coupon_log 
+					GROUP BY customer_coupon_id
+					ORDER BY used asc 
+					<choose>
+					    <when test="offset > 0 and size > 0">
+					        <![CDATA[ limit #{offset}, #{size} ]]>
+					    </when>
+					    <when test="size > 0">
+					        <![CDATA[ limit 0, #{size} ]]>
+					    </when>
+					    <otherwise>
+						    <![CDATA[ limit 0, 15 ]]>
+					    </otherwise>
+				    </choose>) tp
+					left join customer_coupon cn on cn.id = tp.customer_coupon_id
+					left join user ur on ur.id = cn.user_id
+					left join (select inviter_phone, count(id) inviter, sum(first_trade_time > '2015-01-01 00:00') trade from user where inviter_phone != '' GROUP BY inviter_phone) cc on ur.cellphone = cc.inviter_phone
+	    	    </if>
+	    	    <if test="sort == 'totalMoney' ">
+	    	       SELECT ur.id userId, ur.cellphone, tp.totalMoney total_money, (tp.totalMoney - cn.amount) used_money, cc.inviter, cc.trade
+					from (select customer_coupon_id, sum(if(amount > 0, amount, 0) ) totalMoney 
+					from  customer_invite_coupon_log 
+					GROUP BY customer_coupon_id
+					ORDER BY totalMoney DESC 
+					<choose>
+					    <when test="offset > 0 and size > 0">
+					        <![CDATA[ limit #{offset}, #{size} ]]>
+					    </when>
+					    <when test="size > 0">
+					        <![CDATA[ limit 0, #{size} ]]>
+					    </when>
+					    <otherwise>
+						    <![CDATA[ limit 0, 15 ]]>
+					    </otherwise>
+				    </choose>) tp
+					left join customer_coupon cn on cn.id = tp.customer_coupon_id
+					left join user ur on ur.id = cn.user_id
+					left join (select inviter_phone, count(id) inviter, sum(first_trade_time > '2015-01-01 00:00') trade from user where inviter_phone != '' GROUP BY inviter_phone) cc on ur.cellphone = cc.inviter_phone
+	    	    </if>
+	    	    <if test="sort == 'remainMoney' ">
+	    	       SELECT  tp.user_id userId, c.cellphone,  (tp.amount-cl.used) total_money, cl.used used_money, cc.inviter, cc.trade
+					from (SELECT id, user_id, amount
+					from customer_coupon 
+					where cumulative = 1 
+					ORDER BY amount desc 
+					<choose>
+					    <when test="offset > 0 and size > 0">
+					        <![CDATA[ limit #{offset}, #{size} ]]>
+					    </when>
+					    <when test="size > 0">
+					        <![CDATA[ limit 0, #{size} ]]>
+					    </when>
+					    <otherwise>
+						    <![CDATA[ limit 0, 15 ]]>
+					    </otherwise>
+				    </choose>) tp
+						left join user c on tp.user_id = c.id
+						left join (select customer_coupon_id, sum(if(0 > amount, amount, 0) ) used from  customer_invite_coupon_log GROUP BY customer_coupon_id) cl on tp.id = cl.customer_coupon_id
+						left join (select inviter_phone, count(id) inviter, sum(first_trade_time > '2015-01-01 00:00') trade from user where != '' GROUP BY inviter_phone) cc on c.cellphone = cc.inviter_phone
+	    	    </if>
+	    	    <if test="sort == 'inviter' ">
+	    	        SELECT c.id userId, c.cellphone,  (cp.amount-cl.used) total_money, cl.used used_money, tp.inviter, tp.trade
+					from (select inviter_phone, count(id) inviter, sum(first_trade_time > '2015-01-01 00:00') trade 
+					from user 
+					where inviter_phone != '' 
+					GROUP BY inviter_phone ORDER BY inviter DESC 
+					<choose>
+					    <when test="offset > 0 and size > 0">
+					        <![CDATA[ limit #{offset}, #{size} ]]>
+					    </when>
+					    <when test="size > 0">
+					        <![CDATA[ limit 0, #{size} ]]>
+					    </when>
+					    <otherwise>
+						    <![CDATA[ limit 0, 15 ]]>
+					    </otherwise>
+				    </choose>) tp
+					left join user c on tp.inviter_phone = c.cellphone
+					left join customer_coupon cp on cp.user_id = c.id and cp.cumulative = 1
+					left join (select customer_coupon_id, sum(if(0 > amount, amount, 0) ) used from  customer_invite_coupon_log GROUP BY customer_coupon_id) cl on cp.id = cl.customer_coupon_id
+	    	    </if>
+	    	    <if test="sort == 'trade' ">
+	    	        SELECT c.id userId, c.cellphone,  (cp.amount-cl.used) total_money, cl.used used_money, tp.inviter, tp.trade
+					from (select inviter_phone, count(id) inviter, sum(first_trade_time > '2015-01-01 00:00') trade 
+					from user 
+					where inviter_phone != '' 
+					GROUP BY inviter_phone ORDER BY trade DESC 
+					<choose>
+					    <when test="offset > 0 and size > 0">
+					        <![CDATA[ limit #{offset}, #{size} ]]>
+					    </when>
+					    <when test="size > 0">
+					        <![CDATA[ limit 0, #{size} ]]>
+					    </when>
+					    <otherwise>
+						    <![CDATA[ limit 0, 15 ]]>
+					    </otherwise>
+				    </choose>) tp
+					left join user c on tp.inviter_phone = c.cellphone
+					left join customer_coupon cp on cp.user_id = c.id and cp.cumulative = 1
+					left join (select customer_coupon_id, sum(if(0 > amount, amount, 0) ) used from  customer_invite_coupon_log GROUP BY customer_coupon_id) cl on cp.id = cl.customer_coupon_id
+	    	    </if>
+	    	</if>
+		    <if test="sort == null or sort == ''">
+		    	SELECT  tp.user_id userId, c.cellphone,  (tp.amount-cl.used) total_money, cl.used used_money, cc.inviter, cc.trade
+				from (SELECT id, user_id, amount
+				from customer_coupon 
+				where cumulative = 1 
+				ORDER BY amount desc 
+				<choose>
+				    <when test="offset > 0 and size > 0">
+				        <![CDATA[ limit #{offset}, #{size} ]]>
+				    </when>
+				    <when test="size > 0">
+				        <![CDATA[ limit 0, #{size} ]]>
+				    </when>
+				    <otherwise>
+					    <![CDATA[ limit 0, 15 ]]>
+				    </otherwise>
+			    </choose>) tp
+					left join user c on tp.user_id = c.id
+					left join (select customer_coupon_id, sum(if(0 > amount, amount, 0) ) used from  customer_invite_coupon_log GROUP BY customer_coupon_id) cl on tp.id = cl.customer_coupon_id
+					left join (select inviter_phone, count(id) inviter, sum(first_trade_time > '2015-01-01 00:00') trade from user where inviter_phone != '' GROUP BY inviter_phone) cc on c.cellphone = cc.inviter_phone
+		    </if>
+	    </if>
+	</select>
+	<select id="queryForCount" resultType="int">
+		select count(cn.id) from coupon cn
+		<where>
+			<if test="type ==1 ">
+		    	<![CDATA[
+		    		and cn.category <=3   
+		    	]]>
+		    </if>
+		      <if test="type ==2 ">
+		    	<![CDATA[
+		    		and cn.category >3   
+		    	]]>   
+		    </if>
+		     <if test="name != null">
+		    	and cn.name like '%${name}%'   
+		    </if>
+			<if test="category >= 0">
+		    	and cn.category = #{category}    
+		    </if>
+		    <if test="isTime == 1">
+				and IF(cn.life_cycle = 1, (cn.expires_point >= CURRENT_DATE()),TRUE)
+			</if>
+		</where>    
+	</select>
+	<select id="queryForList" resultMap="ResultMap">
+		select <include refid="column" /> 
+		from coupon cn
+		<where>
+		    <if test="type ==1 ">
+		    	<![CDATA[
+		    		and cn.category <=3   
+		    	]]>
+		    </if>
+		      <if test="type ==2 ">
+		    	<![CDATA[
+		    		and cn.category >3   
+		    	]]>   
+		    </if>
+		     <if test="name != null">
+		    	and cn.name like '%${name}%'   
+		    </if>
+			<if test="category >= 0">
+		    	and cn.category = #{category}    
+		    </if>
+		    <if test="isTime == 1">
+				and IF(cn.life_cycle = 1, (cn.expires_point >= CURRENT_DATE()),TRUE)
+			</if>
+		</where>
+		order by cn.id desc
+		<choose>
+		    <when test="offset > 0 and size > 0">
+		        <![CDATA[ limit #{offset}, #{size} ]]>
+		    </when>
+		    <when test="size > 0">
+		        <![CDATA[ limit 0, #{size} ]]>
+		    </when>
+		    <otherwise>
+			    <![CDATA[ limit 0, 15 ]]>
+		    </otherwise>
+	    </choose>
+	</select>
+	<select id="select" parameterType="int" resultMap="ResultMap">
+	    select <include refid="column" /> 
+	    from coupon cn 
+	    where cn.id = #{id,jdbcType=INTEGER}
+	</select>
+	<insert id="insert">
+	    insert into coupon
+	     <trim prefix="(" suffix=")" suffixOverrides="," >
+	         <if test="category >= 0">
+	         	category,  
+	         </if>
+	         <if test="name != null">
+	         	name,  
+	         </if>
+	         <if test="amount != null">
+	         	amount,  
+	         </if>
+	         	`condition`, 
+	         	life_cycle,  
+	         <if test="expiresPoint != null">
+	         	expires_point,  
+	         </if>
+	         <if test="amountCategory >= 0">
+	         	amount_category,  
+	         </if>
+	         <if test="moneyLimit >= 0">
+	         	money_limit,  
+	         </if>
+	         <if test="tradeAmount >= 0">
+	         	trade_amount,  
+	         </if>
+	         <if test="financePeriod >= 0">
+	         	finance_period,  
+	         </if>
+	         <if test="increaseDays >= 0">
+	         	increase_days,  
+	         </if>
+	         <if test="remark != null">
+	         	remark,  
+	         </if>
+	         <if test="useScene != null">
+	         	use_scene,  
+	         </if>
+	         <if test="donation > -1">
+	         	donation  
+	         </if>
+	     </trim>
+	     <trim prefix="values (" suffix=")" suffixOverrides=",">
+	         <if test="category >= 0">
+	         	#{category,jdbcType=TINYINT},  
+	         </if>
+	         <if test="name != null">
+	            #{name,jdbcType=VARCHAR},
+	         </if>
+	         <if test="amount != null">
+	         	#{amount,jdbcType=VARCHAR},  
+	         </if>
+	            #{condition,jdbcType=VARCHAR},
+	            #{lifeCycle,jdbcType=TINYINT},
+	         <if test="expiresPoint != null">
+	            #{expiresPoint,jdbcType=VARCHAR},
+	         </if>
+	         <if test="amountCategory >= 0">
+	         	#{amountCategory,jdbcType=TINYINT}, 
+	         </if>
+	         <if test="moneyLimit >= 0">
+	            #{moneyLimit,jdbcType=TINYINT},
+	         </if>
+	         <if test="tradeAmount >= 0">
+	            #{tradeAmount,jdbcType=INTEGER},
+	         </if>
+	         <if test="financePeriod >= 0">
+	            #{financePeriod,jdbcType=INTEGER},
+	         </if>
+	         <if test="increaseDays >= 0">
+	            #{increaseDays,jdbcType=INTEGER},
+	         </if>
+	         <if test="remark != null">
+	         	#{remark,jdbcType=VARCHAR}, 
+	         </if>
+	         <if test="useScene != null">
+	         	#{useScene,jdbcType=VARCHAR}, 
+	         </if>
+	         <if test="donation > -1">
+	         	#{donation,jdbcType=INTEGER}
+	         </if>
+	     </trim>
+	</insert>
+	<update id="update">
+		update coupon
+		<set>
+			<if test="category >= 0">
+	         	category = #{category,jdbcType=TINYINT},  
+	         </if>
+	         <if test="name != null">
+	            name = #{name,jdbcType=VARCHAR},
+	         </if>
+	         <if test="amount != null">
+	            amount = #{amount,jdbcType=VARCHAR},
+	         </if>
+	         <if test="condition != null">
+	            `condition` = #{condition,jdbcType=VARCHAR},
+	         </if>
+	         <if test="lifeCycle >= 0">
+	            life_cycle = #{lifeCycle,jdbcType=TINYINT},
+	         </if>
+	         <if test="expiresPoint != null">
+	         	expires_point = #{expiresPoint,jdbcType=VARCHAR},
+	         </if>
+	         <if test="amountCategory >= 0">
+	         	amount_category = #{amountCategory,jdbcType=TINYINT}, 
+	         </if>
+	         <if test="moneyLimit >= 0">
+	            money_limit = #{moneyLimit,jdbcType=TINYINT},
+	         </if>
+	         <if test="tradeAmount >= 0">
+	            trade_amount = #{tradeAmount,jdbcType=INTEGER},
+	         </if>
+	         <if test="financePeriod >= 0">
+	            finance_period = #{financePeriod,jdbcType=INTEGER},
+	         </if>
+	         <if test="increaseDays >= 0">
+	            increase_days = #{increaseDays,jdbcType=INTEGER},
+	         </if>
+	         <if test="donation > -1">
+	         	donation = #{donation,jdbcType=TINYINT},   
+	         </if>
+	         <if test="remark != null">
+	         	remark = #{remark,jdbcType=VARCHAR}, 
+	         </if> 
+	         <if test="useScene != null">
+	         	use_scene = #{useScene,jdbcType=VARCHAR}, 
+	         </if> 
+		</set>
+		where id = #{id,jdbcType=INTEGER}
+	</update>	
+	<select id="statisticsCoupons" resultMap="StatisticsSourceMap">
+	    SELECT tp.source, SUM(tp.totalAmount) totalAmount, SUM(tp.usedAmount) usedAmount
+		from (SELECT source, coupon_id, SUM(amount) totalAmount, SUM(if(used = 1, amount, 0)) usedAmount 
+		from customer_coupon
+	    <where>
+	        cumulative = 0
+			<if test="beginTime != null and endTime != null">
+		        and create_time between #{beginTime}  and #{endTime}
+			</if>
+	    </where>
+		GROUP BY coupon_id, source ORDER BY null) tp
+		left join coupon cn on tp.coupon_id = cn.id
+		where cn.category in (0, 1)
+		GROUP BY tp.source
+	</select>
+    <select id="selectIncreaseCoupon" resultMap="StatisticsSourceMap">
+		SELECT tp.source, SUM(tp.quantity) quantity, SUM(tp.usedQuantity) usedQuantity
+		from (SELECT source, coupon_id, COUNT(id) quantity, sum(used) usedQuantity 
+		from customer_coupon
+		<where>
+	        cumulative = 0
+			<if test="beginTime != null and endTime != null">
+			    and create_time between #{beginTime} and #{endTime}
+			</if>
+	    </where>
+		GROUP BY coupon_id, source ORDER BY null) tp
+		left join coupon cn on tp.coupon_id = cn.id
+		where cn.category = 4
+		GROUP BY tp.source
+	</select>
+	
+	<select id="statisticsCouponsDetail" resultMap="StatisticsMap">
+	    SELECT cn.id, cn.amount, cn.condition useCondition, cn.finance_period financePeriod, tp.totalAmount, tp.usedAmount, tp.usedQuantity, tp.quantity
+		from (SELECT coupon_id, COUNT(id) quantity, sum(if(used = 1 
+			<if test="beginTime != null and endTime != null">
+		      and UNIX_TIMESTAMP(used_time) between UNIX_TIMESTAMP(#{beginTime})  and UNIX_TIMESTAMP(#{endTime})
+			</if>
+			, 1, 0)) usedQuantity, SUM(amount) totalAmount, SUM(if(used = 1
+			<if test="beginTime != null and endTime != null">
+		      and UNIX_TIMESTAMP(used_time) between UNIX_TIMESTAMP(#{beginTime})  and UNIX_TIMESTAMP(#{endTime})
+			</if>
+			, amount, 0)) usedAmount from customer_coupon
+		    <where>
+		        source = #{source}
+				<if test="beginTime != null and endTime != null">
+			      and UNIX_TIMESTAMP(create_time) between UNIX_TIMESTAMP(#{beginTime})  and UNIX_TIMESTAMP(#{endTime})
+				</if>
+		    </where>
+			GROUP BY coupon_id ORDER BY null) tp
+		left join coupon cn on tp.coupon_id = cn.id
+		<if test="category == 0">
+			where cn.category in (0, 1)
+		</if>
+		<if test="category == 1">
+			where cn.category = 4
+		</if>
+	</select>
+</mapper>

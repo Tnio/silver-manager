@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.NewsMaterialDao" >
+  <resultMap id="ResultMap" type="NewsMaterial" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="title" property="title" jdbcType="VARCHAR" />
+    <result column="source" property="source" jdbcType="VARCHAR" />
+    <result column="news_date" property="newsDate" jdbcType="VARCHAR" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="type" property="type" jdbcType="INTEGER" />
+    <result column="link" property="link" jdbcType="VARCHAR" />
+    <result column="content" property="content" jdbcType="VARCHAR" />
+    <result column="keywords" property="keywords" jdbcType="VARCHAR" />
+    <result column="remark" property="remark" jdbcType="VARCHAR" />
+    <result column="img_url" property="imgUrl" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="columns" >
+    id, title, source, news_date, create_time, type, link, content, keywords, remark, img_url
+  </sql>
+  <select id="queryForList" resultMap="ResultMap">
+    select 
+    <include refid="columns" />
+    from news_material 
+    order by news_date desc, id desc
+    <choose>
+	  <when test="offset > 0 and size > 0">
+        <![CDATA[ limit #{offset}, #{size} ]]>
+	  </when>
+	  <when test="size > 0">
+        <![CDATA[ limit 0, #{size} ]]>
+	  </when>
+	  <otherwise>
+	    <![CDATA[ limit 0, 15 ]]>
+	  </otherwise>
+	</choose>
+  </select>
+  <select id="queryForCount" resultType="java.lang.Integer" >
+    select count(*) from news_material
+  </select>
+  <select id="selectById" resultMap="ResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="columns" />
+    from news_material
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="delete" parameterType="java.lang.Integer" >
+    delete from news_material
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="NewsMaterial" useGeneratedKeys="true" keyProperty="id" >
+    insert into news_material
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+	    <if test="title != null">
+	      title,    
+	    </if>
+	    <if test="source != null">
+	      source,
+	    </if>
+	    <if test="newsDate != null">
+	      news_date,
+	    </if>
+	    <if test="createTime != null">
+	      create_time,
+	    </if>
+	    <if test="type > 0">
+	      type,
+	    </if>
+	    <if test="link != null">
+	      link,
+	    </if>
+	    <if test="content != null">
+	      content,
+	    </if>
+	    <if test="keywords != null">
+	      keywords,
+	    </if>
+	    <if test="remark != null">
+	      remark,
+	    </if>
+	    <if test="imgUrl != null">
+	      img_url
+	    </if>
+	  </trim>
+	  <trim prefix="values (" suffix=")" suffixOverrides=",">
+	    <if test="title != null">
+	      #{title,jdbcType=VARCHAR},    
+	    </if>
+	    <if test="source != null">
+	      #{source,jdbcType=VARCHAR},
+	    </if>
+	    <if test="newsDate != null">
+	      #{newsDate,jdbcType=VARCHAR},
+	    </if>
+	    <if test="createTime != null">
+	      #{createTime,jdbcType=TIMESTAMP},
+	    </if>
+	    <if test="type > 0">
+	      #{type,jdbcType=INTEGER},
+	    </if>
+	    <if test="link != null">
+	      #{link,jdbcType=VARCHAR},
+	    </if>
+	    <if test="content != null">
+	      #{content,jdbcType=VARCHAR},
+	    </if>
+	    <if test="keywords != null">
+	      #{keywords,jdbcType=VARCHAR},
+	    </if>
+	    <if test="remark != null">
+	      #{remark,jdbcType=VARCHAR},
+	    </if>
+	    <if test="imgUrl != null">
+	      #{imgUrl,jdbcType=VARCHAR}
+	    </if>
+	  </trim>
+  </insert>
+  <update id="update" parameterType="NewsMaterial" >
+    update news_material
+    <set>
+        <if test="title != null">
+            title = #{title,jdbcType=VARCHAR},
+        </if>
+        <if test="source != null">
+            source = #{source,jdbcType=VARCHAR},
+        </if>
+        <if test="newsDate != null">
+            news_date = #{newsDate,jdbcType=VARCHAR},
+        </if>
+        <if test="type > 0">
+            type = #{type,jdbcType=INTEGER},
+        </if>
+        <if test="link != null">
+            link = #{link,jdbcType=VARCHAR},
+        </if>
+        <if test="remark != null">
+            remark = #{remark,jdbcType=VARCHAR},
+        </if>
+        <if test="keywords != null">
+            keywords = #{keywords,jdbcType=VARCHAR},
+        </if>
+        <if test="content != null">
+            content = #{content,jdbcType=VARCHAR},
+        </if>
+        <if test="imgUrl != null">
+            img_url = #{imgUrl,jdbcType=VARCHAR},
+       </if>
+    </set> 
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.DispatchingCouponRuleDao" >
+  <resultMap id="ResultMap" type="DispatchingCouponRule">
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="source" property="source" jdbcType="TINYINT" />
+    <result column="quantity" property="quantity" jdbcType="INTEGER" />
+    <result column="status" property="status" jdbcType="TINYINT" />
+    <result column="give_condition" property="giveCondition" jdbcType="TINYINT" />
+    <result column="coupon_ids" property="couponIds" jdbcType="VARCHAR" />
+    <result column="coupon_amounts" property="couponAmounts" jdbcType="VARCHAR" />
+    <association property="template" javaType="SmsTemplate">
+		<id column="template_id" property="id" />
+		<result column="template_content" property="content" />
+		<result column="template_status" property="status" />
+	</association>
+  </resultMap>
+  <sql id="columns" >
+    dr.id, dr.source, dr.quantity, dr.status, dr.give_condition, dr.coupon_ids, dr.coupon_amounts, t.id template_id,
+    t.content template_content, t.status template_status
+  </sql>
+   <select id="selectAll" resultMap="ResultMap">
+    select 
+    <include refid="columns"/>
+    from dispatching_coupon_rule dr
+    left join sms_template t on t.id = dr.template_id
+  </select>
+   <select id="selectById" resultMap="ResultMap">
+    select 
+    <include refid="columns"/>
+    from dispatching_coupon_rule dr
+    left join sms_template t on t.id = dr.template_id
+    where dr.id = #{id,jdbcType=INTEGER}
+  </select>
+  <update id="enable">
+  	update dispatching_coupon_rule set status = #{status,jdbcType=TINYINT} where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="update" parameterType="DispatchingCouponRule" >
+    update dispatching_coupon_rule
+    <set >
+      <if test="quantity >= 0" >
+        quantity = #{quantity,jdbcType=INTEGER},
+      </if>
+      <if test="template != null and template.id > 0" >
+        template_id = #{template.id,jdbcType=INTEGER},
+      </if>
+      <if test="giveCondition >= 0" >
+        give_condition = #{giveCondition,jdbcType=INTEGER},
+      </if>
+      <if test="couponIds != null" >
+        coupon_ids = #{couponIds,jdbcType=VARCHAR},
+      </if>
+      <!-- <if test="status >= 0" >
+        status = #{status,jdbcType=INTEGER},
+      </if> -->
+      <if test="couponAmounts != null" >
+        coupon_amounts = #{couponAmounts,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

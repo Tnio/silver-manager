@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.ActivityDao" >
+    <resultMap id="ResultMap" type="Activity" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="title" property="title" jdbcType="VARCHAR" />
+        <result column="sort_number" property="sortNumber" jdbcType="INTEGER" />
+        <result column="status" property="status" jdbcType="TINYINT" />
+        <result column="img_url" property="imgUrl" jdbcType="VARCHAR" />
+        <result column="introduction" property="introduction" jdbcType="VARCHAR" />
+        <result column="type" property="type" jdbcType="TINYINT" />
+        <result column="content" property="content" jdbcType="VARCHAR" />
+        <result column="recommend" property="recommend" jdbcType="TINYINT" />
+        <result column="begin_date" property="beginDate" jdbcType="VARCHAR" />
+        <result column="end_date" property="endDate" jdbcType="VARCHAR" />
+        <result column="share_desc" property="shareDesc" jdbcType="VARCHAR" />
+    </resultMap>
+    <sql id="columns" >
+        id, title, sort_number, status, img_url, introduction, type, content, recommend, begin_date, end_date, share_desc
+    </sql>
+    <select id="queryForList" resultMap="ResultMap">
+        select
+        <include refid="columns" />
+        from activity
+        <where>
+            <if test="status > -1">
+                status = #{status,jdbcType=TINYINT}
+            </if>
+        </where>
+        order by status desc, sort_number DESC
+        <choose>
+            <when test="offset > 0 and size > 0">
+                <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+            </when>
+            <when test="size > 0">
+                <![CDATA[
+      limit 0, #{size}
+      ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+	    limit 0, 15
+	  ]]>
+            </otherwise>
+        </choose>
+    </select>
+    <select id="queryForCount" resultType="int">
+        select count(id) from activity
+        <where>
+            <if test="status > -1">
+                status = #{status,jdbcType=TINYINT}
+            </if>
+        </where>
+    </select>
+    <select id="selectByTitle" resultType="int">
+        select count(id) from activity
+        <where>
+            <if test="title != null">
+                title = #{title,jdbcType=VARCHAR}
+            </if>
+            <if test="id > 0">
+                and id != #{id,jdbcType=INTEGER}
+            </if>
+        </where>
+    </select>
+    <select id="selectById" resultMap="ResultMap" parameterType="java.lang.Integer" >
+        select
+        <include refid="columns" />
+        from activity where id = #{id,jdbcType=INTEGER}
+    </select>
+    <insert id="insert" parameterType="Activity">
+        insert into activity
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="title != null" >
+                title,
+            </if>
+            sort_number,
+            <if test="imgUrl != null " >
+                img_url,
+            </if>
+            <if test="introduction != null" >
+                introduction,
+            </if>
+            <if test="type > -1" >
+                type,
+            </if>
+            <if test="content != null " >
+                content,
+            </if>
+            <if test="beginDate != null" >
+                begin_date,
+            </if>
+            <if test="endDate != null " >
+                end_date,
+            </if>
+            <if test="shareDesc != null " >
+                share_desc,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="title != null" >
+                #{title,jdbcType=VARCHAR},
+            </if>
+            (select t.sortNumber from (select IF(max(id) is not null ,max(id)+1,999) sortNumber from activity) t),
+            <if test="imgUrl != null" >
+                #{imgUrl,jdbcType=VARCHAR},
+            </if>
+            <if test="introduction != null" >
+                #{introduction,jdbcType=VARCHAR},
+            </if>
+            <if test="type >= 0" >
+                #{type,jdbcType=TINYINT},
+            </if>
+            <if test="content != null " >
+                #{content,jdbcType=VARCHAR},
+            </if>
+            <if test="beginDate != null" >
+                #{beginDate,jdbcType=VARCHAR},
+            </if>
+            <if test="endDate != null " >
+                #{endDate,jdbcType=VARCHAR},
+            </if>
+            <if test="shareDesc != null " >
+                #{shareDesc,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="update" parameterType="Activity" >
+        update activity
+        <set >
+            <if test="title != null" >
+                title =  #{title,jdbcType=VARCHAR},
+            </if>
+            <if test="sortNumber > 0 " >
+                sort_number = #{sortNumber,jdbcType=INTEGER},
+            </if>
+            <if test="imgUrl != null" >
+                img_url = #{imgUrl,jdbcType=VARCHAR},
+            </if>
+            <if test="introduction != null" >
+                introduction = #{introduction,jdbcType=VARCHAR},
+            </if>
+            <if test="type >= 0" >
+                type = #{type,jdbcType=TINYINT},
+            </if>
+            <if test="content != null " >
+                content = #{content,jdbcType=VARCHAR},
+            </if>
+            <if test="beginDate != null" >
+                begin_date = #{beginDate,jdbcType=VARCHAR},
+            </if>
+            <if test="endDate != null " >
+                end_date = #{endDate,jdbcType=VARCHAR},
+            </if>
+            <if test="shareDesc != null " >
+                share_desc = #{shareDesc,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="updateStatus">
+        update activity set status = #{status,jdbcType=TINYINT} where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="updateRecommend">
+        update activity set recommend = #{recommend,jdbcType=TINYINT} where id = #{id,jdbcType=VARCHAR}
+    </update>
+    <update id="updateSort">
+        <foreach collection="activitys" item="activity" index="index" separator=";">
+            update activity
+            <set>
+                sort_number = #{activity.sortNumber}
+            </set>
+            where id = ${activity.id}
+        </foreach>
+    </update>
+    <delete id="delete" parameterType="java.lang.Integer" >
+        delete from activity where id = #{id,jdbcType=INTEGER}
+    </delete>
+</mapper>

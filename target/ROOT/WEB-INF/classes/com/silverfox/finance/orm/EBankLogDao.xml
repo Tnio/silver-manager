@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.EBankLogDao" >
+    <resultMap id="ResultMap" type="EBankLog" >
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="logout_img" property="logoutImg" jdbcType="VARCHAR" />
+        <result column="validate_img" property="validateImg" jdbcType="VARCHAR" />
+        <result column="idcard_facade" property="idcardFacade" jdbcType="VARCHAR" />
+        <result column="idcard_back" property="idcardBack" jdbcType="VARCHAR" />
+        <result column="remark" property="remark" jdbcType="VARCHAR" />
+        <result column="status" property="status" jdbcType="INTEGER" />
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+        <association property="newBank" javaType="CustomerBank">
+            <id column="new_bank_id" property="id" />
+            <result column="new_card_no" property="cardNO"/>
+            <result column="new_bank_no" property="bankNO"/>
+            <result column="new_bank_name" property="bankName"/>
+        </association>
+        <association property="oldBank" javaType="CustomerBank">
+            <id column="old_bank_id" property="id" />
+            <result column="old_card_no" property="cardNO"/>
+            <result column="old_bank_no" property="bankNO"/>
+            <result column="old_bank_name" property="bankName"/>
+            <association property="customer" javaType="Customer">
+                <id column="customer_id" property="id" />
+                <result column="customer_name" property="name" />
+                <result column="customer_cellphone" property="cellphone" />
+                <result column="customer_idcard" property="idcard" />
+            </association>
+        </association>
+    </resultMap>
+    <sql id="columns">
+        ebl.id, ebl.create_time, ebl.idcard_back, ebl.idcard_facade, ebl.remark, ebl.logout_img, ebl.`status`, ebl.validate_img,
+        cbk.id new_bank_id, cbk.bank_name new_bank_name, cbk.bank_no new_bank_no, cbk.card_no new_card_no,
+        ck.id old_bank_id, ck.bank_no old_bank_no, ck.card_no old_card_no, ck.bank_name old_bank_name,
+        cr.id customer_id, cr.cellphone customer_cellphone, cr.`name` customer_name, cr.idcard customer_idcard
+    </sql>
+    <select id="queryForList" resultMap="ResultMap">
+        select
+        <include refid="columns" />
+        from ebank_log ebl
+        left join customer_bank cbk on cbk.id = ebl.new_bank_id
+        left join customer_bank ck on ck.id = ebl.old_bank_id
+        left join customer cr on cr.id = ck.customer_id
+        ORDER BY ebl.create_time DESC
+        <choose>
+            <when test="offset > 0 and size > 0">
+                limit #{offset}, #{size}
+            </when>
+            <when test="size > 0">
+                <![CDATA[
+      limit 0, #{size}
+      ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+	    limit 0, 15
+	  ]]>
+            </otherwise>
+        </choose>
+    </select>
+    <select id="queryForCount" resultType="int">
+        select count(*) from ebank_log
+    </select>
+    <select id="selectById" resultMap="ResultMap">
+        select
+        <include refid="columns" />
+        from ebank_log ebl
+        left join customer_bank cbk on cbk.id = ebl.new_bank_id
+        left join customer_bank ck on ck.id = ebl.old_bank_id
+        left join customer cr on cr.id = ck.customer_id
+        where ebl.id = #{id,jdbcType=INTEGER}
+    </select>
+    <select id="selectByNewCardId" resultMap="ResultMap">
+        select
+        <include refid="columns" />
+        from ebank_log ebl
+        left join customer_bank cbk on cbk.id = ebl.new_bank_id
+        left join customer_bank ck on ck.id = ebl.old_bank_id
+        left join customer cr on cr.id = ck.customer_id
+        where ebl.new_bank_id = #{newBankId,jdbcType=INTEGER} and ebl.status = #{status,jdbcType=INTEGER}
+    </select>
+    <select id="selectByOldCardId" resultMap="ResultMap">
+        select
+        <include refid="columns" />
+        from ebank_log ebl
+        left join customer_bank cbk on cbk.id = ebl.new_bank_id
+        left join customer_bank ck on ck.id = ebl.old_bank_id
+        left join customer cr on cr.id = ck.customer_id
+        where ebl.old_bank_id = #{oldBankId,jdbcType=INTEGER} and ebl.status = #{status,jdbcType=INTEGER}
+    </select>
+    <insert id="insert" parameterType="EBankLog">
+        insert into ebank_log
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="logoutImg != null" >
+                logout_img,
+            </if>
+            <if test="validateImg != null" >
+                validate_img,
+            </if>
+            <if test="idcardFacade != null" >
+                idcard_facade,
+            </if>
+            <if test="idcardBack != null" >
+                idcard_back,
+            </if>
+            <if test="createTime != null" >
+                create_time,
+            </if>
+            <if test="newBank != null and newBank.id >0" >
+                new_bank_id,
+            </if>
+            <if test="oldBank != null and oldBank.id >0" >
+                old_bank_id
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="logoutImg != null" >
+                #{logoutImg,jdbcType=VARCHAR},
+            </if>
+            <if test="validateImg != null" >
+                #{validateImg,jdbcType=VARCHAR},
+            </if>
+            <if test="idcardFacade != null" >
+                #{idcardFacade,jdbcType=VARCHAR},
+            </if>
+            <if test="idcardBack != null" >
+                #{idcardBack,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null" >
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="newBank != null and newBank.id >0" >
+                #{newBank.id,jdbcType=INTEGER},
+            </if>
+            <if test="oldBank != null and oldBank.id >0" >
+                #{oldBank.id,jdbcType=INTEGER}
+            </if>
+        </trim>
+    </insert>
+    <update id="audit">
+        update ebank_log set status = #{status}, remark = #{remark} where id = #{id,jdbcType=INTEGER}
+    </update>
+</mapper>

@@ -1,0 +1,90 @@
+package com.silverfox.finance.service;
+
+import java.util.List;
+
+import com.alibaba.fastjson.JSONObject;
+import com.silverfox.finance.domain.Coupon;
+import com.silverfox.finance.domain.CouponCardLog;
+import com.silverfox.finance.domain.CouponExchange;
+import com.silverfox.finance.domain.CouponVip;
+import com.silverfox.finance.domain.CustomerCoupon;
+import com.silverfox.finance.domain.DispatchingBonusLog;
+import com.silverfox.finance.domain.DispatchingCouponRule;
+import com.silverfox.finance.domain.InviteActivity;
+import com.silverfox.finance.domain.InviteActivityLog;
+import com.silverfox.finance.domain.InviteActivityRule;
+import com.silverfox.finance.domain.RuleCoupon;
+import com.silverfox.finance.domain.SmsTemplate;
+import com.silverfox.finance.domain.User;
+import com.silverfox.finance.entity.BonusRecordEntity;
+import com.silverfox.finance.entity.CouponStatisticsEntity;
+import com.silverfox.finance.entity.CouponVipEntity;
+import com.silverfox.finance.entity.CouponVipExclusive;
+import com.silverfox.finance.entity.InviterRecordEntity;
+
+public interface CouponService {
+	int count(int type, int category,String name, int status, int isTime);
+	List<Coupon> list(int type, int category,String name, int status, int isTime, int offset, int size);
+	boolean save(Coupon coupon);
+	Coupon get(int couponId);
+	List<DispatchingCouponRule> ruleList();
+	public List<RuleCoupon> list(int ruleId);
+	public DispatchingCouponRule getRule(int id);
+	public boolean enable(Integer ruleId, int status);
+	public boolean saveRule(DispatchingCouponRule rule);
+	public int countSmsTemplate(int status);
+	public List<SmsTemplate> listSmsTemplate(int status, int offset, int pageSize);
+	int countInviteActivity();
+	List<InviteActivity> listInviteActivity(int offset, int size);
+	public boolean saveInviteActivity(InviteActivity inviteActivity, String ruleStr);
+	List<InviteActivityRule> selectRuleById(int activityId);
+	InviteActivity getInviteActivity(int id);
+	int countInviteActivityLogs(int activityId, String inviteCellphone, String cellphone, String type, int period, String beginTime, String endTime);
+	List<InviteActivityLog> getInviteActivityLogs(int activityId, String inviteCellphone, String cellphone, String type, int period, String beginTime, String endTime, int offset, int pageSize);
+	boolean validateTime(int id);
+	public boolean auditActivity(int id, int status);
+	int countCustomerAggregate(int category,int source, String cellphone);
+	List<CouponStatisticsEntity> listCustomerAggregate(int category, int source, String cellphone, String sort, int offset, int size);
+	int countBonusRecord(int customerId);
+	List<BonusRecordEntity> listBonusRecord(int customerId, int offset, int size);
+	int countInviterRecord(String cellphone);
+	List<InviterRecordEntity> listInviterRecord(String cellphone, int offset, int size);
+	public User getUser(int id);
+	int count(String cellphone, int category);
+	List<DispatchingBonusLog> list(String cellphone, int category, int offset, int size);
+    boolean saveDispatchingBonusLog(DispatchingBonusLog dispatchingBonusLog);
+	DispatchingBonusLog getDispatchingBonusLog(int dispatchingBonusLogId);
+	List<Coupon> getDispatchingBonusLogCoupon(Integer dispatchingBonusLogId);
+	public boolean saveDispatchingBonusLogs(DispatchingBonusLog dispatchingBonusLog);
+	int countByDispatchingBonusLogId(int category, String cellphone, int used, int dispatchingBonusLogId);
+	List<CustomerCoupon> getByDispatchingBonusLogId(int category, String cellphone, int used, int dispatchingBonusLogId, int offset, int pageSize);
+	int countExchange();
+	List<CouponExchange> listExchange(int offset, int size);
+	boolean saveCouponExchange(CouponExchange couponExchange, String code);
+	CouponExchange getCouponExchange(int couponExchangeCodeId);
+	boolean changeStatus(CouponExchange couponExchange);
+	int countCouponExchange(int couponExchangeId, String beginTime,String endTime, int type, int used);
+	List<CustomerCoupon> listCouponExchange(int couponExchangeId, String beginTime,String endTime, int type, int used, int offset, int size);
+	int countCouponCard(String cardNO, String cellphone, int used);
+	List<CouponCardLog> listCouponCard(String cardNO, String cellphone, int used, int offset, int pageSize);
+	JSONObject saveCouponCards(List<CouponCardLog> couponCardLogs);
+	int countCouponCardRecord(String cardNO, String cellphone, String name, float amount, int used, String beginTime, String endTime);
+	List<CouponCardLog> listCouponCardRecord(String cardNO, String cellphone, String name, float amount, int used, String beginTime, String endTime, int offset, int pageSize);
+	boolean grantCard(int id, String cellphone);
+	boolean duplicateInviteActivityName(int id, String name);
+	boolean canDisable(int couponId);
+	int countCustomerCoupons(int couponId, String cellphone, int status);
+	List<CustomerCoupon> listCustomerCoupons(int couponId, String cellphone, int status, int offset, int size);
+	int countCoupons(int customerId, int status);
+	List<CustomerCoupon> listCoupons(int customerId, int status, int offset, int size);
+	int countCustomerCouponsByUse(int userId, int used);
+
+	int countCouponActivityRecord(String cellphone, Integer used, int couponActivityId);
+	List<CustomerCoupon> listCouponActivityRecord(String cellphone, Integer used, int couponActivityId, int offset, int pageSize);
+	
+    boolean  save(List<CouponVip> couponVips, int coupontype);
+    List<CouponVipEntity> selectByCouponType(int couponType);
+	boolean  save(int vipExclusiveCoupon ,List<CouponVipExclusive> vipCoupons);
+	CouponCardLog getCouponCardLog(int couponCardLogId);
+
+}

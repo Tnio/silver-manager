@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.CouponExchangeDao" >
+	<resultMap type="CouponExchange" id="resultMap">
+	    <id column="id" property="id" jdbcType="INTEGER"/>
+	    <result column="quantity" property="quantity" jdbcType="SMALLINT"/>
+	    <result column="make_mode" property="makeMode" jdbcType="SMALLINT"/>
+	    <result column="status" property="status" jdbcType="SMALLINT"/>
+	    <result column="category" property="category" jdbcType="SMALLINT"/>
+	    <result column="begin_time" property="beginTime" jdbcType="VARCHAR" />
+	    <result column="end_time" property="endTime" jdbcType="VARCHAR" />
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+	    <association property="coupon" javaType="Coupon">
+		    <id column="coupon_id" property="id" jdbcType="INTEGER" />
+	    	<result column="coupon_name" property="name" jdbcType="VARCHAR" />
+	    	<result column="coupon_amount" property="amount" jdbcType="VARCHAR" />
+	    	<result column="coupon_category" property="category" jdbcType="VARCHAR" />
+	    	<result column="coupon_source" property="source" jdbcType="TINYINT" />
+	    	<result column="coupon_condition" property="condition" jdbcType="VARCHAR" />
+	    	<result column="coupon_finance_period" property="financePeriod" jdbcType="INTEGER" />
+	    	<result column="coupon_increase_days" property="increaseDays" jdbcType="INTEGER" />
+	    </association>
+	    <association property="goodsCouponCode" javaType="GoodsCouponCode">
+		    <result column="goods_coupon_code_code" property="code" />
+	    </association>
+	</resultMap>
+    <sql id="columns">
+        ce.id, ce.make_mode, ce.status, ce.category, ce.create_time, ce.begin_time, ce.end_time
+    </sql>
+     <select id="selectById" parameterType="int" resultMap="resultMap">
+        select <include refid="columns"/>, ce.quantity quantity, t.goods_coupon_code_code, c.id coupon_id, c.name as coupon_name, c.category coupon_category, c.amount coupon_amount,
+        c.condition coupon_condition, c.finance_period coupon_finance_period, c.increase_days coupon_increase_days
+        from  coupon_exchange ce left join (select  gcc.coupon_exchange_id, gcc.`code` goods_coupon_code_code from goods_coupon_code gcc GROUP BY coupon_exchange_id) t
+		on t.coupon_exchange_id = ce.id
+		left join coupon c on ce.coupon_id = c.id
+		where ce.id = #{id}
+    </select>
+    <select id="queryForList" resultMap="resultMap">
+        select  
+        <include refid="columns"/>, <![CDATA[ CONCAT(t.count ,'/', ce.quantity) quantity ]]>, t.goods_coupon_code_code, c.id coupon_id, c.category coupon_category, c.name coupon_name, c.amount coupon_amount, 
+        c.finance_period coupon_finance_period, c.increase_days coupon_increase_days
+		from coupon_exchange ce 
+		left join (select gcc.coupon_exchange_id, sum(IF(gcc.used > 0,1,0 )) count, gcc.`code` goods_coupon_code_code from goods_coupon_code gcc GROUP BY coupon_exchange_id) t
+		on t.coupon_exchange_id = ce.id
+		left join coupon c on ce.coupon_id = c.id
+       	order by  ce.status, ce.create_time desc
+        <choose>
+		  <when test="offset > 0 and size > 0">
+		     <![CDATA[
+		     limit #{offset}, #{size}
+		     ]]>
+		  </when>
+		  <when test="size > 0">
+		     <![CDATA[
+		     limit 0, #{size}
+		     ]]>
+		  </when>
+		  <otherwise>
+		  <![CDATA[
+		   limit 0, 15
+		  ]]>
+		  </otherwise>
+		</choose>
+    </select>
+    <select id="queryForCount" resultType="int">
+        select count(id) from coupon_exchange
+    </select>
+     <insert id="insert" parameterType="CouponExchange" useGeneratedKeys="true" keyProperty="id" >
+	    insert into coupon_exchange
+	    <trim prefix="(" suffix=")" suffixOverrides=",">
+	    	<if test="coupon != null and coupon.id > 0">
+	    		coupon_id,    
+	    	</if>
+	    	<if test="quantity != null">
+	    		quantity,    
+	    	</if>
+	    	<if test="makeMode >= 0">
+	    		make_mode,    
+	    	</if>
+	    	<if test="status >= 0">
+	    		status,    
+	    	</if>
+	    	<if test="category >= 0 ">
+	    	    category,
+	    	</if>
+	    	<if test="createTime != null ">
+	    	    create_time,
+	    	</if>    	
+	    	<if test="beginTime != null ">
+	    	    begin_time,
+	    	</if>    
+	    	<if test="endTime != null ">
+	    	    end_time,
+	    	</if>    
+	    </trim>
+	    <trim prefix="values (" suffix=")" suffixOverrides=",">
+	        <if test="coupon != null and coupon.id > 0">
+	    		#{coupon.id, jdbcType=INTEGER},
+	    	</if>
+	    	<if test="quantity != null">
+	    		#{quantity, jdbcType=INTEGER},  
+	    	</if>
+	    	<if test="makeMode >= 0">
+	    		#{makeMode, jdbcType=INTEGER},    
+	    	</if>
+	    	<if test="status >= 0">
+	    		#{status, jdbcType=INTEGER},     
+	    	</if>
+	    	<if test="category >= 0 ">
+	    	    #{category, jdbcType=INTEGER},   
+	    	</if>
+	    	<if test="createTime != null ">
+	    	    #{createTime, jdbcType=TIMESTAMP},
+	    	</if>	
+	    	<if test="beginTime != null ">
+	    	    #{beginTime, jdbcType=VARCHAR},
+	    	</if>    
+	    	<if test="endTime != null ">
+	    	    #{endTime, jdbcType=VARCHAR},
+	    	</if>     	
+	    </trim>
+	</insert>
+	<update id="update" parameterType="CouponExchange">
+	    update coupon_exchange
+	    <set>
+	       <if test="coupon != null and coupon.id > 0">
+	    		coupon_id = #{coupon.id, jdbcType=INTEGER},
+	    	</if>
+	    	<if test="quantity != null">
+	    		quantity = #{quantity, jdbcType=INTEGER},  
+	    	</if>
+	    	<if test="makeMode >= 0">
+	    		make_mode = #{makeMode, jdbcType=INTEGER},    
+	    	</if>
+	    	<if test="status >= 0">
+	    		status = #{status, jdbcType=INTEGER},     
+	    	</if>
+	    	<if test="category >= 0 ">
+	    	    category = #{category, jdbcType=INTEGER},   
+	    	</if>
+	    	<if test="createTime != null ">
+	    	    create_time = #{createTime, jdbcType=TIMESTAMP},
+	    	</if>
+	    	<if test="beginTime != null ">
+	    	    begin_time = #{beginTime, jdbcType=VARCHAR},
+	    	</if>    
+	    	<if test="endTime != null ">
+	    	    end_time = #{endTime, jdbcType=VARCHAR},
+	    	</if>		       
+	    </set>
+	    where id = #{id,jdbcType=INTEGER}
+	</update>
+</mapper>

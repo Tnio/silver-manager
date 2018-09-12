@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.ProductCategoryDao">
+  <resultMap type="ProductCategory" id="resultMap">
+    <id column="id" property="id" jdbcType="INTEGER"/>
+    <result column="name" property="name" jdbcType="VARCHAR"/>
+    <result column="property" property="property" jdbcType="VARCHAR"/>
+    <result column="status" property="status" jdbcType="INTEGER"/>
+  </resultMap>
+  <sql id="column">
+    id, name, property, status,remark
+  </sql>
+  <select id="queryForList" resultMap="resultMap">
+    select <include refid="column"/> from product_category
+    <where>
+        <if test="status != null and status >= 0">
+            status = #{status}
+        </if>        
+    </where>
+    order by id desc
+  </select>
+  
+  <select id="queryForCountByProperty" resultType="int">
+    select count(id) from product_category where property = #{property}
+  </select>
+   <select id="selectByProperty" resultMap="resultMap" >
+    select 
+    <include refid="column" />
+    from product_category where property = #{property}
+  </select>
+  <select id="selectById" resultMap="resultMap" >
+    select 
+    <include refid="column" />
+    from product_category pc where pc.id = #{id}
+  </select>
+  <select id="duplicate" resultType="int">
+    select count(id) from product_category 
+    <where>
+      <if test="name != null">
+      	name = #{name,jdbcType=VARCHAR}
+      </if>
+      <if test="id > 0">
+        and id != #{id,jdbcType=INTEGER}
+      </if>
+    </where>
+  </select>
+  <insert id="insert" parameterType="ProductCategory">
+    insert into product_category
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="name != null" >
+        name,
+      </if>
+      <if test="property != null" >
+        property,
+      </if>
+      <if test="status > 0" >
+        status,
+      </if>
+      <if test="remark != null" >
+        remark
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="name != null" >
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="property != null" >
+        #{property,jdbcType=VARCHAR},
+      </if>
+      <if test="status > 0" >
+        #{status,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null" >
+        #{remark,jdbcType=VARCHAR}
+      </if>
+    </trim>
+  </insert>
+  <update id="enable">
+    update product_category set status = #{value,jdbcType=INTEGER} where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

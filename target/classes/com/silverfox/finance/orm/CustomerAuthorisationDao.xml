@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.CustomerAuthorisationDao" >
+    <resultMap id="ResultMap" type="CustomerAuthorisation" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="user_id" property="userId" jdbcType="INTEGER" />
+        <result column="open_id" property="openId" jdbcType="VARCHAR" />
+        <result column="nick_name" property="nickName" jdbcType="VARCHAR" />
+        <result column="head_img" property="headImg" jdbcType="VARCHAR" />
+        <result column="category" property="category" jdbcType="INTEGER" />
+    </resultMap>
+    <sql id="columns">
+        id, user_id, open_id, nick_name, head_img, category
+    </sql>
+    <select id="selectByOpenId" resultMap="ResultMap">
+        select
+        <include refid="columns" />
+        from customer_authorisation
+        where open_id = #{openId,jdbcType=VARCHAR} and category = #{category,jdbcType=INTEGER} limit 1
+    </select>
+    <select id="selectByUserId" resultMap="ResultMap">
+        select
+        <include refid="columns" />
+        from customer_authorisation
+        where user_id = #{userId,jdbcType=INTEGER} and category = #{category,jdbcType=INTEGER} limit 1
+    </select>
+    <insert id="insert" parameterType="CustomerAuthorisation">
+        insert into customer_authorisation
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="openId != null" >
+                open_id,
+            </if>
+            <if test="userId > 0" >
+                user_id,
+            </if>
+            <if test="nickName != null" >
+                nick_name,
+            </if>
+            <if test="headImg != null" >
+                head_img,
+            </if>
+            <if test="category >= 0" >
+                category
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="openId != null" >
+                #{openId,jdbcType=VARCHAR},
+            </if>
+            <if test="userId > 0" >
+                #{userId,jdbcType=INTEGER},
+            </if>
+            <if test="nickName != null" >
+                #{nickName,jdbcType=VARCHAR},
+            </if>
+            <if test="headImg != null" >
+                #{headImg,jdbcType=VARCHAR},
+            </if>
+            <if test="category >= 0" >
+                #{category,jdbcType=INTEGER}
+            </if>
+        </trim>
+    </insert>
+    <update id="update" parameterType="CustomerAuthorisation">
+        update customer_authorisation
+        <set >
+            <if test="userId > 0" >
+                user_id = #{userId,jdbcType=INTEGER},
+            </if>
+            <if test="openId != null" >
+                open_id = #{openId, jdbcType=VARCHAR},
+            </if>
+            <if test="nickName != null" >
+                nick_name = #{nickName, jdbcType=VARCHAR},
+            </if>
+            <if test="headImg != null" >
+                head_img = #{headImg, jdbcType=VARCHAR},
+            </if>
+            <if test="category >= 0" >
+                category = #{category, jdbcType=INTEGER}
+            </if>
+        </set>
+        where id = #{id, jdbcType=VARCHAR}
+    </update>
+</mapper>

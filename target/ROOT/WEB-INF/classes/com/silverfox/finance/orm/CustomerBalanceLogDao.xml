@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.CustomerBalanceLogDao" >
+   <resultMap id="resultMap" type="CustomerBalanceLog" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="serial_no" property="serialNO" jdbcType="VARCHAR" />
+    <result column="order_no" property="orderNO" jdbcType="VARCHAR" />
+    <result column="type" property="type" jdbcType="INTEGER" />
+    <result column="amount" property="amount" jdbcType="DOUBLE" />
+    <result column="channel" property="channel" jdbcType="INTEGER" />
+    <result column="balance" property="balance" jdbcType="DOUBLE" />
+    <result column="purpose" property="purpose" jdbcType="VARCHAR" />
+    <result column="trade_time" property="tradeTime" jdbcType="TIMESTAMP" />
+    <result column="method" property="method" jdbcType="INTEGER" />
+    <result column="fee" property="fee" jdbcType="DOUBLE" />
+    <association property="user" javaType="User">
+      <id column="user_id" property="id" />
+   	  <result column="user_name" property="name" />
+   	  <result column="user_cellphone" property="cellphone" />
+    </association> 
+  </resultMap> 
+  <sql id="columns">
+    cbl.id, cbl.serial_no, cbl.order_no, cbl.type, cbl.amount, cbl.channel, cbl.balance, cbl.purpose, cbl.trade_time, cbl.method,
+    cbl.fee, cbl.user_id, ur.name user_name, ur.cellphone user_cellphone
+  </sql>
+  <select id="queryForList" resultMap="resultMap">
+    select <include refid="columns" />
+	from customer_balance_log cbl
+	left join user ur on ur.id = cbl.user_id
+	where type = #{type}
+	<if test="method > -1">
+	    and cbl.method = #{method}
+	</if> 
+	<if test="userName">
+	    and ur.name = #{userName}
+	</if>
+	<if test="cellphone">
+	    and ur.cellphone = #{cellphone}
+	</if>
+	<if test="startDate != null and endDate != null">
+	    and cbl.trade_time >= #{startDate} and #{endDate} >= cbl.trade_time
+	</if>
+	ORDER BY cbl.trade_time DESC
+	<choose>
+	  <when test="offset > 0 and size > 0">
+      <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+	  </when>
+	  <when test="size > 0">
+      <![CDATA[
+      limit 0, #{size}
+      ]]>
+	  </when>
+	  <otherwise>
+	  <![CDATA[
+	    limit 0, 15
+	  ]]>
+	  </otherwise>
+	</choose>
+  </select>
+  <select id="queryForSum" resultType="java.util.HashMap">
+     select sum(cbl.amount) amount, sum(cbl.fee) fee
+  	 from customer_balance_log cbl
+	 left join user ur on ur.id = cbl.user_id
+	 where type = #{type}
+	<if test="method > -1">
+	    and cbl.method = #{method}
+	</if> 
+	<if test="userName">
+	    and ur.name = #{userName}
+	</if>
+	<if test="cellphone">
+	    and ur.cellphone = #{cellphone}
+	</if>
+	<if test="startDate != null and endDate != null">
+	    and cbl.trade_time >= #{startDate} and #{endDate} >= cbl.trade_time
+	</if>
+  </select>
+  <select id="queryForCount" resultType="int">
+  	 select  count(*) 
+  	 from customer_balance_log cbl
+	 left join user ur on ur.id = cbl.user_id
+	 where type = #{type}
+	<if test="method > -1">
+	    and cbl.method = #{method}
+	</if> 
+	<if test="userName">
+	    and ur.name = #{userName}
+	</if>
+	<if test="cellphone">
+	    and ur.cellphone = #{cellphone}
+	</if>
+	<if test="startDate != null and endDate != null">
+	    and cbl.trade_time >= #{startDate} and #{endDate} >= cbl.trade_time
+	</if>
+  </select>
+	<select id="queryForUserCount" resultType="int">
+		select count(cbl.id)
+		from customer_balance_log cbl
+		left join user ur on ur.id = cbl.user_id
+		where cbl.user_id = #{userId}
+		<if test="type > 0">
+			and cbl.type = ${type}
+		</if>
+	</select>
+	<select id="queryForUserList" resultMap="resultMap">
+		select
+		<include refid="columns" />
+		from customer_balance_log cbl
+		left join user ur on ur.id = cbl.user_id
+		where cbl.user_id = #{userId}
+		<if test="type > 0">
+			and cbl.type = ${type}
+		</if>
+		order by cbl.trade_time DESC
+		<choose>
+			<when test="offset > 0 and size > 0">
+				<![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+			</when>
+			<when test="size > 0">
+				<![CDATA[
+      limit 0, #{size}
+      ]]>
+			</when>
+			<otherwise>
+				<![CDATA[
+	    limit 0, 15
+	  ]]>
+			</otherwise>
+		</choose>
+	</select>
+</mapper>

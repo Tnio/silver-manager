@@ -1,0 +1,795 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.CustomerOrderDao" >
+  <resultMap id="ResultMap" type="CustomerOrder" >
+    <id column="order_no" property="orderNO" jdbcType="VARCHAR" />
+    <result column="principal" property="principal" jdbcType="INTEGER" />
+    <result column="fee" property="fee" jdbcType="FLOAT" />
+    <result column="payback_amount" property="paybackAmount" jdbcType="FLOAT" />
+    <result column="coupon_amount" property="couponAmount" jdbcType="FLOAT" />
+    <result column="interest_period" property="interestPeriod" jdbcType="INTEGER" />
+    <result column="order_time" property="orderTime" jdbcType="TIMESTAMP" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="is_payback" property="isPayback" jdbcType="INTEGER" />
+    <result column="pay_type" property="payType" jdbcType="INTEGER" />
+    <result column="version" property="version" jdbcType="INTEGER" />
+    <result column="payback_time" property="paybackTime" jdbcType="TIMESTAMP" />
+    <result column="payback_no" property="paybackNO" jdbcType="VARCHAR" />
+     <result column="vip_interest" property="vipInterest" jdbcType="DOUBLE" />
+    <association property="bank" javaType="CustomerBank">
+      <id column="bank_id" property="id" />
+      <result column="card_no" property="cardNO"/>
+      <result column="bank_name" property="bankName" />
+      <result column="bank_no" property="bankNO" />
+    </association>
+    <association property="product" javaType="Product">
+      <id column="product_id" property="id" />
+      <result column="product_name" property="name" />
+      <result column="year_income" property="yearIncome" />
+      <result column="finance_period" property="financePeriod" />
+      <result column="increase_days" property="increaseDays" />
+      <result column="interest_date" property="interestDate" />
+    </association>
+    <association property="customer" javaType="Customer">
+      <id column="customer_id" property="id" />
+      <result column="customer_name" property="name" />
+      <result column="customer_cellphone" property="cellphone" />
+      <result column="customer_idcard" property="idcard" />
+      <association property="channel" javaType="Channel">
+	    <id column="channel_id" property="id" />
+	    <result column="channel_name" property="name" />
+	  </association>
+    </association>
+  </resultMap>
+	<resultMap id="detailResultMap" type="CustomerOrder" >
+		<id column="order_no" property="orderNO" jdbcType="VARCHAR" />
+		<result column="payback_no" property="paybackNO" jdbcType="VARCHAR" />
+		<result column="principal" property="principal" jdbcType="INTEGER" />
+		<result column="fee" property="fee" jdbcType="FLOAT" />
+		<result column="payback_amount" property="paybackAmount" jdbcType="FLOAT" />
+		<result column="coupon_amount" property="couponAmount" jdbcType="FLOAT" />
+		<result column="interest_period" property="interestPeriod" jdbcType="INTEGER" />
+		<result column="order_time" property="orderTime" jdbcType="TIMESTAMP" />
+		<result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+		<result column="is_payback" property="isPayback" jdbcType="INTEGER" />
+		<result column="pay_type" property="payType" jdbcType="INTEGER" />
+		<result column="payback_time" property="paybackTime" jdbcType="TIMESTAMP" />
+		<association property="bank" javaType="CustomerBank">
+			<id column="bank_id" property="id" />
+			<result column="card_no" property="cardNO" />
+			<result column="bank_name" property="bankName" />
+			<result column="bank_no" property="bankNO" />
+		</association>
+		<association property="customer" javaType="Customer">
+			<id column="customer_id" property="id" />
+			<result column="customer_name" property="name" />
+			<result column="customer_cellphone" property="cellphone" />
+			<result column="customer_idcard" property="idcard" />
+			<association property="channel" javaType="Channel">
+				<id column="channel_id" property="id" />
+				<result column="channel_name" property="name" />
+			</association>
+		</association>
+		<association property="product" javaType="Product">
+			<id column="product_id" property="id" />
+			<result column="product_name" property="name" />
+			<result column="year_income" property="yearIncome" />
+			<result column="loan_year_income" property="loanYearIncome" jdbcType="FLOAT"/>
+			<result column="increase_interest" property="increaseInterest" />
+			<result column="finance_period" property="financePeriod" />
+			<result column="increase_days" property="increaseDays" />
+			<result column="interest_date" property="interestDate" jdbcType="VARCHAR"/>
+			<result column="highest_money" property="highestMoney" jdbcType="VARCHAR"/>
+			<association property="category" javaType="ProductCategory">
+				<id column="category_id" property="id" jdbcType="INTEGER" />
+				<result column="property" property="property" jdbcType="VARCHAR"/>
+			</association>
+			<association property="bonus" javaType="Bonus">
+				<id column="bonus_id" property="id" jdbcType="INTEGER" />
+				<id column="bonus_name" property="name" jdbcType="INTEGER" />
+			</association>
+		</association>
+	</resultMap>
+  <sql id="columns">
+    co.order_no, co.payback_no, co.principal, co.fee, co.payback_amount, co.coupon_amount, co.order_time, co.create_time, co.is_payback,
+	co.pay_type, co.version, co.payback_time, co.bank_id, cb.card_no, cb.bank_name, cb.bank_no, co.interest_period,
+    pr.id product_id, pr.name product_name, pr.interest_date, pr.year_income, pr.finance_period, 
+    cr.name customer_name, cr.id customer_id, cr.cellphone customer_cellphone, cr.idcard customer_idcard,
+	cl.id channel_id, cl.`name` channel_name, cr.name customer_name
+  </sql>
+  <sql id="columns_join">
+    co.order_no, co.principal, co.fee, co.payback_amount, co.coupon_amount, co.interest_period, co.order_time, co.create_time, co.is_payback, co.vip_interest,
+	co.pay_type, co.payback_time, pr.id product_id, pr.name product_name, pr.interest_date, pr.year_income, 
+	pr.finance_period, co.payback_no, co.name customer_name, co.customer_id, co.cellphone customer_cellphone, 
+	co.idcard customer_idcard, cl.id channel_id, cl.name channel_name
+  </sql>
+  <sql id="details">
+    co.order_no, co.customer_id, co.payback_no, co.pay_type, co.interest_period, pr.id product_id, pr.name product_name, pr.bonus_id, year_income, 
+    co.order_time, co.create_time, co.order_no, co.pay_type, pr.id product_id, pr.name product_name, pr.bonus_id, year_income, co.interest_period, 
+    pr.finance_period, payback_time, co.coupon_amount, co.interest_period, cbo.card_no, cbo.bank_no, cbo.bank_name, principal, co.fee, 
+    payback_amount, is_payback, interest_date, pr.category_id, pc.property, pr.loan_year_income,
+    c.name customer_name, c.cellphone customer_cellphone, c.idcard customer_idcard,
+    cl.id channel_id, cl.name channel_name
+  </sql>
+  <select id="queryForList" resultMap="ResultMap">
+    select <include refid="columns_join" />
+	from (select co.order_no, co.principal, co.fee, co.coupon_amount, co.order_time, co.create_time, co.is_payback, co.vip_interest,
+	co.pay_type, co.payback_time, co.customer_id, co.product_id, 
+	<if test="orderType != 3">
+	    co.payback_amount, 
+		co.payback_no, 
+		co.interest_period, 
+	</if>
+	<if test="orderType == 3">
+	    (co.principal+ROUND(co.principal*prt.increase_interest*prt.finance_period/36500, 2)+ROUND(co.principal*prt.year_income*prt.finance_period/36500, 2)
+	      +ROUND(if(co.interest_period = 0, co.coupon_amount, LEAST(co.interest_period, prt.finance_period)*co.coupon_amount*co.principal/35600), 2)
+	      +ROUND(if(co.vip_interest = 0, 0, co.principal*co.vip_interest*prt.finance_period/36500), 2)
+	    ) payback_amount,
+		DATE_ADD(prt.interest_date,INTERVAL prt.finance_period DAY) payback_no, 
+		DATEDIFF(curdate(), ADDDATE(prt.interest_date, prt.finance_period)) interest_period, 
+	</if>
+	cr.channel_id, cr.cellphone, cr.name, cr.idcard
+	from customer_order co
+	left join product prt on prt.id = co.product_id
+	left join customer cr on cr.id = co.customer_id
+	<where>
+	  <if test="orderType == 0">
+	  	 co.is_payback in (0,1,3,4,5)
+	  </if>
+  	  <if test="orderType == 3">
+  	     co.is_payback in (0,3,4,5) and now() > DATE_ADD(prt.interest_date,INTERVAL prt.finance_period+1 DAY)
+  	  </if>
+  	  <if test="orderType == 1">
+  	     co.is_payback = 1
+  	  </if>
+	  <if test="orderNO != null">
+      	and co.order_no = #{orderNO}
+      </if>
+      <if test="customerId > 0 ">
+       	and co.customer_id = #{customerId}
+   	  </if>
+      <if test="orderType == 1 and amountFrom > 0 and amountTo > 0">
+       	and co.payback_amount >= #{amountFrom} and #{amountTo} >= co.payback_amount
+      </if>
+      <if test="orderType != 1 and amountFrom > 0 and amountTo > 0">
+       	and co.principal >= #{amountFrom} and #{amountTo} >= co.principal
+      </if>
+      <if test="payType > 0">
+      	and co.pay_type = #{payType}
+      </if>
+      <if test="orderType !=1 and beginTime != null and endTime != null">
+      	and (DATE_FORMAT(co.order_time,'%Y-%m-%d') >= #{beginTime} and #{endTime} >= DATE_FORMAT(co.order_time,'%Y-%m-%d'))
+      </if>
+      <if test="orderType ==1 and beginTime != null and endTime != null">
+      	and (DATE_FORMAT(co.payback_time,'%Y-%m-%d') >= #{beginTime} and #{endTime} >= DATE_FORMAT(co.payback_time,'%Y-%m-%d'))
+      </if>
+      <if test="name != null and cellphone == null"> 
+        and cr.name = #{name}
+      </if>
+      <if test="name == null and cellphone != null"> 
+        and REVERSE(cr.cellphone) like REVERSE('%${cellphone}')
+      </if>
+      <if test="name != null and cellphone != null"> 
+        and REVERSE(cr.cellphone) like REVERSE('%${cellphone}') and cr.name = #{name}
+      </if>
+      <if test="productName != null">
+        and co.product_id in (select id from product where name like '%${productName}%') 
+      </if>
+      <if test="channelId != null and channelId > -1"> 
+      	and cr.channel_id = #{channelId}
+      </if>
+	</where>
+	<if test="orderType ==0">
+	  order by co.order_time desc
+	</if>
+	<if test="orderType ==3">
+	  order by  <!--  DATEDIFF(curdate(), ADDDATE(prt.interest_date, prt.finance_period)) desc  --> DATE_ADD(prt.interest_date,INTERVAL prt.finance_period DAY) desc
+		
+	</if>
+	<if test="orderType ==1">
+	  order by co.payback_time desc
+	</if>
+	<choose>
+	  <when test="offset > 0 and size > 0">
+      limit #{offset}, #{size}
+	  </when>
+	  <when test="size > 0">
+      <![CDATA[
+      limit 0, #{size}
+      ]]>
+	  </when>
+	  <otherwise>
+	  <![CDATA[
+	  ]]>
+	  </otherwise>
+	</choose>
+	) co
+    left join product pr on co.product_id = pr.id 
+    left join channel cl on co.channel_id = cl.id
+    <if test="orderType !=1 and orderType != 3">
+	  order by co.order_time desc
+	</if>
+	<if test="orderType ==1">
+	  order by co.payback_time desc
+	</if>
+	<if test="orderType ==3">
+		order by  <!-- co.interest_period  desc  --> DATE_ADD(pr.interest_date,INTERVAL pr.finance_period DAY) desc
+	</if>
+  </select>
+  <select id="getOrderInfo" resultType="java.util.HashMap">
+  	<if test="channelId > -1"> 
+	  	select count(co.order_no) orders,
+	  	<if test="orderType == 0">
+	  	   sum(co.principal) money
+	  	</if>
+	  	<if test="orderType == 1">
+	  	   sum(co.payback_amount) money
+	  	</if>
+	  	<if test="orderType == 3">
+	  	   sum(co.principal+ROUND(co.principal*prt.increase_interest*prt.finance_period/36500, 2)+ROUND(co.principal*prt.year_income*prt.finance_period/36500, 2)+ROUND(if(co.interest_period = 0, co.coupon_amount, LEAST(co.interest_period, prt.finance_period)*co.coupon_amount*co.principal/35600), 2)) money
+	  	</if>
+	  	from customer_order co
+	  	left join product prt on prt.id = co.product_id
+		left join customer cr on cr.id = co.customer_id
+	  	<where>
+	  	  cr.channel_id = #{channelId}
+	  	  <if test="orderType == 0">
+	  	     and co.is_payback in (0,1,3,4,5)
+	  	  </if>
+	  	  <if test="orderType == 3">
+	  	     and co.is_payback in (0,3,4,5) and now() > DATE_ADD(prt.interest_date,INTERVAL prt.finance_period+1 DAY)
+	  	  </if>
+	  	  <if test="orderType == 1">
+	  	     and co.is_payback = 1
+	  	  </if>
+	  	  <if test="orderNO != null">
+	      	and co.order_no like '%${orderNO}%'
+	      </if>
+	   	  <if test="orderType == 1">
+	   	  	<if test="isPayback == 1">
+	       		and co.is_payback = 2
+	      	</if>
+	      	<if test="isPayback == 3">
+	       		and co.is_payback = 3
+	      	</if>
+	   	  </if>
+	      <if test="orderType == 1 and amountFrom > 0 and amountTo > 0">
+	       	and co.payback_amount >= #{amountFrom} and #{amountTo} >= co.payback_amount
+	      </if>
+	      <if test="orderType !=1 and amountFrom > 0 and amountTo > 0">
+	       	and co.principal >= #{amountFrom} and #{amountTo} >= co.principal
+	      </if>
+	      <if test="payType > 0">
+	      	and co.pay_type = #{payType}
+	      </if>
+	      <if test="productName != null">
+	        and co.product_id in (select id from product where name like '%${productName}%')
+	      </if>
+	      <if test="orderType !=1 and beginTime != null and endTime != null">
+	      	and (DATE_FORMAT(order_time,'%Y-%m-%d') >= #{beginTime} and #{endTime} >= DATE_FORMAT(order_time,'%Y-%m-%d'))
+	      </if>
+	      <if test="orderType ==1 and beginTime != null and endTime != null">
+	      	and (DATE_FORMAT(payback_time,'%Y-%m-%d') >= #{beginTime} and #{endTime} >= DATE_FORMAT(payback_time,'%Y-%m-%d'))
+	      </if>
+	      <if test="name != null and cellphone == null"> 
+	        and cr.name = #{name}
+	      </if>
+	      <if test="name == null and cellphone != null"> 
+	        and cr.cellphone = #{cellphone}
+	      </if>
+	      <if test="name != null and cellphone != null"> 
+	        and cr.cellphone = ${cellphone} and cr.name = #{name}
+	      </if>
+	    </where>
+	 </if>
+	 <if test="-1 >= channelId">  
+	     select count(co.order_no) orders,
+	  	<if test="orderType == 0">
+	  	   sum(co.principal) money
+	  	</if>
+	  	<if test="orderType == 1">
+	  	   sum(co.payback_amount) money
+	  	</if>
+	  	<if test="orderType == 3">
+	  	   sum(co.principal+ROUND(co.principal*prt.increase_interest*prt.finance_period/36500, 2)+ROUND(co.principal*prt.year_income*prt.finance_period/36500, 2)+ROUND(if(co.interest_period = 0, co.coupon_amount, LEAST(co.interest_period, prt.finance_period)*co.coupon_amount*co.principal/35600), 2)) money
+	  	</if>
+	  	from customer_order co
+	  	left join product prt on prt.id = co.product_id
+	  	<where>
+	  	  <if test="orderType == 0">
+	  	     and co.is_payback in (0,1,3,4,5)
+	  	  </if>
+	  	  <if test="orderType == 3">
+	  	     co.is_payback in (0,3,4,5) and now() > DATE_ADD(prt.interest_date,INTERVAL prt.finance_period+1 DAY)
+	  	  </if>
+	  	  <if test="orderType == 1">
+	  	     co.is_payback = 1
+	  	  </if>
+	  	  <if test="orderNO != null">
+	      	and co.order_no like '%${orderNO}%'
+	      </if>
+	      <if test="orderType == 1 and amountFrom > 0 and amountTo > 0">
+	       	and co.payback_amount >= #{amountFrom} and #{amountTo} >= co.payback_amount
+	      </if>
+	      <if test="orderType != 1 and amountFrom > 0 and amountTo > 0">
+	       	and co.principal >= #{amountFrom} and #{amountTo} >= co.principal
+	      </if>
+	      <if test="payType > 0">
+	      	and co.pay_type = #{payType}
+	      </if>
+	      <if test="productName != null">
+	        and co.product_id in (select id from product where name like '%${productName}%')
+	      </if>
+	      <if test="orderType !=1 and beginTime != null and endTime != null">
+	      	and (DATE_FORMAT(order_time,'%Y-%m-%d') >= #{beginTime} and #{endTime} >= DATE_FORMAT(order_time,'%Y-%m-%d'))
+	      </if>
+	      <if test="orderType ==1 and beginTime != null and endTime != null">
+	      	and (DATE_FORMAT(payback_time,'%Y-%m-%d') >= #{beginTime} and #{endTime} >= DATE_FORMAT(payback_time,'%Y-%m-%d'))
+	      </if>
+	      <if test="name != null and cellphone == null"> 
+	        and co.customer_id in (select id from customer where name = #{name})
+	      </if>
+	      <if test="name == null and cellphone != null"> 
+	        and co.customer_id in (select id from customer where cellphone = ${cellphone})
+	      </if>
+	      <if test="name != null and cellphone != null"> 
+	        and co.customer_id in (select id from customer where cellphone = ${cellphone} and name = #{name})
+	      </if>
+	    </where> 
+	 </if>
+  </select>
+	<select id="selectfreezingAmountByCustomerId" resultType="int">
+		select IFNULL(sum(principal), 0) from customer_order where customer_id = #{id, jdbcType=INTEGER} and is_payback = 4
+	</select>
+	<select id="queryByProductId" resultMap="ResultMap">
+		select
+		<include refid="columns" />
+		from customer_order co
+		left join product pr on co.product_id = pr.id
+		left join customer_bank cb on co.bank_id = cb.id
+		left join customer cr on co.customer_id = cr.id
+		left join channel cl on cr.channel_id = cl.id
+		where co.product_id = #{productId, jdbcType=INTEGER}
+	</select>
+	<select id="queryTradeDetailCount" resultType="int" >
+		select count(order_no)
+		from (select co.order_no from
+		customer_order co
+		<where>
+			co.customer_id = #{customerId, jdbcType=INTEGER}
+			<if test="isPayback == 1">
+				and co.is_payback != 1
+			</if>
+			<if test="isPayback == 2">
+				and co.is_payback = -2
+			</if>
+			<if test="isPayback == 3">
+				and co.is_payback = 1
+			</if>
+			<if test="couponType > 0">
+				and co.coupon_amount > 0
+			</if>
+		</where>
+		union all
+		select bo.order_no
+		from baobao_order bo
+		<where>
+			bo.customer_id = #{customerId, jdbcType=INTEGER}
+			<if test="isPayback == 1">
+				and bo.status = -1
+			</if>
+			<if test="isPayback == 2">
+				and bo.status in (1,2)
+			</if>
+			<if test="isPayback == 3">
+				and bo.status = -1
+			</if>
+			<if test="couponType > 0">
+				and bo.coupon_amount > 0
+			</if>
+		</where>
+		) t1
+	</select>
+	<select id="queryTradeDetailList" resultMap="detailResultMap">
+		select co.order_no, co.order_time, co.create_time, co.pay_type, co.coupon_amount, pr.id product_id, pr.name product_name, pr.bonus_id,
+		year_income, pr.finance_period, pc.property, principal, co.fee, payback_amount, is_payback,
+		interest_date, pr.category_id, co.customer_id, co.interest_period
+		from customer_order co
+		left join product pr on co.product_id = pr.id
+		left join product_category pc on  pr.category_id = pc.id
+		<where>
+			co.customer_id = #{customerId, jdbcType=INTEGER}
+			<if test="isPayback == 1">
+				and co.is_payback != 1
+			</if>
+			<if test="isPayback == 2">
+				and co.is_payback = -2
+			</if>
+			<if test="isPayback == 3">
+				and co.is_payback = 1
+			</if>
+			<if test="couponType > 0">
+				and co.coupon_amount > 0
+			</if>
+		</where>
+		union all
+		select bbo.order_no, bbo.order_time, bbo.order_time create_time,2, bbo.coupon_amount, pr.id product_id, pr.name product_name, pr.bonus_id,
+		year_income, pr.finance_period, pc.property, principal, bbo.fee, principal, bbo.status,
+		interest_date, pr.category_id, bbo.customer_id, bbo.interest_period
+		from baobao_order bbo
+		left join product pr on bbo.product_id = pr.id
+		left join product_category pc on  pr.category_id = pc.id
+		<where>
+			bbo.customer_id = #{customerId, jdbcType=INTEGER}
+			<if test="isPayback == 1">
+				and bbo.status = 0
+			</if>
+			<if test="isPayback == 2">
+				and bbo.status in (1,2)
+			</if>
+			<if test="isPayback == 3">
+				and bbo.status = -1
+			</if>
+			<if test="couponType > 0">
+				and bbo.coupon_amount > 0
+			</if>
+		</where>
+		order by order_time desc
+		<choose>
+			<when test="offset > 0 and size > 0">
+				<![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+			</when>
+			<when test="size > 0">
+				<![CDATA[
+      limit 0, #{size}
+      ]]>
+			</when>
+			<otherwise>
+				<![CDATA[
+	    limit 0, 15
+	  ]]>
+			</otherwise>
+		</choose>
+	</select>
+  <select id="selectAmountLastMonth" resultType="java.lang.Integer">
+    SELECT sum(principal) 
+    from customer_order 
+    where order_time BETWEEN #{startTime} AND #{endTime}
+  </select>
+  <select id="selectOrdersLastMonth" resultType="int">
+    SELECT count(*) 
+    from customer_order 
+    where order_time BETWEEN #{startTime} AND #{endTime}
+  </select>
+  <select id="selectProductsLastMonth" resultType="int">
+    SELECT count from (
+	SELECT COUNT(product_id) count, MAX(order_time) order_time
+		from customer_order
+		GROUP BY product_id) tp
+	where tp.order_time BETWEEN #{startTime} AND #{endTime}
+  </select>
+  <select id="selectAmountPast12Month" resultType="java.util.HashMap">
+    SELECT DATE_FORMAT(order_time,'%Y-%m') pointOfMonth, sum(principal) amount
+	from customer_order
+    where order_time BETWEEN #{startTime} AND #{endTime}
+	GROUP BY DATE_FORMAT(order_time,'%Y-%m')
+  </select>
+  <select id="selectAmountBeforThisMonth" resultType="java.lang.Integer">
+    <![CDATA[ SELECT sum(principal) 
+    from customer_order 
+    where order_time <= #{lastDate}
+    ]]>
+    <if test="isPayback != null and isPayback == 0">
+      and is_payback = #{isPayback}
+    </if>
+  </select>
+  <select id="countOrdersBeforThisMonth" resultType="int">
+    <![CDATA[ SELECT count(order_no) 
+    from customer_order 
+    where order_time <= #{lastDate}
+    ]]>
+  </select>
+  <select id="selectProfitBeforThisMonth" resultType="java.lang.Double">
+  <![CDATA[
+    select sum((pt.year_income+pt.increase_interest)*pt.highest_money*LEAST(DATEDIFF(curdate(),co.order_time)+1, pt.finance_period)/36500+co.coupon_amount) 
+    from customer_order co 
+	left join product pt on pt.id = co.product_id
+	left join product_category pc on pt.category_id=pc.id
+	where pc.property = 'EXPERIENCE' and co.is_payback = 0
+	and co.interest_period =0 and co.order_time <= #{lastDate}
+	union all
+	select sum((pt.year_income+pt.increase_interest)*pt.highest_money*LEAST(DATEDIFF(curdate(),co.order_time)+1, pt.finance_period)/36500+pt.highest_money*co.coupon_amount*LEAST(DATEDIFF(curdate(),co.order_time)+1, co.interest_period)/36500) 
+    from customer_order co 
+	left join product pt on pt.id = co.product_id
+	left join product_category pc on pt.category_id=pc.id
+	where pc.property = 'EXPERIENCE' and co.is_payback = 0
+	and co.interest_period >0 and co.order_time <= #{lastDate}
+	union all
+	select sum((pt.year_income+pt.increase_interest)*co.principal*LEAST(DATEDIFF(curdate(),co.order_time)+1, pt.finance_period)/36500+co.coupon_amount)
+	from customer_order co 
+	left join product pt on pt.id = co.product_id
+	left join product_category pc on pt.category_id=pc.id
+	where pc.property = 'NOVICE' and co.is_payback = 0
+	and co.interest_period =0 and co.order_time <= #{lastDate}
+	union all
+	select sum((pt.year_income+pt.increase_interest)*co.principal*LEAST(DATEDIFF(curdate(),co.order_time)+1, pt.finance_period)/36500+co.principal*co.coupon_amount*LEAST(DATEDIFF(curdate(),co.order_time)+1, co.interest_period)/36500)
+	from customer_order co 
+	left join product pt on pt.id = co.product_id
+	left join product_category pc on pt.category_id=pc.id
+	where pc.property = 'NOVICE' and co.is_payback = 0
+	and co.interest_period >0 and co.order_time <= #{lastDate}
+	union all
+	select sum((pt.year_income+pt.increase_interest)*co.principal*LEAST(GREATEST(DATEDIFF(curdate(),pt.interest_date)+1, 0), pt.finance_period)/36500+co.coupon_amount) 
+	from customer_order co 
+	left join product pt on pt.id = co.product_id
+	left join product_category pc on pt.category_id=pc.id
+	where pc.property != 'EXPERIENCE' and pc.property != 'NOVICE' and co.is_payback = 0
+	and co.interest_period =0 and co.order_time <= #{lastDate}
+	union all
+	select sum((pt.year_income+pt.increase_interest)*co.principal*LEAST(GREATEST(DATEDIFF(curdate(),pt.interest_date)+1, 0), pt.finance_period)/36500+co.principal*co.coupon_amount*LEAST(GREATEST(DATEDIFF(curdate(),pt.interest_date)+1, 0), co.interest_period)/36500) 
+	from customer_order co 
+	left join product pt on pt.id = co.product_id
+	left join product_category pc on pt.category_id=pc.id
+	where pc.property != 'EXPERIENCE' and pc.property != 'NOVICE' and co.is_payback = 0
+	and co.interest_period >0 and co.order_time <= #{lastDate}
+	union all
+	select sum(co.payback_amount - principal) 
+	from customer_order co 
+	where co.is_payback = 1 and co.payback_time <= #{lastDate}
+  ]]>
+  </select>
+  <select id="queryForCount" resultType="int">
+  	SELECT count(co.order_no) 
+  	FROM customer_order co
+  	left join customer cr on cr.id = co.customer_id
+  	<where>
+  	  <if test="orderNO != null">
+      	co.order_no = #{orderNO}
+      </if>
+   	  <if test="customerId > 0 ">
+       	   and co.customer_id = #{customerId}
+   	  </if>
+      <if test="isPayback > -1 ">
+       	   and co.is_payback = #{isPayback}
+   	  </if>
+      <if test="orderType == 1">
+          <if test="isPayback == -1">
+               and (co.is_payback = 1 or co.is_payback = 3)
+          </if>
+          <if test="isPayback > -1 ">
+          	   and co.is_payback = ${isPayback}
+      	  </if>
+      </if>
+      <if test="orderType == 1 and amountFrom > 0 and amountTo > 0">
+       	and co.payback_amount >= #{amountFrom} and #{amountTo} >= co.payback_amount
+      </if>
+      <if test="orderType == 0 and amountFrom > 0 and amountTo > 0">
+       	and co.principal >= #{amountFrom} and #{amountTo} >= co.principal
+      </if>
+      <if test="payType > 0 and orderType != 1">
+      	and co.pay_type = #{payType}
+      </if>
+      <if test="productName != null">
+	    and co.product_id in (select id from product where name like '%${productName}%') 
+      </if>
+      <if test="orderType !=1 and beginTime != null and endTime != null">
+      	and (DATE_FORMAT(co.order_time,'%Y-%m-%d') >= #{beginTime} and #{endTime} >= DATE_FORMAT(co.order_time,'%Y-%m-%d'))
+      </if>
+      <if test="orderType ==1 and beginTime != null and endTime != null">
+      	and (DATE_FORMAT(co.payback_time,'%Y-%m-%d') >= #{beginTime} and #{endTime} >= DATE_FORMAT(co.payback_time,'%Y-%m-%d'))
+      </if>
+       <if test="name != null and cellphone == null"> 
+        and cr.name = #{name}
+      </if>
+      <if test="name == null and cellphone != null"> 
+        and REVERSE(cr.cellphone) like REVERSE('%${cellphone}')
+      </if>
+      <if test="name != null and cellphone != null"> 
+        and REVERSE(cr.cellphone) like REVERSE('%${cellphone}') and cr.name = #{name}
+      </if>
+      <if test="channelId != null and channelId > -1">
+      	and channel_id = #{channelId}
+      </if>
+  	</where>
+  </select>
+  <update id="payback">
+  	update customer_order 
+  	set 
+  	  payback_amount = #{orderMoney,jdbcType=FLOAT},
+  	  payback_time = #{paybackTime,jdbcType=TIMESTAMP},
+  	  payback_no = #{paybackNO,jdbcType=VARCHAR},
+  	  is_payback = #{status,jdbcType=INTEGER},
+  	  version = (select coor.version from(select max(cor.version)+1 version from customer_order cor)coor)
+  	where order_no = #{orderNo,jdbcType=VARCHAR} and (is_payback = 0 or is_payback = 3)
+  </update>
+  <update id="paybackFailured">
+  	update customer_order 
+  	set 
+  	  is_payback = 3,
+  	  payback_no = #{paybackNO,jdbcType=VARCHAR},
+  	  version = (select coor.version from(select max(cor.version)+1 version from customer_order cor)coor)
+  	where order_no = #{orderNO,jdbcType=VARCHAR} and is_payback != 1
+  </update>
+
+  <select id="sumOrderInSomeday" resultType="int">
+    select sum(principal) 
+    from customer_order 
+    where order_time BETWEEN CONCAT(#{systemDate,jdbcType=VARCHAR}, ' 00:00:00') AND CONCAT(#{systemDate,jdbcType=VARCHAR}, ' 23:59:59')
+  </select>
+  <select id="selectReinvest" resultType="ReinvestEntity" >
+    SELECT count(DISTINCT cor.customer_id) investCustomers, tp.customerIds paybackCustomers,  sum(cor.principal) investAmount, tp.payback_amount paybackAmount
+	from customer_order cor
+	left join (SELECT count(DISTINCT customer_id) customerIds, sum(payback_amount) payback_amount 
+		from customer_order where payback_time BETWEEN #{beginTime,jdbcType=VARCHAR} and #{endTime,jdbcType=VARCHAR} and is_payback = 1) tp on 1=1
+	where cor.order_time BETWEEN #{beginTime,jdbcType=VARCHAR} and DATE_ADD(#{endTime,jdbcType=VARCHAR},INTERVAL 6 DAY) 
+	and cor.customer_id in (SELECT customer_id from customer_order where payback_time BETWEEN #{beginTime,jdbcType=VARCHAR} and #{endTime,jdbcType=VARCHAR} and is_payback = 1)
+  </select>
+  <select id="selectNotReinvest" resultType="ReinvestEntity" >
+    SELECT count(DISTINCT cor.customer_id) investCustomers, tp.customerIds paybackCustomers,  0 investAmount, 0 paybackAmount
+	from customer_order cor
+	left join (SELECT count(DISTINCT customer_id) customerIds from customer_order where payback_time BETWEEN #{beginTime,jdbcType=VARCHAR} and #{endTime,jdbcType=VARCHAR} and is_payback = 1) tp on 1=1
+	where cor.order_time BETWEEN #{beginTime,jdbcType=VARCHAR} and DATE_ADD(#{endTime,jdbcType=VARCHAR},INTERVAL 29 DAY) 
+	and cor.customer_id in (SELECT customer_id from customer_order where payback_time BETWEEN #{beginTime,jdbcType=VARCHAR} and #{endTime,jdbcType=VARCHAR} and is_payback = 1)
+  </select>
+  <select id="oldEarning" resultType="EarningEntity">
+  	SELECT prt.id productId, prt.name productName, IFNULL(sum(cor.principal), 0) actualAmount, prt.finance_period financePeriod,
+	sum(IF(cor.interest_period=0,cor.coupon_amount, 0)) couponAmount, sum(cor.principal*prt.finance_period*prt.increase_interest/36500) interestAmount, prt.year_income yearIncome,
+	sum(if(cor.interest_period >0 AND prt.finance_period >= cor.interest_period, cor.principal*cor.interest_period*cor.coupon_amount/36500, IF(cor.interest_period > 0, cor.principal*prt.finance_period*cor.coupon_amount/36500, 0))) interestCouponAmount,
+	SUM(IF(cor.principal*0.0025 > 1, cor.principal*0.0025,1)) + IF(cor.payback_no != NULL,COUNT(distinct(cor.payback_no)),0) paymentCost
+	from product prt
+	left join customer_order cor on cor.product_id = prt.id
+	where prt.interest_date <![CDATA[<>]]>'' and prt.loan_year_income = 0 and UNIX_TIMESTAMP(DATE_ADD(prt.interest_date,INTERVAL prt.finance_period DAY)) between UNIX_TIMESTAMP(#{beginDate, jdbcType=VARCHAR}) and UNIX_TIMESTAMP(#{endDate, jdbcType=VARCHAR})
+	GROUP BY cor.product_id
+	ORDER BY DATE_ADD(prt.interest_date,INTERVAL prt.finance_period DAY) desc, cor.product_id desc
+  </select>
+  <select id="newEarning" resultType="EarningEntity">
+  	SELECT prt.id productId, prt.name productName, IFNULL(sum(cor.principal), 0) actualAmount, prt.finance_period financePeriod,
+	sum(IF(cor.interest_period=0,cor.coupon_amount, 0)) couponAmount, sum(cor.principal*prt.finance_period*prt.increase_interest/36500) interestAmount, prt.year_income yearIncome, mo.principal borrowAmount, prt.loan_year_income borrowInterest,
+	sum(if(cor.interest_period >0 AND prt.finance_period >= cor.interest_period, cor.principal*cor.interest_period*cor.coupon_amount/36500, IF(cor.interest_period > 0, cor.principal*prt.finance_period*cor.coupon_amount/36500, 0))) interestCouponAmount,
+	SUM(IF(cor.principal > 0,IF(cor.principal*IF(cor.order_time >= '2016-12-05 00:00:00', 0.0023, 0.0025) > 1, cor.principal*IF(cor.order_time >= '2016-12-05 00:00:00', 0.0023, 0.0025),1),0)) + COUNT(distinct(cor.payback_no)) paymentCost
+	from product prt
+	left join (select product_id,principal from merchant_order where type=1 and status > -1) mo on prt.id= mo.product_id
+	left join customer_order cor on cor.product_id = prt.id
+	where prt.loan_year_income > 0 and UNIX_TIMESTAMP(DATE_ADD(prt.interest_date,INTERVAL prt.finance_period DAY)) between UNIX_TIMESTAMP(#{beginDate, jdbcType=VARCHAR}) and UNIX_TIMESTAMP(#{endDate, jdbcType=VARCHAR})
+	GROUP BY cor.product_id
+	ORDER BY DATE_ADD(prt.interest_date,INTERVAL prt.finance_period DAY) desc, cor.product_id desc
+  </select>
+
+  <select id="paybackCalender" resultType="PaybackCalenderEntity" >
+  		SELECT  prt.id productId, prt.name productName, IFNULL(sum(cor.principal), 0) actualAmount, prt.finance_period financePeriod, prt.year_income yearIncome, prt.increase_interest increaseInterest, 
+		  sum(ROUND(IF(cor.interest_period=0,cor.coupon_amount, 0),2)) couponAmount,
+		  sum(ROUND(cor.principal*prt.finance_period*prt.increase_interest/36500,2)) interestAmount,
+	      sum(ROUND(cor.principal*prt.finance_period*cor.vip_interest/36500,2)) vipInterestAmount,
+		  sum(ROUND(if(cor.interest_period >0 AND prt.finance_period >= cor.interest_period, 
+		  cor.principal*cor.interest_period*cor.coupon_amount/36500, IF(cor.interest_period > 0, 
+		  cor.principal*prt.finance_period*cor.coupon_amount/36500, 0)),2)) interestCouponAmount,
+		  sum(ROUND(cor.principal*prt.loan_year_income*prt.finance_period/36500,2)) merchantBackCharge,
+	  	  sum(ROUND(cor.principal*prt.finance_period*prt.year_income/36500,2)) serviceCharge,
+	  	  DATE_ADD(prt.interest_date,INTERVAL prt.finance_period DAY) paybackDate
+		from product prt
+		left join customer_order cor on cor.product_id = prt.id
+		where prt.status = 1 and prt.actual_amount >= prt.total_amount and prt.interest_date <![CDATA[<>]]>'' 
+		<if test="backChannel == 1">
+			and cor.auth_code <![CDATA[<>]]> ''
+		</if>
+		<if test="backChannel == 2">
+			and cor.auth_code = ''
+		</if>
+  	<if test="type == 1">
+		and UNIX_TIMESTAMP(DATE_ADD(prt.interest_date,INTERVAL prt.finance_period DAY)) between UNIX_TIMESTAMP(#{beginDate, jdbcType=VARCHAR}) and UNIX_TIMESTAMP(#{endDate, jdbcType=VARCHAR})
+		GROUP BY cor.product_id
+		ORDER BY DATE_ADD(prt.interest_date,INTERVAL prt.finance_period DAY) DESC, cor.product_id DESC
+  	</if>
+	<if test="type == 2">
+		and UNIX_TIMESTAMP(prt.sold_out_time) between UNIX_TIMESTAMP(#{beginDate, jdbcType=VARCHAR}) and UNIX_TIMESTAMP(#{endDate, jdbcType=VARCHAR})
+		group by prt.id 
+	</if>
+  </select>
+ <select id="listOpex" resultType="OpexEntity">
+	select tp1.orderTime consumeTime, sum(IFNULL(tp1.couponAmount,0)) couponAmount, IFNULL(sum(tp1.couponInterest),0) couponInterest, sum(IFNULL(tp1.feeAmount,0)) feeAmount, sum(IFNULL(tp1.increaseInterest,0)) interestAmount
+		from (select DATE_FORMAT(cor.order_time,'%Y-%m-%d') orderTime, 0 couponAmount, 0 couponInterest, sum(IF(1 > cor.principal*if(cor.order_time >= '2016-12-05 00:00:00', 0.0023, 0.0025), 1, cor.principal*if(cor.order_time >= '2016-12-05 00:00:00', 0.0023, 0.0025))) feeAmount,  0 increaseInterest
+		from customer_order cor
+		where DATE_FORMAT(cor.order_time,'%Y-%m-%d') >= #{beginDate} and #{endDate} >= DATE_FORMAT(cor.order_time,'%Y-%m-%d')
+		GROUP BY DATE_FORMAT(cor.order_time,'%Y-%m-%d')
+		union 
+	select DATE_FORMAT(bbo.order_time,'%Y-%m-%d') orderTime, 0 couponAmount, 0 couponInterest, sum(IF(1 > bbo.principal*0.0025, 1, bbo.principal*0.0025)) feeAmount, 0 increaseInterest
+		from baobao_order bbo
+		where bbo.status = 0 and DATE_FORMAT(bbo.order_time,'%Y-%m-%d') >= #{beginDate} and #{endDate} >= DATE_FORMAT(bbo.order_time,'%Y-%m-%d')
+		GROUP BY DATE_FORMAT(bbo.order_time,'%Y-%m-%d')
+		UNION
+	select DATE_FORMAT(corp.payback_time,'%Y-%m-%d') orderTime, SUM(if(1 > corp.interest_period, corp.coupon_amount, 0)) couponAmount, SUM(if(corp.interest_period > 0, if(prt.finance_period > corp.interest_period, corp.principal*corp.coupon_amount*corp.interest_period/36500, corp.principal*corp.coupon_amount*prt.finance_period/36500), 0)) couponInterest, count(DISTINCT if(corp.payback_no is null, corp.order_no, corp.payback_no)) feeAmount, sum(corp.principal*prt.increase_interest*prt.finance_period/36500) increaseInterest
+		from customer_order corp
+		left join product prt on prt.id = corp.product_id
+		where corp.is_payback = 1 and DATE_FORMAT(corp.payback_time,'%Y-%m-%d') >= #{beginDate} and #{endDate} >= DATE_FORMAT(corp.payback_time,'%Y-%m-%d')
+		GROUP BY DATE_FORMAT(corp.payback_time,'%Y-%m-%d') 
+		UNION
+	select DATE_FORMAT(bbop.trade_time,'%Y-%m-%d') orderTime, 0 couponAmount, SUM(if(bbop.interest_period > 0, if(prt.finance_period > bbop.interest_period, bbop.principal*bbop.coupon_amount*bbop.interest_period/36500, bbop.principal*bbop.coupon_amount*prt.finance_period/36500), 0)) couponInterest, count(DISTINCT if(bbop.payback_no is null, bbop.order_no, bbop.payback_no)) feeAmount, 0 increaseInterest
+		from baobao_order bbop 
+		left join product prt on prt.id = bbop.product_id
+		where bbop.status = 2 and DATE_FORMAT(bbop.trade_time,'%Y-%m-%d') >= #{beginDate} and #{endDate} >= DATE_FORMAT(bbop.trade_time,'%Y-%m-%d')
+		GROUP BY DATE_FORMAT(bbop.trade_time,'%Y-%m-%d') 
+		UNION
+	select DATE_FORMAT(mor.trade_time,'%Y-%m-%d') orderTime, 0 couponAmount, 0 couponInterest, count(mor.order_no)*20 feeAmount, 0 increaseInterest
+		from merchant_order mor  
+		where type = 0 and status = 2 and DATE_FORMAT(mor.trade_time,'%Y-%m-%d') >= #{beginDate} and #{endDate} >= DATE_FORMAT(mor.trade_time,'%Y-%m-%d')
+		GROUP BY DATE_FORMAT(mor.trade_time,'%Y-%m-%d') 
+		union 
+	SELECT DATE_FORMAT(morp.trade_time,'%Y-%m-%d') orderTime, 0 couponAmount, 0 couponInterest, count(morp.order_no) feeAmount, 0 increaseInterest
+		from merchant_order morp  
+		where type = 1 and status = 2 and DATE_FORMAT(morp.trade_time,'%Y-%m-%d') >= #{beginDate} and #{endDate} >= DATE_FORMAT(morp.trade_time,'%Y-%m-%d')
+		GROUP BY DATE_FORMAT(morp.trade_time,'%Y-%m-%d')) tp1
+	where tp1.orderTime is not NULL
+	GROUP BY tp1.orderTime
+	ORDER BY tp1.orderTime desc
+    <choose>
+	  <when test="offset > 0 and size > 0">
+      <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+	  </when>
+	  <when test="size > 0">
+      <![CDATA[
+      limit 0, #{size}
+      ]]>
+	  </when>
+	  <otherwise>
+	  <![CDATA[
+	    
+	  ]]>
+	  </otherwise>
+	</choose>
+  </select>
+
+  <select id="countOrderInSomeday" resultType="int">
+    select count(order_no) 
+    from customer_order 
+    where order_time BETWEEN CONCAT(#{systemDate,jdbcType=VARCHAR}, ' 00:00:00') AND CONCAT(#{systemDate,jdbcType=VARCHAR}, ' 23:59:59')
+  </select>
+  <select id="countOpex" resultType="int">
+    select count(t.orderTime)
+	from (select DATE_FORMAT(order_time,'%Y-%m-%d') orderTime
+    from customer_order
+		GROUP BY DATE_FORMAT(order_time,'%Y-%m-%d')) t
+    <where>
+      <if test="beginDate != null and endDate != null">
+      	t.orderTime >= #{beginDate} and #{endDate} >= t.orderTime
+      </if>
+    </where>
+  </select>
+    <select id="countOrderInSometime" resultType="java.util.HashMap">
+    select DATE_FORMAT(order_time,'%H') timePoint, count(*) value
+    from customer_order 
+    where order_time BETWEEN CONCAT(#{systemDate,jdbcType=VARCHAR}, ' 00:00:00') AND CONCAT(#{systemDate,jdbcType=VARCHAR}, ' 23:59:59')
+    GROUP BY DATE_FORMAT(order_time,'%Y-%m-%d %H')
+    ORDER BY order_time
+  </select>
+   <select id="queryOrderByProductId" resultType="EsignEntity">
+	select co.order_no orderNO, co.customer_id customerId, prt.id productId, prt.name productName, mt.name merchantName, mt.license_no merchantNO,
+    prt.actual_amount merchantAmount, cr.name customerName, cr.idcard, cr.cellphone, sum(co.principal) principal, min(co.order_time) order_time, 
+	prt.year_income yearIncome, prt.finance_period financePeriod, prt.interest_date interestDate, prt.sold_out_time soldOutTime
+	from customer_order co
+	left join customer cr on cr.id = co.customer_id
+	left join product prt on prt.id = co.product_id
+	left join merchant mt on mt.id = prt.merchant_id
+	where co.product_id = ${productId}
+	group by co.customer_id
+	order by principal asc
+  </select>
+  <select id="sumOrderInSometime" resultType="java.util.HashMap">
+    select DATE_FORMAT(order_time,'%H') timePoint, sum(principal) value
+    from customer_order 
+    where order_time BETWEEN CONCAT(#{systemDate,jdbcType=VARCHAR}, ' 00:00:00') AND CONCAT(#{systemDate,jdbcType=VARCHAR}, ' 23:59:59')
+    GROUP BY DATE_FORMAT(order_time,'%Y-%m-%d %H')
+    ORDER BY order_time
+  </select>
+  <select id="queryLoanList" resultType="LoanEntity">
+    SELECT ur.account_id accountId, cor.payback_no orderId, cor.principal txAmount, 0 bidFee, 0 debtFee, mt.account_id forAccountId, prt.id productId, cor.auth_code authCode
+	from customer_order cor
+	left join user ur on ur.id = cor.customer_id
+	left join product prt on prt.id = cor.product_id
+	left join merchant mt on mt.id = prt.merchant_id
+	where cor.product_id = #{productId}
+  </select>
+</mapper>

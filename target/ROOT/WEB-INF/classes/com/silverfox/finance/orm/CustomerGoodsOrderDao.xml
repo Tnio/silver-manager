@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.CustomerGoodsOrderDao" >
+    <resultMap type="CustomerGoodsOrder" id="resultMap">
+        <id column="order_no" property="orderNo" jdbcType="VARCHAR"/>
+        <result column="address" property="address" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="cellphone" property="cellphone" jdbcType="VARCHAR"/>
+        <result column="exchange_time" property="exchangeTime" jdbcType="TIMESTAMP"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="thirdparty_no" property="thirdpartyNo" jdbcType="VARCHAR"/>
+        <association property="customer" javaType="Customer">
+            <id column="customer_id" property="id" jdbcType="INTEGER"/>
+            <result column="customer_name" property="name"/>
+            <result column="customer_cellphone" property="cellphone"/>
+        </association>
+        <association property="goods" javaType="Goods">
+            <result column="goods_name" property="name"/>
+            <result column="consume_silver" property="consumeSilver"/>
+            <result column="discount" property="discount"/>
+            <result column="type" property="type" jdbcType="INTEGER"/>
+            <result column="url" property="url"/>
+        </association>
+    </resultMap>
+    <sql id="columns">
+        ge.order_no, ge.address as address, ge.name, ge.cellphone, ge.exchange_time as exchange_time, c.name as customer_name,
+        c.cellphone as customer_cellphone, g.name as goods_name, g.type, ge.status, g.consume_silver, g.discount
+    </sql>
+    <select id="selectByOrderNo" resultMap="resultMap">
+        select <include refid="columns"/>
+        from customer_goods_order ge
+        left join goods g on g.id = ge.goods_id
+        left join customer c on c.id = ge.user_id
+        where ge.order_no = #{orderNo,jdbcType=VARCHAR}
+    </select>
+    <select id="selectLatestGoodsOrder" resultMap="resultMap">
+        select cgo.order_no, cr.cellphone, g.name from customer_goods_order cgo left join customer cr on cgo.user_id=cr.id
+        left join goods g on cgo.goods_id = g.id where cr.id > 0 ORDER BY exchange_time DESC LIMIT #{num,jdbcType=INTEGER};
+    </select>
+    <select id="queryForList" resultMap="resultMap">
+        select gee.order_no, address, name, cellphone, gee.exchange_time, customer_name,
+        customer_cellphone, goods_name, type, status, consume_silver, discount, gcc.code thirdparty_no from (
+        select <include refid="columns"/>
+        from customer_goods_order ge
+        left join goods g on g.id = ge.goods_id
+        left join user c on c.id = ge.user_id
+        <where>
+            <if test="type > 0">
+                g.type = #{type}
+            </if>
+            <if test="goodsName != null">
+                and g.name like '%${goodsName}%'
+            </if>
+            <if test="beginDate != null and endDate != null">
+                and DATE_FORMAT(ge.exchange_time,'%Y-%m-%d') >= #{beginDate} and #{endDate} >= DATE_FORMAT(ge.exchange_time,'%Y-%m-%d')
+            </if>
+            <if test="cellphone != null and cellphone != ''">
+                and c.cellphone like '%${cellphone}%'
+            </if>
+        </where>
+        order by ge.exchange_time DESC
+        <choose>
+            <when test="offset > 0 and size > 0">
+                <![CDATA[
+		     limit #{offset}, #{size}
+		     ]]>
+            </when>
+            <when test="size > 0">
+                <![CDATA[
+		     limit 0, #{size}
+		     ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+		  ]]>
+            </otherwise>
+        </choose>
+        ) gee left join goods_coupon_code gcc on gcc.order_no = gee.order_no order by gee.exchange_time DESC
+    </select>
+    <select id="queryForCount" resultType="int">
+        select count(*)
+        from customer_goods_order ge
+        left join goods g on g.id = ge.goods_id
+        <where>
+            <if test="type > 0">
+                g.type = #{type}
+            </if>
+            <if test="goodsName != null">
+                and g.name like '%${goodsName}%'
+            </if>
+            <if test="beginDate != null and endDate != null">
+                and DATE_FORMAT(ge.exchange_time,'%Y-%m-%d') >= #{beginDate} and #{endDate} >= DATE_FORMAT(ge.exchange_time,'%Y-%m-%d')
+            </if>
+            <if test="cellphone != null and cellphone != ''">
+                and ge.user_id in (select id from user where cellphone like '%${cellphone}%')
+            </if>
+        </where>
+    </select>
+    <update id="update" parameterType="CustomerGoodsOrder">
+        update customer_goods_order
+        <set>
+            <if test="status > 0">
+                status = #{status,jdbcType=INTEGER}
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+    <insert id="insert" parameterType="CustomerGoodsOrder" useGeneratedKeys="true" keyProperty="id">
+        insert into customer_goods_order
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="customer != null and customer.id > 0" >
+                user_id,
+            </if>
+            <if test="name != null">
+                name,
+            </if>
+            <if test="cellphone != null">
+                cellphone,
+            </if>
+            <if test="goods != null and goods.id > 0" >
+                goods_id,
+            </if>
+            <if test="address != null" >
+                address,
+            </if>
+            <if test="exchangeTime != null" >
+                exchange_time,
+            </if>
+            <if test="status != null" >
+                status,
+            </if>
+            <if test="orderNo != null" >
+                order_no,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="customer != null and customer.id > 0" >
+                #{customer.id,jdbcType=INTEGER},
+            </if>
+            <if test="name != null" >
+                #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="cellphone != null" >
+                #{cellphone,jdbcType=VARCHAR},
+            </if>
+            <if test="goods != null and goods.id > 0" >
+                #{goods.id,jdbcType=INTEGER},
+            </if>
+            <if test="address != null" >
+                #{address,jdbcType=VARCHAR},
+            </if>
+            <if test="exchangeTime != null" >
+                #{exchangeTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="status != null" >
+                #{status,jdbcType=TINYINT},
+            </if>
+            <if test="orderNo != null" >
+                #{orderNo,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+</mapper>

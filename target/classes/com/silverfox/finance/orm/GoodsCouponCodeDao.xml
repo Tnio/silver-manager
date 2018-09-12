@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.GoodsCouponCodeDao" >
+	<resultMap id="ResultMap" type="GoodsCouponCode" >
+		<id column="id" property="id" jdbcType="INTEGER"/>
+		<result column="code" property="code" jdbcType="VARCHAR"/>
+		<result column="used" property="used" jdbcType="SMALLINT"/>
+		<result column="user_id" property="userId" jdbcType="INTEGER"/>
+		<result column="order_no" property="orderNo" jdbcType="VARCHAR"/>
+		<result column="exchange_time" property="exchangeTime" jdbcType="TIMESTAMP" />
+		<association property="couponExchange" javaType="CouponExchange">
+			<id column="coupon_exchange_id" property="id" />
+			<result column="make_mode" property="makeMode" jdbcType="INTEGER" />
+			<association property="coupon" javaType="Coupon">
+				<id column="coupon_id" property="id" />
+			</association>
+		</association>
+	</resultMap>
+	<select id="checkExchangeCode" resultType="int">
+		select count(id) from goods_coupon_code gcc where gcc.code = #{code,jdbcType=VARCHAR}
+		<if test="id > 0">
+			and gcc.coupon_exchange_id != #{id,jdbcType=INTEGER}
+		</if>
+	</select>
+     <select id="queryForList" resultType="GoodsCouponCode">
+        select id, code, used from goods_coupon_code gcc
+        <where>
+            <if test="goodsId > 0">
+                gcc.goods_id = #{goodsId}
+            </if>
+            <if test="couponExchangeId > 0">
+                gcc.coupon_exchange_id = #{couponExchangeId}
+            </if>
+        </where> 
+        <choose>
+		  <when test="offset > 0 and size > 0">
+		     <![CDATA[
+		     limit #{offset}, #{size}
+		     ]]>
+		  </when>
+		  <when test="size > 0">
+		     <![CDATA[
+		     limit 0, #{size}
+		     ]]>
+		  </when>
+		  <otherwise>
+		  <![CDATA[
+		   limit 0, 15
+		  ]]>
+		  </otherwise>
+		</choose>
+    </select>
+    
+    <select id="queryForCount" resultType="int">
+        select count(gcc.id) from goods_coupon_code gcc
+        <where>
+            <if test="goodsId > 0">
+                gcc.goods_id = #{goodsId}
+            </if>
+            <if test="couponExchangeId > 0">
+                gcc.coupon_exchange_id = #{couponExchangeId}
+            </if>
+        </where> 
+    </select>
+   <insert id="insertGoodsCouponCodes" parameterType="GoodsCouponCode" >
+		insert into goods_coupon_code (goods_id, code, used, coupon_exchange_id) values
+		<foreach collection="goodsCouponCodes" item="goodsCouponCode" index="index" separator="," >
+			(
+			#{goodsId},
+			#{goodsCouponCode.code},
+			#{goodsCouponCode.used},
+			#{couponExchangeId}
+			)
+		</foreach>
+	</insert>
+	<update id="update" parameterType="GoodsCouponCode">
+		update goods_coupon_code set user_id = #{userId}, order_no = #{orderNo}, exchange_time = #{exchangeTime}, customer_coupon_id = #{customerCoupon.id}, used = 1 where id = #{id}
+	</update>
+	<delete id="deleteByGoodsId">
+		delete from goods_coupon_code where goods_id = #{goodsId}
+	</delete>
+	<delete id="deleteByCouponExchangeId">
+		delete from goods_coupon_code where coupon_exchange_id = #{couponExchangeId}
+	</delete>
+</mapper>

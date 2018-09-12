@@ -1,0 +1,195 @@
+{
+  "groups": [{
+    "name": "system.resource",
+    "type": "com.silverfox.finance.config.AplicationResourceProperties",
+    "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+  }],
+  "properties": [
+    {
+      "name": "system.resource.app-name-no-pass",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.app-name-pass",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.auth-url",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.commission-rate",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.contract-leisure",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.contract-occupy",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.coupon-activity-url",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.coupon-code-excel-name",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.customer-excel-name",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.customer-lost-excel-name",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.customer-order-excel-name",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.customer-order-in-excel-name",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.customer-uninvest-excel-name",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.customers-account-balance",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.customers-service-url",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.emay-sms-send",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.https-url",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.huaxing-sms-send",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.huaxing-user-signature",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.ignore-uri",
+      "type": "java.util.List<java.lang.String>",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.image-check",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.licenseno-no-pass",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.licenseno-pass",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.licenses",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.monternet-sms-send",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.multipart-max-file-size",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.multipart-max-request-size",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.oss-path",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.plugin-url",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.sayen-sms-send",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.session-less",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.sms-message-content",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.template-path",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.upload-path",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.version-number-no-pass",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.version-number-pass",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    },
+    {
+      "name": "system.resource.zookeeprt-config-namespace",
+      "type": "java.lang.String",
+      "sourceType": "com.silverfox.finance.config.AplicationResourceProperties"
+    }
+  ],
+  "hints": []
+}

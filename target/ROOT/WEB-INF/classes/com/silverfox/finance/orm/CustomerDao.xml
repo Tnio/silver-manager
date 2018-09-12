@@ -1,0 +1,645 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.CustomerDao" >
+  <resultMap id="ResultMap" type="Customer" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="cellphone" property="cellphone" jdbcType="VARCHAR" />
+    <result column="idcard" property="idcard" jdbcType="VARCHAR" />
+    <result column="vip_level" property="vipLevel" jdbcType="TINYINT" />
+    <result column="latest_trade_time" property="latestTradeTime" jdbcType="TIMESTAMP" />
+    <result column="total_trade_amount" property="totalTradeAmount" jdbcType="INTEGER" />
+    <result column="total_trade_money" property="totalTradeMoney" jdbcType="INTEGER" />
+    <result column="total_trade_income" property="totalTradeIncome" jdbcType="DOUBLE" />
+    <result column="send_message" property="sendMessage" jdbcType="INTEGER" />
+  	<association property="channel" javaType="Channel">
+		<id column="channel_id" property="id" />
+		<result column="channel_name" property="name" />
+	</association>
+  </resultMap>
+  <resultMap id="RMap" type="Customer" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="cellphone" property="cellphone" jdbcType="VARCHAR" />
+    <result column="idcard" property="idcard" jdbcType="VARCHAR" />
+    <result column="latest_trade_time" property="latestTradeTime" jdbcType="TIMESTAMP" />
+    <result column="total_trade_amount" property="totalTradeAmount" jdbcType="INTEGER" />
+    <result column="total_trade_money" property="totalTradeMoney" jdbcType="INTEGER" />
+    <result column="total_trade_income" property="totalTradeIncome" jdbcType="DOUBLE" />
+    <result column="send_message" property="sendMessage" jdbcType="INTEGER" />
+  	<association property="channel" javaType="Channel">
+		<id column="channel_id" property="id" />
+		<result column="channel_name" property="name" />
+	</association>
+  </resultMap>
+  <resultMap id="ResultBankMap" type="CustomerBank" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="bankNO" property="bankNO" jdbcType="VARCHAR" />
+    <result column="bankName" property="bankName" jdbcType="VARCHAR" />
+    <result column="cardNO" property="cardNO" jdbcType="VARCHAR" />
+    <result column="status" property="status" jdbcType="TINYINT" />
+    <association property="customer" javaType="Customer">
+		<id column="customer_id" property="id" jdbcType="VARCHAR" />
+	</association>
+  </resultMap>
+  
+  <resultMap id="UninvestMap" type="UninvestEntity" >
+    <id column="id" property="userId" jdbcType="INTEGER" />
+    <result column="cellphone" property="cellphone" jdbcType="VARCHAR" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="channel_name" property="channelName" jdbcType="VARCHAR" />
+    <result column="register_time" property="registerTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  
+  <resultMap id="LostcustomerMap" type="LostUserEntity" >
+    <id column="id" property="userId" jdbcType="INTEGER" />
+    <result column="cellphone" property="cellphone" jdbcType="VARCHAR" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="total_trade_money" property="investAmount" jdbcType="DOUBLE" />
+    <result column="channel_name" property="channelName" jdbcType="VARCHAR" />
+    <result column="payback_time" property="lastPaybackTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  
+  <sql id="columns" >
+    cr.id, cr.name, cr.cellphone, cr.channel_id, cr.idcard, cr.vip_level, 
+    latest_trade_time, total_trade_amount, total_trade_money, cr.send_message,
+    total_trade_income
+  </sql>
+  <sql id="column" >
+    cr.name, cr.cellphone, cr.idcard, cr.silver_number, cr.register_time, cr.channel_id, cr.first_trade_time, latest_trade_time, 
+    IFNULL(co.principal,0) total_trade_income, total_trade_money, latest_sign_time
+  </sql>
+  <sql id="bankColumns">
+  	id, bank_name bankName, card_no cardNO, status, bank_no bankNO, customer_id
+  </sql>
+  <select id="selectTop10" resultMap="ResultMap">
+    SELECT cr.id, cr.cellphone, tp.principal total_trade_money
+	from  (SELECT customer_id, max(order_time) order_time, sum(principal) principal
+		from customer_order
+		where product_id = #{productId,jdbcType=INTEGER}
+		GROUP BY customer_id
+		ORDER BY principal DESC, order_time limit 10) tp
+	left join customer cr on tp.customer_id = cr.id
+	ORDER BY tp.principal DESC, tp.order_time
+  </select>
+  <select id="selectLossingCustomers" resultMap="RMap">
+  select coc.customer_id id, coc.name, coc.cellphone, coc.total_trade_money, coc.channel_id, coc.latest_trade_time, cl.name channel_name, ur.register_time from (
+	SELECT DISTINCT cor.customer_id, cr.name, cr.cellphone, cr.total_trade_money, cr.channel_id, cr.latest_trade_time  
+	from customer_order cor left join customer cr on cr.id = cor.customer_id   
+	where cor.payback_time BETWEEN #{beginTime,jdbcType=VARCHAR} and #{endTime,jdbcType=VARCHAR} and cor.is_payback = 1 and cor.customer_id not in(   
+		SELECT customer_id from customer_order cor where cor.order_time BETWEEN #{beginTime,jdbcType=VARCHAR} and DATE_ADD(#{endTime,jdbcType=VARCHAR},INTERVAL 29 DAY) and cor.customer_id in (
+			SELECT customer_id from customer_order where payback_time BETWEEN #{beginTime,jdbcType=VARCHAR} and #{endTime,jdbcType=VARCHAR} and is_payback = 1
+		)  
+	)  
+		<if test="sort == 'tradeMoney'"> 
+		   order by  cr.total_trade_money desc
+		</if>
+		<if test="sort == 'lastTradeTime'">
+		   order by cr.latest_trade_time desc
+		</if>
+		<choose>
+		  <when test="offset > 0 and size > 0">
+	      <![CDATA[
+	      limit #{offset}, #{size}
+	      ]]>
+		  </when>
+		  <when test="size > 0">
+	      <![CDATA[
+	      limit 0, #{size}
+	      ]]>
+		  </when>
+		  <otherwise>
+		  <![CDATA[
+		    limit 0, 15
+		  ]]>
+		  </otherwise>
+		</choose>
+	) coc
+	left join channel cl on cl.id = coc.channel_id
+	left join `user` ur on ur.id = coc.customer_id
+  </select>
+  <select id="countLossingCustomers" resultType="int">
+    SELECT count(DISTINCT customer_id)
+	from customer_order
+	where payback_time BETWEEN #{beginTime,jdbcType=VARCHAR} and #{endTime,jdbcType=VARCHAR} and customer_id not in (
+		SELECT customer_id from customer_order cor
+			where cor.order_time BETWEEN #{beginTime,jdbcType=VARCHAR} and DATE_ADD(#{endTime,jdbcType=VARCHAR},INTERVAL 29 DAY) 
+			and cor.customer_id in (SELECT customer_id from customer_order where payback_time BETWEEN #{beginTime,jdbcType=VARCHAR} and #{endTime,jdbcType=VARCHAR}
+		)
+	)
+  </select>
+  <!-- <select id="selectByAccount" parameterType="java.lang.String" resultMap="ResultMap">
+    select 
+    <include refid="columns" />, cl.name channel_name
+    from customer cr 
+    left join channel cl on cr.channel_id = cl.id
+    where account = #{account,jdbcType=VARCHAR}
+  </select> -->
+  <select id="selectByUserId" resultMap="ResultMap">
+    select 
+    <include refid="columns" />, cl.name channel_name
+    from customer cr 
+    left join channel cl on cr.channel_id = cl.id
+    where cr.id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectCollectPrincipal" resultType="int">
+  	select IFNULL(SUM(principal), 0) 
+  	from customer_order 
+  	where customer_id = #{userId,jdbcType=INTEGER} and is_payback != 1
+  </select>
+  <select id="selectBanksByCustomerId" resultType="CustomerBank">
+    select 
+    <include refid="bankColumns" />
+    from customer_bank
+    where customer_id = #{customerId,jdbcType=INTEGER}
+    <if test="status == -2">
+    	and status != 0
+    </if>
+  </select>
+  <select id="selectBankByCustomerId" parameterType="int" resultType="userBank">
+  	select id, bank_no bankNo, bank_name bankName, card_no cardNo
+	from user_bank where user_id = #{id,jdbcType=INTEGER} and type = 0
+  </select>
+  <select id="selectByCardNO" resultMap="ResultBankMap">
+    select 
+    <include refid="bankColumns" />
+    from customer_bank
+    where card_no = #{cardNO,jdbcType=VARCHAR} limit 1
+  </select>
+   <select id="selectById" resultType="CustomerBank">
+    select 
+    <include refid="bankColumns" />
+    from customer_bank
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="countCustomerBySinglePrincipal" resultType="int">
+    SELECT count(DISTINCT customer_id) 
+    from customer_order 
+    where principal >= #{satisfyInitialAmount} and #{satisfyInitialAmount} >= principal 
+    	and order_time BETWEEN #{beginDate} and #{endDate} 
+  </select>
+  <select id="selectByOrderNo" resultMap="ResultMap">
+    select <include refid="columns" /> 
+    from customer cr 
+    left join customer_order co on cr.id = co.customer_id 
+    where co.order_no = #{orderNo,jdbcType=VARCHAR}
+  </select>
+  <select id="selectByBaobaoOrderNo" resultType="Customer">
+    select <include refid="columns" /> 
+    from customer cr 
+    left join baobao_order bbo on cr.id = bbo.customer_id 
+    where bbo.order_no = #{orderNo,jdbcType=VARCHAR}
+  </select>
+  <select id="countSuccessfulTradingNumber" resultType="int">
+  	select count(*) 
+  	from customer c 
+  	left join user ur on ur.id = c.id
+  	where ur.inviter_phone = #{cellphone,jdbcType=VARCHAR} and c.total_trade_money > 0
+  </select>
+  <!-- <select id="getTop15Scores" resultType="java.util.HashMap">
+    <![CDATA[ select cor.cellphone cellphone, tp.score score
+	from (select account, sum(if(prt.finance_period >= 30 and prt.finance_period < 59, cor.principal/100, if(prt.finance_period >= 60 and prt.finance_period < 89, cor.principal/50, 
+		if(prt.finance_period >= 90 and prt.finance_period < 179, cor.principal/25, if(prt.finance_period >= 180 and prt.finance_period < 269, cor.principal/100*8, cor.principal/100*12))))) score
+	from customer_order cor
+	left join product prt on prt.id = cor.product_id
+	left join product_category pcy on pcy.id = prt.category_id
+	where DATE_FORMAT(order_time, '%Y-%m-%d %H:%m:%s') >= #{startDate,jdbcType=VARCHAR} and #{endDate,jdbcType=VARCHAR} >= DATE_FORMAT(order_time, '%Y-%m-%d %H:%m:%s') 
+		and pcy.property in ('COMMON','ACTIVITY') and prt.finance_period >= 30
+	GROUP BY account ORDER BY score desc, cor.order_time asc limit 15) tp
+	left join customer cor on cor.account = tp.account ]]>
+  </select> 
+  <select id="getScore" resultType="Integer">
+    <![CDATA[ select sum(if(prt.finance_period >= 30 and prt.finance_period < 59, cor.principal/100, if(prt.finance_period >= 60 and prt.finance_period < 89, cor.principal/50, 
+	if(prt.finance_period >= 90 and prt.finance_period < 179, cor.principal/25, if(prt.finance_period >= 180 and prt.finance_period < 269, cor.principal/100*8, cor.principal/100*12))))) score
+	from customer_order cor
+	left join product prt on prt.id = cor.product_id
+	left join product_category pcy on pcy.id = prt.category_id
+	where DATE_FORMAT(order_time, '%Y-%m-%d %H:%m:%s') >= #{startDate,jdbcType=VARCHAR} and #{endDate,jdbcType=VARCHAR} >= DATE_FORMAT(order_time, '%Y-%m-%d %H:%m:%s') 
+		and pcy.property in ('COMMON','ACTIVITY') and prt.finance_period >= 30 and account = #{account,jdbcType=VARCHAR} ]]>
+  </select>  -->
+  <select id="selectIdcardBeforThisMonth" resultType="java.lang.String">
+    <![CDATA[ SELECT idcard 
+    from customer 
+    where idcard != '' and idcard is not null and first_trade_time <= #{lastDate}
+    ]]>
+  </select>
+  <select id="totalTradeMoney" resultType="java.lang.Integer">
+  	select SUM(c.total_trade_money) from customer c
+  </select>
+  <select id="totalAccumulationProfit" resultType="java.lang.Double">
+  	select SUM(c.total_trade_income) + SUM(c.baobao_trade_income) from customer c
+  </select>
+  <select id="selectInMonth" resultType="java.lang.String">
+    select cellphone
+    from customer
+    where idcard != '' and idcard is not null and SUBSTR(idcard FROM 11 FOR 2) = #{systemMonth}
+  </select>
+  <select id="selectAccountGiveUser" resultType="java.lang.String">
+	<!-- select distinct(co.account) usernum 
+		from customer_order co 
+		left join product p on p.id = co.product_id
+		left join product_category pc on pc.id = p.category_id 
+		where co.order_time BETWEEN #{beginDate} and #{endDate} and pc.property = 'COMMON'
+	<if test="satisfyType == 2 ">	  
+		GROUP BY co.account HAVING SUM(co.principal) >= #{satisfyAmount}
+	</if>
+	<if test="satisfyType == 1">
+		and co.principal >= #{satisfyAmount}
+	</if> -->
+	<if test="satisfyType == 1">
+  		select DISTINCT(customer_id) from customer_order
+  		where order_time BETWEEN #{beginDate} and #{endDate}
+		and principal >= #{satisfyInitialAmount} and principal <![CDATA[ <= ]]> #{satisfyEndAmount}  
+	</if>
+	<if test="satisfyType == 2">
+		select `customer_id` FROM `customer_order` WHERE order_time BETWEEN #{beginDate} and #{endDate} GROUP BY `customer_id` 
+		HAVING SUM(`principal`) >= #{satisfyInitialAmount} and SUM(`principal`) <![CDATA[ <= ]]> #{satisfyEndAmount}
+	</if>
+	<if test="satisfyType == 3">
+	    select `customer_id` FROM `customer_order` WHERE is_payback = 1 and order_time BETWEEN #{beginDate} and #{endDate} GROUP BY `customer_id` 
+		HAVING SUM(`payback_amount`) >= #{satisfyInitialAmount} and SUM(`payback_amount`) <![CDATA[ <= ]]> #{satisfyEndAmount}
+	</if>
+	<if test="satisfyType == 4">
+		select `customer_id` FROM `customer_order` WHERE order_time BETWEEN #{beginDate} and #{endDate} GROUP BY `customer_id` 
+		HAVING COUNT(customer_id) >= #{satisfyInitialAmount} and COUNT(customer_id) <![CDATA[ <= ]]> #{satisfyEndAmount}
+	</if>
+	<if test="satisfyType == 5">
+		select `customer_id` FROM `customer_order` WHERE  (is_payback = 0 or (is_payback = 1 and payback_time >= #{endDate})) and #{endDate} >= order_time  
+    	GROUP BY customer_id HAVING SUM(principal) >= #{satisfyInitialAmount} and SUM(principal) <![CDATA[ <= ]]> #{satisfyEndAmount} 
+	</if>
+  </select>
+  <select id="countGiveUser" resultType="int">
+	<if test="satisfyType == 1">
+  		select COUNT(DISTINCT(customer_id)) 
+  		from customer_order 
+  		where order_time BETWEEN #{beginDate} and #{endDate}
+		and principal >= #{satisfyInitialAmount} and #{satisfyEndAmount} >= principal
+	</if>
+	<if test="satisfyType == 2">
+  		SELECT count(tp.customer_id)
+		from (select customer_id, sum(principal) total
+		  	from customer_order	cor
+  			left join customer cr on cr.id = cor.customer_id
+			where order_time BETWEEN #{beginDate} and #{endDate}
+		GROUP BY  customer_id) tp 
+		where total >= #{satisfyInitialAmount} and #{satisfyEndAmount} >= total
+	</if>
+	<if test="satisfyType == 3">
+	    SELECT count(tp.customer_id)
+		from (select customer_id, sum(payback_amount) total
+		  	from customer_order	cor
+  			left join customer cr on cr.id = cor.customer_id
+			where is_payback = 1 and order_time BETWEEN #{beginDate} and #{endDate}
+		GROUP BY  customer_id) tp 
+		where total >= #{satisfyInitialAmount} and #{satisfyEndAmount} >= total
+	</if>
+	<if test="satisfyType == 4">
+	   SELECT count(tp.total)
+		from (select count(customer_id) total
+		  	from customer_order	cor
+  			left join customer cr on cr.id = cor.customer_id
+			where order_time BETWEEN #{beginDate} and #{endDate}
+		GROUP BY  customer_id) tp
+		where total >= #{satisfyInitialAmount} and #{satisfyEndAmount} >= total
+	</if>
+	<if test="satisfyType == 5">
+	    select count(tp.customer_id)
+	    from (select cor.customer_id, sum(cor.principal) total
+  		from customer_order cor
+  		left join customer cr on cr.id = cor.customer_id
+		where is_payback = 0 or (is_payback = 1 and payback_time >= #{endDate})
+		GROUP BY customer_id) tp
+		where total >= #{satisfyInitialAmount} and #{satisfyEndAmount} >= total
+	</if>
+  </select>
+  <select id="selectAccumulativeAmount" resultType="int">
+	select COUNT(DISTINCT(customer_id)) from `customer_order` where `order_time` BETWEEN #{beginDate} and #{endDate}
+	and `product_id` in (SELECT id from `product` where category_id in (select id from `product_category` WHERE property= 'COMMON'))
+	HAVING SUM(principal) >= #{accumulativeAmount};
+  </select>
+  <!-- <select id="countCustomeTrade" resultType="int">
+  	select count(*) from customer_order where account = #{account}
+  </select>
+  <select id="countUsedCoupon" resultType="int">
+  	select count(*) from customer_order where account = #{account} and coupon_amount > 0
+  </select> -->
+  <select id="countWinCentage" resultType="double">
+  	select IFNULL((select count(*) from customer where total_trade_money >= #{totalTradeAmount}) / (select count(id) from customer where total_trade_money >= 100),0.000)
+  </select>
+  <select id="selectTelesaleCellphones" resultType="string">
+    select cellphone from customer 
+    where latest_trade_time > DATE_SUB(curdate(),INTERVAL 1 DAY) and cellphone in 
+    <foreach collection="cellphones" item="cellphone" index="index" 
+	open="(" separator="," close=")">#{cellphone}</foreach>
+  </select>
+  <insert id="insert" parameterType="Customer" useGeneratedKeys="true" keyProperty="id">
+    insert into customer
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id > 0">
+        id,
+      </if>
+      <if test="name != null">
+        name,
+      </if>
+      <if test="cellphone != null">
+        cellphone,
+      </if>
+      <if test="idcard != null">
+        idcard,
+      </if>
+      <if test="firstTradeTime != null">
+        first_trade_time,
+      </if>
+      <if test="channel != null and channel.id > 0">
+        channel_id,
+      </if>
+      latest_trade_time
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id > 0">
+        #{id, jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="cellphone != null">
+        #{cellphone,jdbcType=VARCHAR}, 
+      </if>
+      <if test="idcard != null">
+        #{idcard,jdbcType=VARCHAR}, 
+      </if>
+      <if test="firstTradeTime != null">
+        #{firstTradeTime,jdbcType=VARCHAR}, 
+      </if>
+      <if test="channel != null and channel.id > 0">
+        #{channel.id, jdbcType=INTEGER},
+      </if>
+      now()
+    </trim>
+  </insert>
+  <insert id="insertBank" parameterType="CustomerBank" useGeneratedKeys="true" keyProperty="id">
+	    insert into customer_bank
+	    <trim prefix="(" suffix=")" suffixOverrides=",">
+	    	<if test="customer != null and customer.id > 0">
+	    		customer_id, 
+	    	</if>
+	    	<if test="bankName != null">
+	    		bank_name,    
+	    	</if>
+	    	<if test="cardNO != null">
+	    	    card_no,
+	    	</if>
+	    	<if test="bankNO != null">
+	    	    bank_no,
+	    	</if>
+	    	<if test="status > 0">
+	    	    status,
+	    	</if>
+	    </trim>
+	    <trim prefix="values (" suffix=")" suffixOverrides=",">
+	        <if test="customer != null and customer.id > 0">
+	    		#{customer.id,jdbcType=INTEGER},       
+	    	</if>
+	    	<if test="bankName != null">
+	    		#{bankName,jdbcType=VARCHAR},    
+	    	</if>
+	    	<if test="cardNO">
+	    	    #{cardNO,jdbcType=VARCHAR},
+	    	</if>
+	    	<if test="bankNO != null">
+	    	    #{bankNO,jdbcType=VARCHAR},
+	    	</if>
+	    	<if test="status > 0">
+	    	    #{status,jdbcType=INTEGER},
+	    	</if>
+	    </trim>
+	</insert>
+ <insert id="insertUserBank">
+   insert into user_bank (card_no,bank_name,bank_no,user_id) values(#{newCard},#{bankName},#{bankNo},#{userId})
+ </insert>
+ <update id="updateUserBank">
+   update user_bank set type = 1 where user_id=#{userId} and card_no=#{oldCard}
+ </update>
+  <update id="updateBank" parameterType="CustomerBank" >
+	update customer_bank set bank_no = #{bankNO} , bank_name = #{bankName}, status = #{status} where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="resetTurnOutBank" parameterType="CustomerBank" >
+	update customer_bank set status = 1 where customer_id = #{id,jdbcType=INTEGER} and status=2 
+  </update>
+  <update id="unbundling">
+    update customer_bank set status = 0 where customer_id = #{id,jdbcType=INTEGER} and card_no = #{originalCard,jdbcType=VARCHAR}
+  </update>
+  <update id="changing">
+    update customer_bank set card_no = #{newCard,jdbcType=VARCHAR} where customer_id = #{id,jdbcType=INTEGER} and card_no = #{originalCard,jdbcType=VARCHAR}
+  </update>
+  <update id="cumulativeIncome">
+    update customer cr, customer_order co
+	set cr.total_trade_income = cr.total_trade_income + (#{orderMoney,jdbcType=FLOAT} - co.principal)
+	where co.order_no = #{orderNo,jdbcType=VARCHAR} and cr.id = co.customer_id
+  </update>
+  <update id="cumulativeBaobaoIncome">
+    update customer cr 
+	left join baobao_order bor on cr.id = bor.customer_id
+	left join product prt on prt.id = bor.product_id   
+	set cr.baobao_trade_income = cr.baobao_trade_income + (#{orderMoney,jdbcType=FLOAT} - bor.portion * prt.lowest_money + bor.fee)
+	where bor.order_no = #{orderNo,jdbcType=VARCHAR}
+  </update>
+  <update id="update" parameterType="Customer" >
+    update customer
+    <set >
+      <if test="name != null">
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="idcard != null">
+        idcard = #{idcard,jdbcType=VARCHAR},
+      </if>
+      <if test="cellphone != null">
+        cellphone = #{cellphone,jdbcType=VARCHAR},
+      </if>
+      <if test="firstTradeTime != null">
+        first_trade_time = #{firstTradeTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="totalTradeAmount > 0">
+        total_trade_amount = #{totalTradeAmount,jdbcType=INTEGER},
+      </if>
+      <if test="latestTradeTime != null">
+        latest_trade_time = #{latestTradeTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="totalTradeIncome > 0">
+        total_trade_income = #{totalTradeIncome,jdbcType=DOUBLE},
+      </if>
+    </set>
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+  
+  <select id ="queryForUninvestCount" resultType="java.lang.Integer">
+    select count(*) from user ur left join channel cl on ur.channel_id = cl.id 
+    <where>
+        <![CDATA[
+        ur.id not in (
+	      select DISTINCT(co.customer_id) from customer_order co WHERE co.order_time < curdate()
+        )
+        ]]>
+		<if test="userName != null" >
+		    and ur.name like '${userName}%'
+		</if>
+		<if test="cellphone != null">
+			and ur.cellphone = '${cellphone}'
+		</if>
+		<choose>
+            <when test="startTime != null and endTime != null">
+                <![CDATA[and (DATE_FORMAT(ur.register_time,'%Y-%m-%d') >= #{startTime} and #{endTime}>= DATE_FORMAT(ur.register_time,'%Y-%m-%d'))]]>
+            </when>
+            <otherwise>
+				<![CDATA[and ur.register_time BETWEEN date_sub(curdate(),interval 7 day) and curdate()]]>
+			</otherwise>
+        </choose>
+    </where> 
+  </select>
+  <select id ="queryForLostcustomerCount" resultType="java.lang.Integer">
+      select count(DISTINCT(cr.id)) from customer cr 
+      left join customer_order co on cr.id = co.customer_id 
+      left join product pt on co.product_id = pt.id 
+      left join channel cl on cr.channel_id = cl.id
+     <where>
+        <![CDATA[
+         cr.id not in (
+	      select DISTINCT(cor.customer_id) from customer_order cor left join product prt on cor.product_id = prt.id where DATE_ADD(prt.interest_date, INTERVAL prt.finance_period DAY) > curdate()
+         )
+        ]]>
+		<if test="userName != null" >
+		    and cr.name like '${userName}%'
+		</if>
+		<if test="cellphone != null">
+			and cr.cellphone = '${cellphone}'
+		</if>
+		<choose>
+            <when test="startTime != null and endTime != null">
+                <![CDATA[and (DATE_ADD(pt.interest_date, INTERVAL pt.finance_period DAY) >= #{startTime} and #{endTime}>= DATE_ADD(pt.interest_date, INTERVAL pt.finance_period DAY))]]>
+            </when>
+            <otherwise>
+				<![CDATA[and DATE_ADD(pt.interest_date, INTERVAL pt.finance_period DAY)  BETWEEN  DATE_ADD(curdate(), INTERVAL -2 MONTH) and DATE_ADD(curdate(), INTERVAL -1 MONTH)]]>
+			</otherwise>
+        </choose>
+     </where>  
+  </select>
+  
+  <select id="queryUninvestList" resultMap="UninvestMap">
+    select ur.id, ur.cellphone ,ur.name, cl.name channel_name, ur.register_time
+    from user ur left join channel cl on ur.channel_id = cl.id 
+    <where>
+        <![CDATA[
+          ur.id not in (
+	        select DISTINCT(co.customer_id) from customer_order co WHERE co.order_time < curdate()
+          )
+        ]]>
+		<if test="userName != null" >
+		    and ur.name like '${userName}%'
+		</if>
+		<if test="cellphone != null">
+			and ur.cellphone = '${cellphone}'
+		</if>
+		<choose>
+            <when test="startTime != null and endTime != null">
+                <![CDATA[and (DATE_FORMAT(ur.register_time,'%Y-%m-%d') >= #{startTime} and #{endTime}>= DATE_FORMAT(ur.register_time,'%Y-%m-%d'))]]>
+            </when>
+            <otherwise>
+				<![CDATA[and ur.register_time BETWEEN date_sub(curdate(),interval 7 day) and curdate()]]>
+			</otherwise>
+        </choose>
+     </where> 
+      ORDER BY ur.register_time DESC
+     <choose>
+	    <when test="offset > 0 and size > 0">
+          <![CDATA[
+           limit #{offset}, #{size}
+          ]]>
+	    </when>
+	    <when test="size > 0">
+            <![CDATA[
+               limit 0, #{size}
+            ]]>
+	    </when>
+	    <otherwise>
+	       <![CDATA[
+	           limit 0, 15
+	       ]]>
+	    </otherwise>
+	</choose>
+  </select>
+  
+  <select id="queryLostcustomers" resultMap="LostcustomerMap">
+     select cr.id , cr.cellphone, cr.name, cl.name channel_name, DATE_ADD(pt.interest_date, INTERVAL pt.finance_period DAY) payback_time, cr.total_trade_money total_trade_money
+     FROM customer cr left join customer_order co on cr.id = co.customer_id left join product pt on co.product_id = pt.id left join channel cl on cr.channel_id = cl.id
+     <where>
+        <![CDATA[
+         cr.id not in (
+	      select DISTINCT(cor.customer_id) from customer_order cor left join product prt on cor.product_id = prt.id where DATE_ADD(prt.interest_date, INTERVAL prt.finance_period DAY) > curdate()
+         )
+        ]]>
+		<if test="userName != null" >
+		    and cr.name like '${userName}%'
+		</if>
+		<if test="cellphone != null">
+			and cr.cellphone = '${cellphone}'
+		</if>
+		<choose>
+            <when test="startTime != null and endTime != null">
+                <![CDATA[and (DATE_ADD(pt.interest_date, INTERVAL pt.finance_period DAY) >= #{startTime}  and #{endTime}>= DATE_ADD(pt.interest_date, INTERVAL pt.finance_period DAY))]]>
+            </when>
+            <otherwise>
+				<![CDATA[and DATE_ADD(pt.interest_date, INTERVAL pt.finance_period DAY)  BETWEEN  DATE_ADD(curdate(), INTERVAL -2 MONTH) and DATE_ADD(curdate(), INTERVAL -1 MONTH)]]>
+			</otherwise>
+        </choose>
+     </where>  
+     GROUP BY cr.id
+     ORDER BY payback_time DESC
+     <choose>
+	    <when test="offset > 0 and size > 0">
+          <![CDATA[
+           limit #{offset}, #{size}
+          ]]>
+	    </when>
+	    <when test="size > 0">
+            <![CDATA[
+               limit 0, #{size}
+            ]]>
+	    </when>
+	    <otherwise>
+	       <![CDATA[
+	           limit 0, 15
+	       ]]>
+	    </otherwise>
+	</choose>
+  </select>
+  
+  <!-- <update id="adjust"> 
+  	update customer set total_trade_money = total_trade_money + #{principal,jdbcType=FLOAT}, latest_trade_time = #{latestTradeTime,jdbcType=TIMESTAMP}, total_trade_amount = IFNULL(total_trade_amount, 0) + 1 where account = #{account,jdbcType=VARCHAR}
+  </update>
+  <insert id="giveBirthdayCouponInBatch">
+    INSERT INTO customer_coupon (account, coupon_id, amount, used, create_time, cumulative, source, dispatching_bonus_log_id)
+    <if test="minAmount == 0">
+	  select account, #{couponId}, #{maxAmount}, 0, now(), 0, 10, #{ruleId}
+	  from customer
+	  where idcard != '' and idcard is not null and SUBSTR(idcard FROM 11 FOR 2) = #{systemMonth}
+    </if>
+    <if test="minAmount > 0">
+	  select account, #{couponId}, FLOOR(#{minAmount} + RAND() * (#{maxAmount} - #{minAmount})), 0, now(), 0, 10, #{ruleId}
+	  from customer
+	  where idcard != '' and idcard is not null and SUBSTR(idcard FROM 11 FOR 2) = #{systemMonth}
+    </if>
+  </insert>
+  <insert id="giveSilverForBirthdayInBatch">
+    INSERT INTO customer_silver_log (account, channel, amount, create_time)
+    select account, #{channel}, #{silverNumber}, now()
+    from customer
+    where idcard != '' and idcard is not null and SUBSTR(idcard FROM 11 FOR 2) = #{systemMonth}
+  </insert>
+  <update id="giveSilverForBirthday" >
+    update customer set silver_number = silver_number + #{silverNumber,jdbcType=INTEGER} 
+    where idcard != '' and idcard is not null and SUBSTR(idcard FROM 11 FOR 2) = #{systemMonth}
+  </update>
+  <update id="updateSendMessageFlag">
+    update customer set send_message = #{flag, jdbcType=INTEGER} where account = #{account,jdbcType=VARCHAR}
+  </update> -->
+</mapper>

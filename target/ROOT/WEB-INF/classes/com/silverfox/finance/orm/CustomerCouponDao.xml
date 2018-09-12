@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.CustomerCouponDao" >
+   <resultMap id="customerCouponMap" type="CustomerCoupon" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="amount" property="amount" jdbcType="DOUBLE" />
+    <result column="used" property="used" jdbcType="INTEGER" />
+    <result column="cumulative" property="cumulative" jdbcType="INTEGER" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="used_time" property="usedTime" jdbcType="TIMESTAMP" />
+    <result column="source" property="source" jdbcType="TINYINT" />
+    <result column="dispatching_bonus_log_id" property="dispatchingBonusLogId" jdbcType="INTEGER" />
+    <result column="cellphone" property="cellphone" jdbcType="VARCHAR" />
+    <association property="coupon" javaType="Coupon">
+      <id column="coupon_id" property="id" />
+      <result column="coupon_category" property="category" />
+   	  <result column="life_cycle" property="lifeCycle" />
+   	  <result column="expires_point" property="expiresPoint" />
+   	  <result column="money_limit" property="moneyLimit" />
+   	  <result column="trade_amount" property="tradeAmount" />
+   	  <result column="finance_period" property="financePeriod" />
+   	  <result column="increase_days" property="increaseDays"/>
+   	  <result column="money_limit" property="moneyLimit" />
+   	  <result column="condition" property="condition" />
+   	  <result column="donation" property="donation" />
+    </association> 
+    <association property="user" javaType="User">
+      <id column="user_id" property="id" />
+      <id column="user_cellphone" property="cellphone" />
+    </association> 
+  </resultMap> 
+  
+  <resultMap id="CouponMap" type="CustomerCoupon" >
+	   <id column="id" property="id" jdbcType="INTEGER" />
+	   <result column="amount" property="amount" jdbcType="DOUBLE" />
+	   <result column="used" property="used" jdbcType="INTEGER" />
+	   <result column="cumulative" property="cumulative" jdbcType="INTEGER" />
+	   <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+	   <result column="used_time" property="usedTime" jdbcType="TIMESTAMP" />
+	   <result column="source" property="source" jdbcType="TINYINT" />
+	   <association property="coupon" javaType="Coupon">
+	     <id column="coupon_id" property="id" />
+	     <result column="coupon_category" property="category" />
+	   	 <result column="coupon_name" property="name" />
+	   	 <result column="coupon_condition" property="condition" />
+	   	 <result column="life_cycle" property="lifeCycle" />
+	   	 <result column="expires_point" property="expiresPoint" />
+	   	 <result column="money_limit" property="moneyLimit" />
+	   	 <result column="trade_amount" property="tradeAmount" />
+	   	 <result column="finance_period" property="financePeriod" />
+	   	 <result column="increase_days" property="increaseDays"/>
+	   	 <result column="donation" property="donation" />
+	   </association> 
+	   <association property="user" javaType="User">
+		   <result column="user_cellphone" property="cellphone" />
+	   </association> 
+	</resultMap>
+	<insert id="insertCustomerCoupon" parameterType="CustomerCoupon" useGeneratedKeys="true" keyProperty="id" >
+		insert into customer_coupon
+		<trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="user != null" >
+				user_id,
+			</if>
+			<if test="coupon != null and coupon.id > 0" >
+				coupon_id,
+			</if>
+			<if test="cumulative >= 0" >
+				cumulative,
+			</if>
+			<if test="amount >= 0" >
+				amount,
+			</if>
+			<if test="source >= 0" >
+				source,
+			</if>
+			<if test="dispatchingBonusLogId >= 0" >
+				dispatching_bonus_log_Id,
+			</if>
+			<if test="createTime != null">
+				create_time,
+			</if>
+			<if test="cellphone != null">
+				cellphone
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="user != null" >
+				#{user.id,jdbcType=VARCHAR},
+			</if>
+			<if test="coupon != null and coupon.id > 0" >
+				#{coupon.id,jdbcType=INTEGER},
+			</if>
+			<if test="cumulative >= 0" >
+				#{cumulative,jdbcType=INTEGER},
+			</if>
+			<if test="amount >= 0" >
+				#{amount,jdbcType=DOUBLE},
+			</if>
+			<if test="source >= 0" >
+				#{source,jdbcType=INTEGER},
+			</if>
+			<if test="dispatchingBonusLogId >= 0" >
+				#{dispatchingBonusLogId,jdbcType=INTEGER},
+			</if>
+			<if test="createTime != null">
+				#{createTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="cellphone != null">
+				#{cellphone,jdbcType=VARCHAR}
+			</if>
+		</trim>
+	</insert>
+   <select id="queryForListCustomerCoupons" resultMap="CouponMap">
+	    select  cc.id, c.cellphone user_cellphone, cc.create_time, cc.used, cc.used_time 
+	    from customer_coupon cc 
+	    left join user c on cc.user_id = c.id
+	    <where>
+	        cc.coupon_id = #{couponId}
+	        <if test="cellphone != null">
+	            and c.cellphone = #{cellphone}
+	        </if>
+	        <if test="status >= 0">
+	            and cc.used = #{status}
+	        </if>
+	    </where>
+		<choose>
+		  <when test="offset > 0 and size > 0"> 
+	      <![CDATA[
+	      limit #{offset}, #{size}
+	      ]]>
+		  </when>
+		  <when test="size > 0">
+	      <![CDATA[
+	      limit 0, #{size}
+	      ]]>
+		  </when>
+		  <otherwise>
+		  <![CDATA[
+		    limit 0, 15
+		  ]]>
+		  </otherwise>
+		</choose>
+  </select>
+   <select id="queryForCountCustomerCoupons" resultType="int">
+  	 select  count(cc.id) from customer_coupon cc left join customer c on cc.user_id = c.id
+     <where>
+        cc.coupon_id = #{couponId}
+        <if test="cellphone != null">
+            and c.cellphone = #{cellphone}
+        </if>
+        <if test="status >= 0">
+            and cc.used = #{status}
+        </if>
+     </where>
+  </select>
+  <select id="queryForCountCouponExchange" resultType="int">
+	   select count(gcc.id)
+	   from goods_coupon_code gcc 
+	   left join coupon_exchange ce on gcc.coupon_exchange_id = ce.id
+	   left join customer_coupon ccn on ccn.id = gcc.customer_coupon_id
+	   left join coupon c on c.id = ce.coupon_id
+	   left join customer co on co.id = gcc.user_id
+	   <where>
+	       	gcc.coupon_exchange_id = #{couponExchangeId}
+	        <if test="type > 0 ">
+	            <if test="type == 1 ">
+	                <![CDATA[ and c.category <= 3 ]]>
+	            </if>
+	            <if test="type == 2 ">
+	                <![CDATA[ and c.category > 3 ]]>
+	            </if>
+	        </if>
+	        <if test="used > -1 ">
+	           and ccn.used = #{used}
+	        </if>
+	        <if test="beginTime != null and endTime != null">
+	      	   and DATE_FORMAT(gcc.exchange_time,'%Y-%m-%d') >= #{beginTime} and #{endTime} >= DATE_FORMAT(gcc.exchange_time,'%Y-%m-%d')
+	        </if>
+		</where>
+  </select>
+  <select id="queryForListCouponExchange" resultMap="CouponMap">
+	   select gcc.id, co.cellphone user_cellphone, c.`name` coupon_name, c.amount amount, c.category coupon_category, ccn.used, gcc.exchange_time used_time, gcc.code coupon_condition
+	   from goods_coupon_code gcc 
+	   left join coupon_exchange ce on gcc.coupon_exchange_id = ce.id
+	   left join customer_coupon ccn on ccn.id = gcc.customer_coupon_id
+	   left join coupon c on c.id = ce.coupon_id
+	   left join user co on co.id = gcc.user_id
+	   <where>
+	       	gcc.coupon_exchange_id = #{couponExchangeId}
+	        <if test="type > 0 ">
+	            <if test="type == 1 ">
+	                <![CDATA[ and c.category <= 3 ]]>
+	            </if>
+	            <if test="type == 2 ">
+	                <![CDATA[ and c.category > 3 ]]>
+	            </if>
+	        </if>
+	        <if test="used > -1 ">
+	           and ccn.used = #{used}
+	        </if>
+	        <if test="beginTime != null and endTime != null">
+	      	   and DATE_FORMAT(gcc.exchange_time,'%Y-%m-%d') >= #{beginTime} and #{endTime} >= DATE_FORMAT(gcc.exchange_time,'%Y-%m-%d')
+	        </if>
+	    </where>
+		<choose>
+		  <when test="offset > 0 and size > 0"> 
+	      <![CDATA[
+	      limit #{offset}, #{size}
+	      ]]>
+		  </when>
+		  <when test="size > 0">
+	      <![CDATA[
+	      limit 0, #{size}
+	      ]]>
+		  </when>
+		  <otherwise>
+		  <![CDATA[
+		    limit 0, 15
+		  ]]>
+		  </otherwise>
+		</choose>
+  </select>
+  <select id="countByDispatchingBonusLogId" resultType="int">
+  	 select COUNT(cc.id) 
+  	 from customer_coupon cc 
+  	 <if test="category >= 0">
+        left join coupon c on cc.coupon_id = c.id
+     </if>
+     <where>
+        cc.dispatching_bonus_log_id = #{dispatchingBonusLogId}
+        <if test="used >= 0">
+            and used = #{used}
+        </if>
+        <if test="cellphone != null">
+           and cc.user_id = (select id from user where cellphone = #{cellphone})
+        </if>
+        <if test="category == 4">
+           and c.category = #{category}
+        </if>
+        <if test="category >= 0 and category != 4">
+           and c.category != 4
+        </if>
+     </where>
+  </select>
+   <select id="selectByDispatchingBonusLogId" resultMap="customerCouponMap">
+	select cc.id, cc.user_id, c.name coupon_name, create_time, cc.amount, cc.used, c.category coupon_category
+	from (select used, id, coupon_id, user_id, create_time, amount from customer_coupon where dispatching_bonus_log_id = #{dispatchingBonusLogId}
+        <if test="used >= 0">
+            and used = #{used}
+        </if>
+	) cc
+	left join coupon c on cc.coupon_id = c.id 
+	<where>
+        <if test="cellphone != null">
+           cc.user_id = (select id from user where cellphone = #{cellphone}) 
+        </if>
+        <if test="category == 4">
+            and c.category = #{category}
+        </if>
+        <if test="category >= 0 and category != 4">
+            and c.category != 4
+        </if>
+    </where>
+	<choose>
+	  <when test="offset > 0 and size > 0"> 
+	    <![CDATA[
+	    limit #{offset}, #{size}
+	    ]]>
+	  </when>
+	  <when test="size > 0">
+	    <![CDATA[
+	    limit 0, #{size}
+	    ]]>
+	  </when>
+	  <otherwise>
+		<![CDATA[
+		  limit 0, 15
+		]]>
+	  </otherwise>
+	</choose>
+  </select>
+	<select id="countCouponActivityRecord" resultType="int">
+		select count(cc.id) from customer_coupon cc left join coupon_activity_log cal on cc.id = cal.customer_coupon_id
+		<if test="cellphone != null">
+			left join customer cr on cc.user_id = cr.id
+		</if>
+		<where>
+			cal.coupon_activity_id = #{couponActivityId}
+			<if test="cellphone != null">
+				and cr.cellphone = #{cellphone}
+			</if>
+			<if test="used >= 0">
+				and cc.used = #{used}
+			</if>
+		</where>
+	</select>
+	<select id="selectCouponActivityRecord" resultMap="customerCouponMap">
+		select cc.id, cr.cellphone, cc.amount, cc.used, cc.create_time
+		from customer_coupon cc
+		left join coupon_activity_log cal on cc.id = cal.customer_coupon_id
+		left join user cr on cc.user_id = cr.id
+		<where>
+			cal.coupon_activity_id = #{couponActivityId}
+			<if test="cellphone != null">
+				and cr.cellphone = #{cellphone}
+			</if>
+			<if test="used >= 0">
+				and cc.used = #{used}
+			</if>
+		</where>
+		<choose>
+			<when test="offset > 0 and size > 0">
+				<![CDATA[
+	    limit #{offset}, #{size}
+	    ]]>
+			</when>
+			<when test="size > 0">
+				<![CDATA[
+	    limit 0, #{size}
+	    ]]>
+			</when>
+			<otherwise>
+				<![CDATA[
+		  limit 0, 15
+		]]>
+			</otherwise>
+		</choose>
+	</select>
+	<select id="countCouponsByCustomerId" resultType="int">
+		select count(*) from customer_coupon ccn left join coupon cpn on ccn.coupon_id = cpn.id where ccn.user_id = #{customerId} and cumulative != 1
+		<if test="status == 0">
+			and ccn.used = 0 and IF(cpn.life_cycle = 1, cpn.expires_point >= curdate(),true) and IF(cpn.life_cycle = 2, ADDDATE(ccn.create_time,(cpn.expires_point - 1)) >= curdate(), true)
+		</if>
+		<if test="status == 1">
+			and ccn.used = 1
+		</if>
+		<if test="status == 2">
+			and ccn.used = 2
+		</if>
+		<if test="status == 3">
+			<![CDATA[ and ccn.used = 0 and cpn.life_cycle > 0 and IF(cpn.life_cycle = 1, cpn.expires_point < curdate(),true) and IF(cpn.life_cycle = 2, ADDDATE(ccn.create_time,(cpn.expires_point - 1)) < curdate(), true) ]]>
+		</if>
+	</select>
+	<select id="queryCouponsByCustomerId" resultMap="customerCouponMap">
+		select ccn.id, ccn.amount, if (ccn.used = 0 and IF(cpn.life_cycle = 1, cpn.expires_point >= curdate(),true) and IF(cpn.life_cycle = 2, ADDDATE(ccn.create_time,(cpn.expires_point - 1)) >= curdate(), true), 0, if(ccn.used = 0, 3, ccn.used)) used, ccn.create_time, ccn.cumulative, ccn.source,
+		ccn.coupon_id, cpn.name coupon_name, cpn.life_cycle, cpn.category coupon_category,
+		cpn.expires_point, cpn.money_limit, cpn.trade_amount, IF(cpn.finance_period is null, 0, cpn.finance_period) as finance_period,
+		cpn.increase_days increase_days, ccn.used_time,
+		cpn.money_limit, cpn.condition
+		from customer_coupon ccn
+		left join coupon cpn on ccn.coupon_id = cpn.id
+		where ccn.user_id = #{customerId} and cumulative != 1
+		<if test="status == 0">
+			and ccn.used = 0 and IF(cpn.life_cycle = 1, cpn.expires_point >= curdate(),true) and IF(cpn.life_cycle = 2, ADDDATE(ccn.create_time,(cpn.expires_point - 1)) >= curdate(), true)
+		</if>
+		<if test="status == 1">
+			and ccn.used = 1
+		</if>
+		<if test="status == 2">
+			and ccn.used = 2
+		</if>
+		<if test="status == 3">
+			<![CDATA[ and ccn.used = 0 and cpn.life_cycle > 0 and IF(cpn.life_cycle = 1, cpn.expires_point < curdate(),true) and IF(cpn.life_cycle = 2, ADDDATE(ccn.create_time,(cpn.expires_point - 1)) < curdate(), true) ]]>
+		</if>
+		order by ccn.id DESC
+		<if test="offset >= 0 and size > 0">
+			<choose>
+				<when test="offset >= 0 and size > 0">
+					<![CDATA[
+            limit #{offset}, #{size}
+          ]]>
+				</when>
+				<when test="size > 0">
+					<![CDATA[
+            limit 0, #{size}
+          ]]>
+				</when>
+			</choose>
+		</if>
+	</select>
+	<select id="queryForCountCustomerCouponsByUserId" resultType="int">
+		select count(ccn.id) from customer_coupon ccn left join coupon cpn on ccn.coupon_id = cpn.id
+		<where>
+			ccn.coupon_id > 0
+			<if test="userId > 0">
+				and ccn.user_id = #{userId}
+			</if>
+			<if test="category == 0">
+				<![CDATA[ and cpn.category <= 3 ]]>
+			</if>
+			<if test="category == 1">
+				and cpn.category > 3
+			</if>
+			<if test="used == 0">
+				<![CDATA[ and ccn.used = 0 and IF(cpn.life_cycle = 1, cpn.expires_point >= curdate(),true) and IF(cpn.life_cycle = 2, ADDDATE(ccn.create_time,(cpn.expires_point - 1)) >= curdate(), true)]]>
+			</if>
+			<if test="used == 1">
+				<![CDATA[ and not (ccn.used = 0 and IF(cpn.life_cycle = 1, cpn.expires_point >= curdate(),true) and IF(cpn.life_cycle = 2, ADDDATE(ccn.create_time,(cpn.expires_point - 1)) >= curdate(), true))]]>
+			</if>
+		</where>
+	</select>
+	<select id="selectByUserId" resultType="CustomerCoupon">
+		select id, amount, create_time, cumulative
+		from customer_coupon
+		where cumulative = 1 and user_id = #{userId,jdbcType=INTEGER}
+	</select>
+  <insert id="insertCustomerCoupons" >
+  	insert into customer_coupon(user_id, coupon_id, amount, create_time, source, cellphone, dispatching_bonus_log_id) values
+  	<foreach collection="customerCoupons" item="customerCoupon" index="index" separator=",">
+	   (#{customerCoupon.user.id}, 
+	   <choose>
+		  <when test="customerCoupon.coupon.id > 0"> 
+	      	#{customerCoupon.coupon.id},
+		  </when>
+		  <otherwise>
+		  	0,
+		  </otherwise>
+		</choose>
+	    <choose>
+		  <when test="customerCoupon.amount > 0"> 
+	      	#{customerCoupon.amount},
+		  </when>
+		  <otherwise>
+		  	0,
+		  </otherwise>
+		</choose>
+	   #{customerCoupon.createTime}, 
+	   #{customerCoupon.source},
+	   <if test="customerCoupon.cellphone != null">
+	     #{customerCoupon.cellphone},
+	   </if>
+	   <if test="customerCoupon.cellphone == null">
+	     '',
+	   </if>
+	   <choose>
+		  <when test="customerCoupon.dispatchingBonusLogId > 0"> 
+	      	#{customerCoupon.dispatchingBonusLogId}
+		  </when>
+		  <otherwise>
+		  	0
+		  </otherwise>
+		</choose>
+	   )
+	 </foreach>
+  </insert>
+  <update id="updateInviteCouponCellphone">
+  	update customer_coupon set cellphone = #{newCellphone,jdbcType=VARCHAR} where cellphone = #{oldCellphone,jdbcType=VARCHAR}
+  </update>
+  <update id="updateInviteCouponLogCellphone">
+  	update customer_invite_coupon_log set cellphone = #{newCellphone,jdbcType=VARCHAR} where cellphone = #{oldCellphone,jdbcType=VARCHAR}
+  </update>
+</mapper>

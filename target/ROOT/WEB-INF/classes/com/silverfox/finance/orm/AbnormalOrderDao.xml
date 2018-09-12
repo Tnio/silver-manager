@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.AbnormalOrderDao" >
+ 
+  <resultMap id="AbnormalOrderResultMap" type="AbnormalOrder" >
+    <id column="order_no" property="orderNO" jdbcType="VARCHAR" />
+    <result column="refund_no" property="refundNO" jdbcType="VARCHAR" />
+    <result column="principal" property="principal" jdbcType="INTEGER" />
+    <result column="fee" property="fee" jdbcType="FLOAT" />
+    <result column="coupon_amount" property="couponAmount" jdbcType="FLOAT" />
+    <result column="order_time" property="orderTime" jdbcType="TIMESTAMP" />
+    <result column="pay_type" property="payType" jdbcType="INTEGER" />
+    <result column="status" property="status" jdbcType="INTEGER" />
+    <association property="product" javaType="Product">
+      <id column="product_id" property="id" />
+      <result column="product_name" property="name" />
+    </association>
+    <association property="user" javaType="user">
+      <id column="user_id" property="id" />
+      <result column="user_name" property="name" />
+      <result column="user_cellphone" property="cellphone" />
+      <result column="user_idcard" property="idcard" />
+      <association property="channel" javaType="Channel">
+	    <id column="channel_id" property="id" />
+	    <result column="channel_name" property="name" />
+	  </association>
+	</association>
+  </resultMap>
+  <sql id="columns">
+    aor.order_no, aor.refund_no, aor.principal, aor.fee, aor.coupon_amount, aor.order_time, aor.pay_type, aor.status,
+	aor.bank_id, cbk.card_no, cbk.bank_no, cbk.bank_name, cr.id user_id, cr.name user_name,
+ 	cr.idcard user_idcard, prt.id product_id, prt.name product_name, aor.version, cr.cellphone user_cellphone
+  </sql>
+  <sql id="join_columns">
+    aor.order_no, aor.refund_no, aor.principal, aor.fee, aor.coupon_amount, aor.order_time, aor.pay_type, aor.status,
+	prt.id product_id, prt.name product_name, cr.id user_id, cr.name user_name, cr.cellphone user_cellphone,
+	cr.idcard user_idcard, cl.id channel_id, cl.name channel_name
+  </sql>
+ 
+  <select id="queryForOrderList" resultMap="AbnormalOrderResultMap">
+    select 
+    <include refid="join_columns" />
+    from abnormal_order aor
+	left join product prt on prt.id = aor.product_id
+	left join product_category pcy on pcy.id = prt.category_id
+	left join user cr on aor.customer_id = cr.id
+	left join channel cl on cr.channel_id = cl.id
+    <where>
+      <if test="name != null">
+      	cr.name like '%${name}%'
+      </if>
+      <if test="cellphone != null">
+      	and cr.cellphone like '%${cellphone}%'
+      </if>
+      <if test="channelId > -1">
+      	and cr.channel_id = ${channelId}
+      </if>
+      <if test="orderStatus > 0">
+      	and aor.status = ${orderStatus}
+      </if>
+      <if test="productName != null">
+      	and prt.name like '%${productName}%'
+      </if>
+      <if test="type == 2">
+        and pcy.property != 'TREASURE'
+      </if>
+      <if test="type == 3">
+        and pcy.property = 'TREASURE'
+      </if>
+      <if test="amountFrom > 0 and amountTo > 0">
+       	and aor.principal >= #{amountFrom} and #{amountTo} >= aor.principal
+      </if>
+      <if test="orderNO != null">
+      	and aor.order_no like '%${orderNO}%'
+      </if>
+      <if test="payType > 0">
+      	and aor.pay_type = #{payType}
+      </if>
+      <if test="beginTime != null and endTime != null">
+      	and (DATE_FORMAT(aor.order_time,'%Y-%m-%d') >= #{beginTime} and #{endTime} >= DATE_FORMAT(aor.order_time,'%Y-%m-%d'))
+      </if>
+    </where>
+    order by aor.order_time desc
+    <choose>
+	  <when test="offset > 0 and size > 0">
+      limit #{offset}, #{size}
+	  </when>
+	  <when test="size > 0">
+      <![CDATA[
+      limit 0, #{size}
+      ]]>
+	  </when>
+	  <otherwise>
+	  <![CDATA[
+	    limit 0, 15
+	  ]]>
+	  </otherwise>
+	</choose>
+  </select>
+
+  <select id="queryForSum" resultType="java.lang.Integer">
+    select sum(aor.principal)
+    from abnormal_order aor
+	left join product prt on prt.id = aor.product_id
+	left join product_category pcy on pcy.id = prt.category_id
+	left join user cr on aor.customer_id = cr.id
+	left join channel cl on cr.channel_id = cl.id
+    <where>
+      <if test="name != null">
+      	cr.name like '%${name}%'
+      </if>
+      <if test="cellphone != null">
+      	and cr.cellphone like '%${cellphone}%'
+      </if>
+      <if test="channelId > -1">
+      	and cr.channel_id = ${channelId}
+      </if>
+      <if test="orderStatus > 0">
+      	and aor.status = ${orderStatus}
+      </if>
+      <if test="type == 2">
+        and pcy.property != 'TREASURE'
+      </if>
+      <if test="type == 3">
+        and pcy.property = 'TREASURE'
+      </if>
+      <if test="amountFrom > 0 and amountTo > 0">
+       	and aor.principal >= #{amountFrom} and #{amountTo} >= aor.principal
+      </if>
+      <if test="productName != null">
+      	and prt.name like '%${productName}%'
+      </if>
+      <if test="orderNO != null">
+      	and aor.order_no like '%${orderNO}%'
+      </if>
+      <if test="payType > 0">
+      	and aor.pay_type = #{payType}
+      </if>
+      <if test="beginTime != null and endTime != null">
+      	and (DATE_FORMAT(aor.order_time,'%Y-%m-%d') >= #{beginTime} and #{endTime} >= DATE_FORMAT(aor.order_time,'%Y-%m-%d'))
+      </if>
+    </where>
+  </select>
+   <select id="queryForCount" resultType="int">
+    select count(aor.order_no)
+    from abnormal_order aor
+	left join product prt on prt.id = aor.product_id
+	left join product_category pcy on pcy.id = prt.category_id
+	left join user cr on aor.customer_id = cr.id
+	left join channel cl on cr.channel_id = cl.id
+    <where>
+      <if test="name != null">
+      	cr.name like '%${name}%'
+      </if>
+      <if test="cellphone != null">
+      	and cr.cellphone like '%${cellphone}%'
+      </if>
+      <if test="channelId > -1">
+      	and cr.channel_id = ${channelId}
+      </if>
+      <if test="orderStatus > 0">
+      	and aor.status = ${orderStatus}
+      </if>
+      <if test="type == 2">
+        and pcy.property != 'TREASURE'
+      </if>
+      <if test="type == 3">
+        and pcy.property = 'TREASURE'
+      </if>
+       <if test="amountFrom > 0 and amountTo > 0">
+       	and aor.principal >= #{amountFrom} and #{amountTo} >= aor.principal
+      </if>
+      <if test="productName != null">
+      	and prt.name like '%${productName}%'
+      </if>
+      <if test="orderNO != null">
+      	and aor.order_no like '%${orderNO}%'
+      </if>
+      <if test="payType > 0">
+      	and aor.pay_type = #{payType}
+      </if>
+      <if test="beginTime != null and endTime != null">
+      	and (DATE_FORMAT(aor.order_time,'%Y-%m-%d') >= #{beginTime} and #{endTime} >= DATE_FORMAT(aor.order_time,'%Y-%m-%d'))
+      </if>
+    </where>
+  </select>
+</mapper>

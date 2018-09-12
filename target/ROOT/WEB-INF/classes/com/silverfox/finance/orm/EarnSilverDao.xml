@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.EarnSilverDao">
+    <resultMap id="ResultMap" type="EarnSilver">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="type" property="type" jdbcType="TINYINT"/>
+        <result column="content" property="content" jdbcType="VARCHAR"/>
+        <result column="address" property="address" jdbcType="VARCHAR"/>
+        <result column="give_silver" property="giveSilver" jdbcType="INTEGER"/>
+        <result column="share_num" property="shareNum" jdbcType="TINYINT"/>
+        <result column="share_content" property="shareContent" jdbcType="VARCHAR"/>
+        <result column="enable" property="enable" jdbcType="TINYINT"/>
+        <result column="newsId" property="newsId" jdbcType="INTEGER"/>
+        <association property="news" javaType="NewsMaterial">
+            <id column="news_id" property="id" jdbcType="INTEGER" />
+            <result column="news_title" property="title" jdbcType="VARCHAR" />
+            <result column="news_type" property="type" jdbcType="INTEGER" />
+            <result column="news_link" property="link" jdbcType="VARCHAR" />
+        </association>
+    </resultMap>
+    <sql id="column">
+        es.id, name, es.type, es.content, address, give_silver,
+        share_num, share_content, enable, news_id, n.title news_title, n.type news_type, n.link news_link
+    </sql>
+    <select id="selectByEnable" resultMap="ResultMap" >
+        select <include refid="column" />
+        from earn_silver es
+        left join news_material n on es.news_id=n.id
+        <where>
+            <if test="enable > -1">
+                es.enable = #{enable}
+            </if>
+        </where>
+    </select>
+    <select id="selectById" resultMap="ResultMap">
+        select <include refid="column"/>
+        from earn_silver es
+        left join news_material n on es.news_id=n.id
+        where es.id = #{id}
+    </select>
+    <update id="update" parameterType="EarnSilver">
+        update earn_silver
+        <set>
+            <if test="name != null">
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="type > 0">
+                type = #{type,jdbcType=TINYINT},
+            </if>
+            <if test="content != null">
+                content = #{content,jdbcType=VARCHAR},
+            </if>
+            <if test="address != null">
+                address = #{address,jdbcType=VARCHAR},
+            </if>
+            <if test="giveSilver > 0">
+                give_silver = #{giveSilver,jdbcType=INTEGER},
+            </if>
+            <if test="shareNum > 0">
+                share_num = #{shareNum,jdbcType=TINYINT},
+            </if>
+            <if test="shareContent != null">
+                share_content = #{shareContent,jdbcType=VARCHAR},
+            </if>
+            <if test="news.id > 0">
+                news_id = #{news.id,jdbcType=INTEGER},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+    <update id="enable">
+        update earn_silver set enable = #{enable,jdbcType=TINYINT} where id = #{id,jdbcType=INTEGER}
+    </update>
+</mapper>

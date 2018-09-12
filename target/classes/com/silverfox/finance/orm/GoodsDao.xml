@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.GoodsDao" >
+    <resultMap type="Goods" id="resultMap">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="category" property="category" jdbcType="TINYINT"/>
+        <result column="virtual_goods" property="virtualGoods" jdbcType="INTEGER"/>
+        <result column="url" property="url" jdbcType="VARCHAR"/>
+        <result column="stock" property="stock" jdbcType="INTEGER"/>
+        <result column="consume_silver" property="consumeSilver" jdbcType="INTEGER"/>
+        <result column="type" property="type" jdbcType="INTEGER"/>
+        <result column="sort_number" property="sortNumber" jdbcType="INTEGER"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
+        <result column="hot" property="hot" jdbcType="TINYINT"/>
+        <result column="larger_url" property="largerUrl" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="rule" property="rule" jdbcType="VARCHAR"/>
+        <result column="price" property="price" jdbcType="DOUBLE"/>
+        <result column="discount" property="discount" jdbcType="DOUBLE"/>
+        <result column="times" property="times" jdbcType="INTEGER"/>
+        <result column="join_num" property="joinNum" jdbcType="INTEGER"/>
+        <result column="begin_date" property="beginDate" jdbcType="DATE"/>
+        <result column="end_date" property="endDate" jdbcType="DATE"/>
+        <result column="achieve_amount" property="achieveAmount" jdbcType="INTEGER"/>
+        <result column="is_show" property="isShow" jdbcType="INTEGER"/>
+        <result column="cellphone" property="cellphone" jdbcType="VARCHAR"/>
+        <result column="finance_period" property="financePeriod" jdbcType="TINYINT"/>
+         <result column="vip_discount" property="vipDiscount" jdbcType="TINYINT"/>
+    </resultMap>
+    <resultMap type="GoodsExchangeOrder" id="goodsExchangeOrderMap">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="order_no" property="orderNo" jdbcType="VARCHAR"/>
+        <result column="user_id" property="userId" jdbcType="INTEGER"/>
+        <result column="amount" property="amount" jdbcType="INTEGER"/>
+    </resultMap>
+    <sql id="columns">
+        g.id as id, g.name as name, g.category, g.virtual_goods, g.url, g.stock as stock,
+        g.consume_silver as consume_silver, g.type, g.sort_number as sort_number,
+        g.status as status, g.hot as hot, g.larger_url as larger_url, g.remark as remark,
+        g.price, g.join_num, g.cellphone, g.discount, g.times,
+        g.begin_date, g.end_date, g.achieve_amount, g.is_show, g.finance_period,g.vip_discount
+    </sql>
+    <select id="selectById" parameterType="int" resultMap="resultMap">
+        select <include refid="columns"/>
+        from goods g where id = #{id,jdbcType=INTEGER}
+    </select>
+    <select id="queryForList" resultMap="resultMap">
+        select
+        <include refid="columns"/>
+        from goods g
+        <where>
+            <if test="achieveAmount == 0">
+                and achieve_amount = 0
+            </if>
+            <if test="achieveAmount == 1">
+                and achieve_amount > 0
+            </if>
+            <if test="type == -1">
+                and <![CDATA[ type <= 3 ]]>
+            </if>
+            <if test="type != -1">
+                and type = #{type}
+            </if>
+            <if test="platform != 5">
+                and g.status = 2
+            </if>
+        </where>
+        <if test="type != 4" >
+            <![CDATA[ order by IF(#{platform} < 5,IF(g.stock > join_num,1,0),IF((g.stock > join_num and status = 1), 1, 0)) DESC, sort_number DESC]]>
+        </if>
+        <if test="type == 4 " >
+            <![CDATA[ order by IF(status = 2, 0, IF(status = 3, 1, 2)) DESC, IF(g.stock > join_num, 0, 1), sort_number DESC ]]>
+        </if>
+        <choose>
+            <when test="offset > 0 and size > 0">
+                <![CDATA[
+		     limit #{offset}, #{size}
+		     ]]>
+            </when>
+            <when test="size > 0">
+                <![CDATA[
+		     limit 0, #{size}
+		     ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+		   limit 0, 15
+		  ]]>
+            </otherwise>
+        </choose>
+    </select>
+    <select id="queryForListGoodsRecord" resultMap="resultMap">
+        select <include refid="columns"></include> from race_log ir
+        left join goods g on ir.goods_id = g.id
+        <where>
+            <if test="cellphone != null">
+                ir.cellphone = #{cellphone}
+            </if>
+            <if test="category == 0">
+                <![CDATA[ and g.stock > g.join_num ]]>
+            </if>
+            <if test="category == 1">
+                <![CDATA[ and g.stock <= g.join_num ]]>
+            </if>
+        </where>
+        GROUP BY g.id order by max(create_time) desc
+        <choose>
+            <when test="offset > 0 and size > 0">
+                <![CDATA[
+		     limit #{offset}, #{size}
+		     ]]>
+            </when>
+            <when test="size > 0">
+                <![CDATA[
+		     limit 0, #{size}
+		     ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+		   limit 0, 15
+		  ]]>
+            </otherwise>
+        </choose>
+    </select>
+    <select id="queryForCountGoodsRecord" resultType="int">
+        select count(t.id) from (select g.id from race_log ir left join goods g on ir.goods_id = g.id
+        <where>
+            <if test="cellphone != null">
+                ir.cellphone = #{cellphone}
+            </if>
+            <if test="category == 0">
+                <![CDATA[ and g.stock > g.join_num ]]>
+            </if>
+            <if test="category == 1">
+                <![CDATA[ and g.stock <= g.join_num ]]>
+            </if>
+        </where>
+        GROUP BY g.id) t
+    </select>
+    <select id="queryOnSaleList" resultMap="resultMap">
+        select
+        <include refid="columns"/>
+        from goods g
+        where (status = 1 and stock > 0 ) or (is_show = 1 and stock = 0)
+        order by  IF(stock > 0, 0,1), sort_number DESC
+    </select>
+    <select id="queryForCount" resultType="int">
+        select count(id) from goods
+        <where>
+            <if test="achieveAmount == 0">
+                and achieve_amount = 0
+            </if>
+            <if test="achieveAmount == 1">
+                and achieve_amount > 0
+            </if>
+            <if test="name != null and name != ''">
+                and name = #{name,jdbcType=VARCHAR}
+            </if>
+            <if test="type == -1">
+                <![CDATA[ and type <= 3 ]]>
+            </if>
+            <if test="type != -1">
+                and  type = #{type}
+            </if>
+            <if test="platform != 5">
+                and  status = 2
+            </if>
+        </where>
+    </select>
+    <!-- <select id="selectGoodsExchangeOrder" resultMap="goodsExchangeOrderMap">
+    select co.order_no, co.account, co.principal amount from customer_order co left join product pt on co.product_id = pt.id left join product_category pc on pc.id=pt.category_id
+	where pt.finance_period >= #{financePeriod,jdbcType=TINYINT} and co.account =#{account,jdbcType=VARCHAR} and DATE_FORMAT(order_time, '%Y-%m-%d %H:%m:%s') between #{beginDate,jdbcType=VARCHAR} and ADDDATE(#{endDate,jdbcType=VARCHAR},1)
+	and pc.property='COMMON' order by pt.finance_period, co.order_time
+    </select> -->
+    <select id="selectByOrders" parameterType="java.lang.String" resultMap="goodsExchangeOrderMap">
+        select order_no, user_id, amount from goods_exchange_order where find_in_set(order_no ,#{orders,jdbcType=VARCHAR})
+    </select>
+    <insert id="insertGoodsExchangeOrder" parameterType="GoodsExchangeOrder" useGeneratedKeys="true" keyProperty="id" >
+        insert into goods_exchange_order
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="orderNo != null">
+                order_no,
+            </if>
+            <if test="userId >= 0">
+                user_id,
+            </if>
+            <if test="amount >= 0">
+                amount,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="orderNo != null">
+                #{orderNo,jdbcType=VARCHAR},
+            </if>
+            <if test="userId >= 0">
+                #{userId,jdbcType=INTEGER},
+            </if>
+            <if test="amount >= 0">
+                #{amount,jdbcType=INTEGER},
+            </if>
+        </trim>
+        ON DUPLICATE KEY UPDATE amount=#{amount,jdbcType=INTEGER}
+    </insert>
+    <insert id="insert" parameterType="Goods" useGeneratedKeys="true" keyProperty="id" >
+        insert into goods
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">
+                name,
+            </if>
+            <if test="category >= 0">
+                category,
+            </if>
+            <if test="virtualGoods >= 0">
+                virtual_goods,
+            </if>
+            <if test="url != null">
+                url,
+            </if>
+            <if test="stock >= 0 ">
+                stock,
+            </if>
+            <if test="consumeSilver > 0 ">
+                consume_silver,
+            </if>
+            <if test="type > 0 ">
+                type,
+            </if>
+            sort_number,
+            <if test="status >= 0">
+                status,
+            </if>
+            <if test="hot >= 0">
+                hot,
+            </if>
+            <if test="largerUrl != null">
+                larger_url,
+            </if>
+            <if test="remark != null">
+                remark,
+            </if>
+            <if test="rule != null">
+                rule,
+            </if>
+            <if test="price >= 0">
+                price,
+            </if>
+            <if test="times >= 0">
+                times,
+            </if>
+            <if test="discount >= 0">
+                discount,
+            </if>
+            <if test="beginDate != null and endDate != null">
+                begin_date, end_date,
+            </if>
+            <if test=" achieveAmount >= 0">
+                achieve_amount,
+            </if>
+            <if test="isShow >= 0">
+                is_show,
+            </if>
+            <if test="financePeriod >= 0">
+                finance_period,
+            </if>
+            vip_discount
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null">
+                #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="category >= 0">
+                #{category,jdbcType=TINYINT},
+            </if>
+            <if test="virtualGoods >= 0">
+                #{virtualGoods,jdbcType=INTEGER},
+            </if>
+            <if test="url != null">
+                #{url,jdbcType=VARCHAR},
+            </if>
+            <if test="stock >= 0 ">
+                #{stock,jdbcType=INTEGER},
+            </if>
+            <if test="consumeSilver > 0 ">
+                #{consumeSilver,jdbcType=INTEGER},
+            </if>
+            <if test="type > 0 ">
+                #{type,jdbcType=INTEGER},
+            </if>
+            (select t.sortNumber from (select IF(max(id) is not null ,max(id)+1,999) sortNumber from goods) t),
+            <if test="status >= 0">
+                #{status,jdbcType=INTEGER},
+            </if>
+            <if test="hot >= 0">
+                #{hot,jdbcType=TINYINT},
+            </if>
+            <if test="largerUrl != null">
+                #{largerUrl,jdbcType=VARCHAR},
+            </if>
+            <if test="remark != null">
+                #{remark,jdbcType=VARCHAR},
+            </if>
+            <if test="rule != null">
+                #{rule,jdbcType=VARCHAR},
+            </if>
+            <if test="price >= 0">
+                #{price,jdbcType=DOUBLE},
+            </if>
+            <if test="times >= 0">
+                #{times,jdbcType=INTEGER},
+            </if>
+            <if test="discount >= 0">
+                #{discount,jdbcType=DOUBLE},
+            </if>
+            <if test="beginDate != null and endDate != null">
+                #{beginDate,jdbcType=DATE},
+                #{endDate,jdbcType=DATE},
+            </if>
+            <if test=" achieveAmount >= 0">
+                #{achieveAmount,jdbcType=INTEGER},
+            </if>
+            <if test="isShow >= 0">
+                #{isShow,jdbcType=INTEGER},
+            </if>
+            <if test="financePeriod >= 0">
+                #{financePeriod,jdbcType=TINYINT},
+            </if>
+             #{vipDiscount}
+        </trim>
+    </insert>
+    <update id="update" parameterType="Goods">
+        update goods
+        <set>
+            <if test="name != null">
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="category >= 0">
+                category = #{category,jdbcType=TINYINT},
+            </if>
+            <if test="virtualGoods >= 0">
+                virtual_goods = #{virtualGoods,jdbcType=INTEGER},
+            </if>
+            <if test="url != null">
+                url = #{url,jdbcType=VARCHAR},
+            </if>
+            <if test="stock >= 0">
+                stock = #{stock,jdbcType=INTEGER},
+            </if>
+            <if test="consumeSilver > 0">
+                consume_silver = #{consumeSilver,jdbcType=INTEGER},
+            </if>
+            <if test="type > 0">
+                type = #{type,jdbcType=INTEGER},
+            </if>
+            <if test="sortNumber > 0">
+                sort_number = #{sortNumber,jdbcType=INTEGER},
+            </if>
+            <if test="status >= 0">
+                status = #{status,jdbcType=INTEGER},
+            </if>
+            <if test="hot >= 0">
+                hot = #{hot,jdbcType=TINYINT},
+            </if>
+            <if test="largerUrl != null and largerUrl != ''">
+                larger_url = #{largerUrl,jdbcType=VARCHAR},
+            </if>
+            <if test="remark != null">
+                remark = #{remark,jdbcType=VARCHAR},
+            </if>
+            <if test="rule != null">
+                rule = #{rule,jdbcType=VARCHAR},
+            </if>
+            <if test="price >= 0">
+                price = #{price,jdbcType=DOUBLE},
+            </if>
+            <if test="discount >= 0">
+                discount = #{discount,jdbcType=DOUBLE},
+            </if>
+            <if test="times >= 0">
+                times = #{times,jdbcType=INTEGER},
+            </if>
+            <if test="joinNum >= 0">
+                join_num = #{joinNum,jdbcType=INTEGER},
+            </if>
+            <if test="cellphone != null">
+                cellphone = #{cellphone,jdbcType=VARCHAR},
+            </if>
+            <if test="beginDate != null and endDate != null">
+                begin_date = #{beginDate,jdbcType=DATE},
+                end_date = #{endDate,jdbcType=DATE},
+            </if>
+            <if test="achieveAmount >= 0 ">
+                achieve_amount = #{achieveAmount,jdbcType=INTEGER},
+            </if>
+            <if test="isShow >= 0">
+                is_show = #{isShow,jdbcType=INTEGER},
+            </if>
+            <if test="financePeriod >= 0">
+                finance_period = #{financePeriod,jdbcType=TINYINT},
+            </if>
+                vip_discount = #{vipDiscount}
+        </set>
+        where id = #{id,jdbcType=INTEGER} and #{stock} >= 0
+    </update>
+    <update id="updateSort">
+        <foreach collection="goodes" item="goods" index="index" separator=";">
+            update goods
+            <set>
+                sort_number = #{goods.sortNumber}
+            </set>
+            where id = ${goods.id}
+        </foreach>
+    </update>
+    <update id="decrease">
+        update goods set stock = stock-1 where id = #{id,jdbcType=INTEGER} and stock > 0
+    </update>
+    <update id="updateCellone">
+        update goods set cellphone = #{newCellphone,jdbcType=VARCHAR} where cellphone = #{oldCellphone,jdbcType=VARCHAR}
+    </update>
+     
+</mapper>

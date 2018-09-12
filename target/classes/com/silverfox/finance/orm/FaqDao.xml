@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.FaqDao">
+	<resultMap type="Faq" id="resultMap">
+	    <id column="id" property="id" jdbcType="INTEGER"/>
+	    <result column="ask" property="ask" jdbcType="VARCHAR"/>
+	    <result column="question" property="question" jdbcType="VARCHAR"/>
+	    <result column="sort_number" property="sortNumber" jdbcType="INTEGER"/>
+	    <result column="enable" property="enable" jdbcType="INTEGER"/>
+	</resultMap>
+	<sql id="column">
+	    f.id, f.ask, f.question, f.sort_number, f.enable
+	</sql>
+	<select id="selectById" resultMap="resultMap">
+	    select <include refid="column"/> from faq f where id = #{id}
+	</select>
+	<select id="queryForList" resultMap="resultMap">
+	    select <include refid="column"/> from faq f order by enable desc, sort_number desc
+	</select>
+	<select id="queryForWebList" resultMap="resultMap">
+	  select <include refid="column" />
+	  from faq f 
+	  where f.enable = 1
+	  order by sort_number DESC
+	  <choose>
+		<when test="offset > 0 and size > 0">
+	      <![CDATA[ limit #{offset}, #{size} ]]>
+		</when>
+		<when test="size > 0">
+	      <![CDATA[ limit 0, #{size} ]]>
+		</when>
+	  </choose>
+	</select>   
+	<insert id="insert" parameterType="Faq" >
+	    insert into faq
+	    <trim prefix="(" suffix=")" suffixOverrides=",">
+	    	<if test="ask != null">
+	    		ask,    
+	    	</if>
+	    	<if test="question != null">
+	    		question,    
+	    	</if>
+	    		sort_number,
+	    	<if test="enable">
+	    	    enable,
+	    	</if>
+	    </trim>
+	    <trim prefix="values (" suffix=")" suffixOverrides=",">
+	        <if test="ask != null">
+	    		#{ask,jdbcType=VARCHAR},    
+	    	</if>
+	    	<if test="question != null">
+	    		#{question,jdbcType=VARCHAR},    
+	    	</if>
+	    		(select t.sortNumber from (select IF(max(id) is not null ,max(id)+1,999) sortNumber from faq) t),
+	    	<if test="enable">
+	    	    #{enable,jdbcType=INTEGER},
+	    	</if>
+	    </trim>
+	</insert>
+	<select id="checkName" resultType="int">
+	    select count(id) from faq 
+	    <where>
+	      <if test="name != null">
+	      	ask = #{name,jdbcType=VARCHAR}
+	      </if>
+	      <if test="id > 0">
+	        and id != #{id,jdbcType=INTEGER}
+	      </if>
+	    </where>
+    </select>
+	<update id="update" parameterType="Faq">
+	    update faq
+	    <set>
+			<if test="ask != null">
+				ask = #{ask,jdbcType=VARCHAR},    
+			</if>
+			<if test="question != null">
+				question = #{question,jdbcType=VARCHAR},    
+			</if>
+			<if test="sortNumber > 0">
+				sort_number = #{sortNumber,jdbcType=INTEGER},
+			</if>
+				enable = #{enable,jdbcType=INTEGER},	        
+	    </set>
+	    where id = #{id}
+	</update>
+	<update id="updateSort">
+      <foreach collection="faqs" item="faq" index="index" separator=";">
+			update faq 
+			<set>
+			  sort_number = #{faq.sortNumber}
+			</set>
+			where id = ${faq.id}
+	   </foreach>
+    </update>
+	<delete id="delete" parameterType="int">
+		delete from faq where id = #{id}    
+    </delete>  
+</mapper>

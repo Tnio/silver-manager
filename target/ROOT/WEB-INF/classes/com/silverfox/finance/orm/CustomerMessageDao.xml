@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.CustomerMessageDao" >
+  <resultMap id="ResultMap" type="CustomerMessage" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="user_id" property="userId" jdbcType="INTEGER" />
+    <result column="scene" property="scene" jdbcType="INTEGER" />
+    <result column="message" property="message" jdbcType="VARCHAR" />
+    <result column="effect_time" property="effectTime" jdbcType="TIMESTAMP" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="status" property="status" jdbcType="INTEGER" />
+  </resultMap>
+  <sql id="columns" >
+    id, user_id, scene, message, effect_time, create_time, status
+  </sql>
+  <!-- <select id="queryForList" resultMap="ResultMap">
+    select 
+    <include refid="columns" />
+    from customer_message 
+    where user_id = #{customerId, jdbcType=INTEGER} and NOW() > effect_time 
+    order by effect_time DESC
+    <choose>
+	  <when test="offset > 0 and size > 0">
+      limit #{offset}, #{size}
+	  </when>
+	  <when test="size > 0">
+      <![CDATA[
+      limit 0, #{size}
+      ]]>
+	  </when>
+	  <otherwise>
+	  <![CDATA[
+	    LIMIT 0,60
+	  ]]>
+	  </otherwise>
+	</choose>
+  </select>
+  <select id="queryForCount" resultType="int">
+    select count(id)
+    from customer_message 
+    where user_id = #{customerId, jdbcType=INTEGER} and NOW() > effect_time 
+    <if test="status >= 0">
+      and status = #{status}
+    </if>
+  </select> -->
+  <select id="queryExpiredList" resultMap="ResultMap" ><!-- account -->
+  	select mes.id id, mes.message, cr.cellphone account 
+  	from customer_message mes 
+  	left join customer cr on mes.user_id = cr.id 
+	where mes.scene = 3 and DATE_FORMAT(mes.effect_time, '%Y-%m-%d') = CURDATE()
+  </select>
+  <insert id="insert" parameterType="CustomerMessage" useGeneratedKeys="true" keyProperty="id">
+    insert into customer_message
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="scene > 0" >
+        scene,
+      </if>
+      <if test="userId > 0" >
+        user_id,
+      </if>
+      <if test="message != null" >
+        message,
+      </if>
+      <if test="effectTime != null" >
+        effect_time,
+      </if>
+        create_time
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="scene > 0" >
+        #{scene,jdbcType=TINYINT},
+      </if>
+      <if test="userId > 0" >
+        #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="message != null" >
+        #{message,jdbcType=VARCHAR},
+      </if>
+      <if test="effectTime != null" >
+        #{effectTime,jdbcType=TIMESTAMP},
+      </if>
+        now()
+    </trim>
+  </insert>
+  <update id="updateById">
+	   update customer_message set status = 1 where id = #{id,jdbcType=INTEGER}     		
+  </update>
+</mapper>

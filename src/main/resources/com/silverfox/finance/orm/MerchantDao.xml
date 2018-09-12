@@ -1,0 +1,647 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.MerchantDao" >
+    <resultMap id="ResultMap" type="Merchant" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="name" property="name" jdbcType="VARCHAR" />
+        <result column="address" property="address" jdbcType="VARCHAR" />
+        <result column="legal_person" property="legalPerson" jdbcType="VARCHAR" />
+        <result column="account_id" property="accountId" jdbcType="VARCHAR" />
+        <result column="license" property="license" jdbcType="VARCHAR" />
+        <result column="cellphone" property="cellphone" jdbcType="VARCHAR" />
+        <result column="version" property="version" jdbcType="INTEGER" />
+        <result column="bank_no" property="bankNO" jdbcType="VARCHAR" />
+        <result column="card_no" property="cardNO" jdbcType="VARCHAR" />
+        <result column="province_code" property="provinceCode" jdbcType="VARCHAR" />
+        <result column="city_code" property="cityCode" jdbcType="VARCHAR" />
+        <result column="pay_voucher" property="payVoucher" jdbcType="VARCHAR" />
+        <result column="status" property="status" jdbcType="INTEGER" />
+        <result column="loan_num" property="loanNum" jdbcType="INTEGER"/>
+        <result column="linkman" property="linkman" jdbcType="VARCHAR" />
+        <result column="legal_person_idcard" property="legalPersonIdcard" jdbcType="VARCHAR" />
+        <result column="licence_img" property="licenceImg" jdbcType="VARCHAR" />
+        <result column="pending_repayment_amount" property="pendingRepaymentAmount" jdbcType="DOUBLE" />
+        <result column="license_no" property="licenseNO" jdbcType="VARCHAR" />
+        <result column="letter_of_commitment" property="letterOfCommitment" jdbcType="VARCHAR" />
+        <result column="real_diagram" property="realDiagram" jdbcType="VARCHAR" />
+        <result column="close_notice" property="closeNotice" jdbcType="INTEGER" />
+        <result column="type" property="type" jdbcType="TINYINT" />
+    </resultMap>
+    <resultMap id="ResultMap2" type="Lender" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="product_id" property="productId" jdbcType="INTEGER" />
+        <result column="name" property="name" jdbcType="VARCHAR" />
+        <result column="idcard" property="idcard" jdbcType="VARCHAR" />
+        <result column="cellphone" property="cellphone" jdbcType="VARCHAR" />
+        <result column="loan_amount" property="loanAmount" jdbcType="INTEGER" />
+        <result column="loan_period" property="loanPeriod" jdbcType="INTEGER" />
+        <result column="sex" property="sex" jdbcType="TINYINT" />
+        <result column="age" property="age" jdbcType="TINYINT" />
+        <result column="work_unit" property="workUnit" jdbcType="VARCHAR" />
+        <result column="address" property="address" jdbcType="VARCHAR" />
+        <result column="type" property="type" jdbcType="TINYINT" />
+        <result column="status" property="status" jdbcType="TINYINT" />
+        <result column="monthly_income" property="monthlyIncome" jdbcType="INTEGER" />
+    </resultMap>
+    <sql id="columns2" >
+        id, product_id, name, idcard, cellphone, loan_amount,loan_period , sex, age, work_unit, address, monthly_income,type,status
+    </sql>
+    <sql id="columns" >
+        me.id, me.name, me.account_id, me.address, me.legal_person, me.license, me.cellphone, me.version, me.letter_of_commitment,
+        me.card_no, me.bank_no, me.province_code, me.city_code, me.pay_voucher, me.status, me.loan_num, me.linkman,
+        me.legal_person_idcard, me.licence_img, me.pending_repayment_amount, me.license_no, me.real_diagram,
+        me.close_notice, me.type
+    </sql>
+    <select id="getOldMerchantRepaymentAmount" resultMap="ResultMap">
+        SELECT mt.id, mt.name, ifnull(sum(pt.actual_amount), 0) pending_repayment_amount
+        from product pt
+        left join merchant mt on mt.id = pt.merchant_id
+        where pt.`status` = 1 and mt.id in (1, 2, 3, 4) and DATE_ADD(pt.interest_date,INTERVAL pt.finance_period DAY) >= CURRENT_DATE()
+        GROUP BY pt.merchant_id
+    </select>
+    <select id="selectByVersion" parameterType="java.lang.Integer" resultMap="ResultMap">
+        select
+        <include refid="columns" />
+        from merchant me
+        where version > #{version,jdbcType=INTEGER}
+    </select>
+     <select id="queryForList" resultMap="ResultMap">
+      
+        select m.id, m.`name`,m.`linkman`,m.`cellphone`,m.`status`,p.loan_num ,ifnull(p.pending_repayment_amount,0) pending_repayment_amount
+        from `merchant`  m  left join (
+        select p.`merchant_id`,  count(p.id) loan_num,sum(p.`total_amount`) pending_repayment_amount from  `product` p
+        left join `merchant_order` mo on p.id=mo.`product_id`
+        where p.`status` = 1 and p.`payback` =0 and p.`actual_amount` >=p.`total_amount` and mo.type=1 and mo.status=2 group by p.merchant_id
+        ) p on m.id=p.merchant_id
+        <where>
+            m.type=0
+            <if test="status == 1">
+                and m.`status` = #{status}
+            </if>
+            <if test="name != null">
+                and m.`name` like '%${name}%'
+            </if>
+            <if test="cellphone != null">
+                and m.`cellphone` = #{cellphone}
+            </if>
+            <if test="startAmount != null and endAmount !=null">
+                and p.pending_repayment_amount between #{startAmount} and #{endAmount}
+            </if>
+        </where>
+             order by m.status=0 desc,m.status=2 desc,m.status=1 desc, m.id desc
+        <choose>
+            <when test="offset > 0 and size > 0">
+                <![CDATA[
+         limit #{offset}, #{size}
+       ]]>
+            </when>
+            <when test="size > 0">
+                <![CDATA[
+         limit 0, #{size}
+        ]]>
+            </when>
+            <otherwise>
+            </otherwise>
+        </choose>
+        
+    </select>
+    <select id="queryForCount" resultType="int">
+        select count(mt.id) from (
+        select m.id, m.`name`,m.`linkman`,m.`cellphone`,m.`status` ,  ifnull(p.pending_repayment_amount,0) pending_repayment_amount
+        from `merchant`  m  left join (
+        select p.`merchant_id` ,sum(p.`total_amount`) pending_repayment_amount from  `product` p
+        left join `merchant_order` mo on p.id=mo.`product_id`
+        where p.`status` =1 and p.`payback` =0 and p.`actual_amount` >=p.`total_amount` and mo.type=1 and mo.status=2 group by p.merchant_id
+        ) p on m.id=p.merchant_id
+        <where>
+            m.type=0
+            <if test="name != null">
+                and m.`name` like '%${name}%'
+            </if>
+            <if test="cellphone != null">
+                and m.`cellphone` = #{cellphone}
+            </if>
+            <if test="startAmount != null and endAmount !=null">
+                and p.pending_repayment_amount between #{startAmount} and #{endAmount}
+            </if>
+        </where>
+        ) mt
+    </select>
+    <select id="selectMerchantCanBorrowMoney" resultType="java.lang.Integer" >
+        select tp1.amount - tp2.amount - tp3.amount from
+        (SELECT IFNULL(sum(p.total_amount), 0) amount, `merchant_id`  from `product` p WHERE p.`merchant_id` =#{merchantId, jdbcType=INTEGER} and p.`status` =1 and p.actual_amount>= p.total_amount) tp1
+        left join
+        (SELECT IFNULL(sum(mor.principal), 0) amount, IFNULL(mor.`merchant_id`, #{merchantId, jdbcType=INTEGER}) `merchant_id` from merchant_order mor WHERE mor.`merchant_id` =#{merchantId, jdbcType=INTEGER}
+        and mor.status > -1 and IF(mor.type is not null, mor.type = 1, 1=1) ) tp2
+        on tp1.merchant_id = tp2.merchant_id
+        left join
+        (SELECT IFNULL(sum(ml.borrow_amount), 0) amount, IFNULL(ml.`merchant_id`, #{merchantId, jdbcType=INTEGER}) `merchant_id` from merchant_loan ml  WHERE ml.`merchant_id` =#{merchantId, jdbcType=INTEGER} and (ml.status =0 or ml.`status`=1) ) tp3
+        on tp1.merchant_id = tp3.merchant_id
+    </select>
+    <select id="selectById" parameterType="java.lang.Integer" resultMap="ResultMap">
+        select
+        <include refid="columns" />
+        from merchant me
+        where me.id = #{id,jdbcType=INTEGER}
+    </select>
+    <select id="selectByCellphone" resultMap="ResultMap">
+        select
+        <include refid="columns" />
+        from merchant me
+        where me.cellphone = #{cellphone}
+    </select>
+    <select id="selectOtherDataByMerchantId" parameterType="java.lang.Integer" resultType="String">
+        SELECT other_data FROM `merchant`  where id = #{id,jdbcType=INTEGER}
+    </select>
+    <select id="duplicate" resultType="int">
+        select count(id) from merchant
+        <where>
+            <if test="licenseNO != null">
+                license_no = #{licenseNO,jdbcType=VARCHAR}
+            </if>
+            <if test="id > 0">
+                and id != #{id,jdbcType=INTEGER}
+            </if>
+        </where>
+    </select>
+    <select id="queryForBorrowerCreditCount" resultType="int">
+        select COUNT(temp.id) from (select id, name, cellphone,SUM(round(loan_amount/100)*500) loanAmount,type from lender  GROUP BY idcard ) as temp
+        <where>
+            <if test="name != null">
+                and temp.name like '%${name}%'
+            </if>
+            <if test="cellphone != null">
+                and temp.cellphone = #{cellphone}
+            </if>
+            <if test="type == 1">
+                and	temp.type = 1
+            </if>
+            <if test="type == 2">
+                and	temp.type = 2
+            </if>
+            <if test="startAmount != null and endAmount !=null">
+                and	temp.loanAmount between #{startAmount} and #{endAmount}
+            </if>
+        </where>
+    </select>
+    <select id="queryForBorrowerCreditCount2" resultType="int">
+        select COUNT(temp.id) from (select id, name, cellphone,SUM(IF(status = 1, loan_amount , 0)) loanAmount,type from lender  GROUP BY idcard ) as temp
+        <where>
+            <if test="name != null">
+                and temp.name like '%${name}%'
+            </if>
+            <if test="cellphone != null">
+                and temp.cellphone = #{cellphone}
+            </if>
+            <if test="type == 1">
+                and	temp.type = 1
+            </if>
+            <if test="type == 2">
+                and	temp.type = 2
+            </if>
+            <if test="startAmount != null and endAmount !=null">
+                and	temp.loanAmount between #{startAmount} and #{endAmount}
+            </if>
+        </where>
+    </select>
+    <select id="queryForBorrowerCreditList" resultType="Lender">
+        SELECT temp.id,temp.name,temp.cellphone,temp.loanAmount, temp.tradeCount,temp.idcard, temp.type,temp.status FROM
+        (SELECT id,name, cellphone,  SUM(round(loan_amount/100)*500) loanAmount,  IF(status > 0, 1, 0) tradeCount ,idcard ,type,status FROM `lender` GROUP BY idcard) as temp
+        <where>
+            <if test="name != null">
+                and temp.name like '%${name}%'
+            </if>
+            <if test="cellphone != null">
+                and temp.cellphone = #{cellphone}
+            </if>
+            <if test="type == 1">
+                and	temp.type = 1
+            </if>
+            <if test="type == 2">
+                and	temp.type = 2
+            </if>
+            <if test="startAmount != null and endAmount !=null">
+                and	temp.loanAmount between #{startAmount} and #{endAmount}
+            </if>
+        </where>
+        ORDER BY  temp.id desc
+        <choose>
+            <when test="offset > 0 and size > 0">
+                <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+            </when>
+            <when test="size > 0">
+                <![CDATA[
+      limit 0, #{size}
+      ]]>
+            </when>
+            <otherwise>
+            </otherwise>
+        </choose>
+    </select>
+    <select id="queryForBorrowerCreditList2" resultType="Lender">
+        SELECT temp.id,temp.name,temp.cellphone,temp.loanAmount, temp.tradeCount,temp.idcard, temp.type,temp.status FROM
+        (SELECT id,name, cellphone,SUM(IF(status = 1, loan_amount , 0)) loanAmount,IF(status > 0, 1 , 0) tradeCount ,idcard ,type,status FROM `lender`
+        GROUP BY idcard) as temp
+        <where>
+            <if test="name != null">
+                and  temp.name like '%${name}%'
+            </if>
+            <if test="cellphone != null">
+                and  temp.cellphone = #{cellphone}
+            </if>
+            <if test="type == 1">
+                and	temp.type = 1
+            </if>
+            <if test="type == 2">
+                and	temp.type = 2
+            </if>
+            <if test="startAmount != null and endAmount !=null">
+                and	temp.loanAmount between #{startAmount} and #{endAmount}
+            </if>
+        </where>
+        ORDER BY  temp.id desc
+        <choose>
+            <when test="offset > 0 and size > 0">
+                <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+            </when>
+            <when test="size > 0">
+                <![CDATA[
+      limit 0, #{size}
+      ]]>
+            </when>
+            <otherwise>
+            </otherwise>
+        </choose>
+    </select>
+    <select id="queryForBorrowerTotalMoney" resultType="Integer">
+        SELECT SUM(temp.loanAmount) FROM (select name,cellphone,SUM(round(loan_amount/100)*500) loanAmount,type,status from lender  GROUP BY idcard ) as temp
+        <where>
+            <if test="name != null">
+                and temp.name like '%${name}%'
+            </if>
+            <if test="cellphone != null">
+                and temp.cellphone = #{cellphone}
+            </if>
+            <if test="type == 1">
+                and	temp.type = 1
+            </if>
+            <if test="type == 2">
+                and	temp.type = 2
+            </if>
+            <if test="startAmount != null and endAmount !=null">
+                and	temp.loanAmount between #{startAmount} and #{endAmount}
+            </if>
+        </where>
+    </select>
+    <select id="queryForBorrowerTotalMoney2" resultType="Integer">
+        SELECT SUM(temp.loanAmount) FROM (select name,cellphone,SUM(IF(status = 1, loan_amount , 0)) loanAmount,type,status from lender  GROUP BY idcard ) as temp
+        <where>
+            <if test="name != null">
+                and temp.name like '%${name}%'
+            </if>
+            <if test="cellphone != null">
+                and temp.cellphone = #{cellphone}
+            </if>
+            <if test="type == 1">
+                and	temp.type = 1
+            </if>
+            <if test="type == 2">
+                and	temp.type = 2
+            </if>
+            <if test="startAmount != null and endAmount !=null">
+                and	temp.loanAmount between #{startAmount} and #{endAmount}
+            </if>
+        </where>
+    </select>
+    <select id="selectByLenderId" parameterType="java.lang.Integer" resultType="Lender">
+        select id,name,other_data otherData,idcard_url idcardUrl, idcard,cellphone,loan_amount loanAmount,loan_period loanPeriod,address
+        from lender
+        where id = #{id,jdbcType=INTEGER}
+    </select>
+    <select id="queryForLicenseNO" parameterType="String"  resultType="Merchant">
+        select id, name,address,cellphone from merchant where  license_no =#{licenseNO}
+    </select>
+    <select id="queryForBorrowCountDetailCount" resultType="int">
+        select count(id) from lender
+        <where>
+            <if test="idcard != null">
+                and	idcard = #{idcard}
+            </if>
+            <if test="status == 1">
+                and	status = 1
+            </if>
+            <if test="status == 2">
+                and	status = 2
+            </if>
+            <if test="status == 8">
+                and	status in(1,2)
+            </if>
+        </where>
+    </select>
+    <select id="queryTotalMoney" resultType="double">
+      select sum(mt.pending_repayment_amount) from (
+      select m.id, m.`name`,m.`linkman`,m.`cellphone`,m.`status` ,  ifnull(p.pending_repayment_amount,0) pending_repayment_amount
+      from `merchant`  m  left join (
+        select p.`merchant_id` ,sum(p.`total_amount`) pending_repayment_amount from  `product` p 
+         left join `merchant_order` mo on p.id=mo.`product_id`
+         where p.`status` =1 and p.`payback` =0 and p.`actual_amount` >=p.`total_amount` and mo.type=1 and mo.status=2 group by p.merchant_id 
+      ) p on m.id=p.merchant_id  
+      <where>
+        m.type=0
+        <if test="name != null">
+          and m.`name` like '%${name}%' 
+        </if>
+        <if test="cellphone != null">
+          and m.`cellphone` = #{cellphone}
+        </if>
+        <if test="startAmount != null and endAmount !=null">
+          and p.pending_repayment_amount between #{startAmount} and #{endAmount}
+        </if>
+      </where>
+    ) mt
+    </select>
+    <select id="queryForBorrowCountDetailList" resultMap="ResultMap2">
+        select
+        <if test="type == 1">
+            id, product_id, name, idcard, cellphone, round(loan_amount/100)*500 loan_amount,if (30 >= loan_period, 30, if (90 >= loan_period, 90, 180)) loan_period , sex, age, work_unit, address, monthly_income,type,status
+        </if>
+        <if test="type == 2">
+            id, product_id, name, idcard, cellphone, loan_amount,loan_period , sex, age, work_unit, address, monthly_income,type,status
+        </if>
+        from lender
+        <where>
+            <if test="idcard != null">
+                and	idcard = #{idcard}
+            </if>
+            <if test="status == 1">
+                and	status = 1
+            </if>
+            <if test="status == 2">
+                and	status = 2
+            </if>
+            <if test="status == 8">
+                and	status in(1,2)
+            </if>
+        </where>
+        ORDER BY status = 1,status = 2, id desc
+        <choose>
+            <when test="offset > 0 and size > 0">
+                <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+            </when>
+            <when test="size > 0">
+                <![CDATA[
+      limit 0, #{size}
+      ]]>
+            </when>
+            <otherwise>
+            </otherwise>
+        </choose>
+    </select>
+    <select id="queryForBorrowCountDetailTotalMoney" resultType="int">
+        SELECT SUM(round(loan_amount/100)*500) loanAmount FROM `lender`
+        <where>
+            <if test="idcard != null">
+                and	idcard = #{idcard}
+            </if>
+            <if test="status == 1">
+                and	status = 1
+            </if>
+            <if test="status == 2">
+                and	status = 2
+            </if>
+            <if test="status == 8">
+                and	status in(1,2)
+            </if>
+        </where>
+        GROUP BY idcard
+    </select>
+    <select id="queryForBorrowCountDetailTotalMoney2" resultType="int">
+        SELECT SUM(loan_amount) FROM `lender`
+        <where>
+            <if test="idcard != null">
+                and	idcard = #{idcard}
+            </if>
+            <if test="status == 1">
+                and	status = 1
+            </if>
+            <if test="status == 2">
+                and	status = 2
+            </if>
+            <if test="status == 8">
+                and	status in(1,2)
+            </if>
+        </where>
+    </select>
+    <insert id="insert" parameterType="Merchant" useGeneratedKeys="true" keyProperty="id">
+        insert into merchant
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="name != null" >
+                name,
+            </if>
+            <if test="accountId != null" >
+                account_id,
+            </if>
+            <if test="address != null" >
+                address,
+            </if>
+            <if test="legalPerson != null" >
+                legal_person,
+            </if>
+            <if test="license != null" >
+                license,
+            </if>
+            <if test="cellphone != null" >
+                cellphone,
+            </if>
+            <if test="bankNO != null" >
+                bank_no,
+            </if>
+            <if test="cardNO != null" >
+                card_no,
+            </if>
+            <if test="provinceCode != null" >
+                province_code,
+            </if>
+            <if test="cityCode != null" >
+                city_code,
+            </if>
+            <if test="payVoucher != null" >
+                pay_voucher,
+            </if>
+            <if test="linkman != null">
+                linkman,
+            </if>
+            <if test="legalPersonIdcard != null">
+                legal_person_idcard,
+            </if>
+            <if test="licenceImg != null">
+                licence_img,
+            </if>
+            <if test="licenseNO != null">
+                license_no,
+            </if>
+            <if test="realDiagram != null">
+                real_diagram,
+            </if>
+            <if test="closeNotice != null">
+                close_notice,
+            </if>
+            <if test="letterOfCommitment != null">
+                letter_of_commitment,
+            </if>
+            <if test="otherData != null">
+                other_data,
+            </if>
+            <if test="type >= 0">
+                type,
+            </if>
+            version
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="name != null" >
+                #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="accountId != null" >
+                #{accountId,jdbcType=VARCHAR},
+            </if>
+            <if test="address != null" >
+                #{address,jdbcType=VARCHAR},
+            </if>
+            <if test="legalPerson != null" >
+                #{legalPerson,jdbcType=VARCHAR},
+            </if>
+            <if test="license != null" >
+                #{license,jdbcType=VARCHAR},
+            </if>
+            <if test="cellphone != null" >
+                #{cellphone,jdbcType=VARCHAR},
+            </if>
+            <if test="bankNO != null" >
+                #{bankNO,jdbcType=VARCHAR},
+            </if>
+            <if test="cardNO != null" >
+                #{cardNO,jdbcType=VARCHAR},
+            </if>
+            <if test="provinceCode != null" >
+                #{provinceCode,jdbcType=VARCHAR},
+            </if>
+            <if test="cityCode != null" >
+                #{cityCode,jdbcType=VARCHAR},
+            </if>
+            <if test="payVoucher != null" >
+                #{payVoucher,jdbcType=VARCHAR},
+            </if>
+            <if test="linkman != null" >
+                #{linkman,jdbcType=VARCHAR},
+            </if>
+            <if test="legalPersonIdcard != null" >
+                #{legalPersonIdcard,jdbcType=VARCHAR},
+            </if>
+            <if test="licenceImg != null" >
+                #{licenceImg,jdbcType=VARCHAR},
+            </if>
+            <if test="licenseNO != null" >
+                #{licenseNO,jdbcType=VARCHAR},
+            </if>
+
+            <if test="realDiagram != null" >
+                #{realDiagram,jdbcType=VARCHAR},
+            </if>
+            <if test="closeNotice != null" >
+                #{closeNotice,jdbcType=INTEGER},
+            </if>
+            <if test="letterOfCommitment != null" >
+                #{letterOfCommitment,jdbcType=VARCHAR},
+            </if>
+            <if test="otherData != null">
+                #{otherData},
+            </if>
+            <if test="type >= 0" >
+                #{type,jdbcType=TINYINT},
+            </if>
+            (select IFNULL(max(mt.version), 0)+1 from merchant mt)
+        </trim>
+    </insert>
+    <update id="update" parameterType="Merchant" >
+        update merchant
+        <set >
+            <if test="name != null" >
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="accountId != null" >
+                account_id = #{accountId,jdbcType=VARCHAR},
+            </if>
+            <if test="address != null" >
+                address = #{address,jdbcType=VARCHAR},
+            </if>
+            <if test="legalPerson != null" >
+                legal_person = #{legalPerson,jdbcType=VARCHAR},
+            </if>
+            <if test="license != null" >
+                license = #{license,jdbcType=VARCHAR},
+            </if>
+            <if test="cellphone != null" >
+                cellphone = #{cellphone,jdbcType=VARCHAR},
+            </if>
+            <if test="bankNO != null" >
+                bank_no = #{bankNO,jdbcType=VARCHAR},
+            </if>
+            <if test="cardNO != null" >
+                card_no = #{cardNO,jdbcType=VARCHAR},
+            </if>
+            <if test="provinceCode != null" >
+                province_code = #{provinceCode,jdbcType=VARCHAR},
+            </if>
+            <if test="cityCode != null" >
+                city_code = #{cityCode,jdbcType=VARCHAR},
+            </if>
+            <if test="payVoucher != null" >
+                pay_voucher = #{payVoucher,jdbcType=VARCHAR},
+            </if>
+            <if test="linkman != null" >
+                linkman = #{linkman,jdbcType=VARCHAR},
+            </if>
+            <if test="legalPersonIdcard != null" >
+                legal_person_idcard = #{legalPersonIdcard,jdbcType=VARCHAR},
+            </if>
+            <if test="licenceImg != null" >
+                licence_img = #{licenceImg,jdbcType=VARCHAR},
+            </if>
+            <if test="licenseNO != null" >
+                license_no = #{licenseNO,jdbcType=VARCHAR},
+            </if>
+            <if test="realDiagram != null" >
+                real_diagram = #{realDiagram,jdbcType=VARCHAR},
+            </if>
+            <if test="closeNotice != null" >
+                close_notice = #{closeNotice,jdbcType=INTEGER},
+            </if>
+            <if test="letterOfCommitment != null" >
+                letter_of_commitment = #{letterOfCommitment,jdbcType=INTEGER},
+            </if>
+            <if test="otherData != null">
+                other_data = #{otherData},
+            </if>
+            <if test="status >= 0" >
+                status = #{status,jdbcType=INTEGER},
+            </if>
+            version = (select mtt.version from(select max(mt.version)+1 version from merchant mt)mtt)
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="updateStatus">
+        update merchant set status = #{status} where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="increasing">
+        update merchant set loan_num = loan_num + 1 where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="adjustAmount">
+        update merchant set pending_repayment_amount = pending_repayment_amount + #{paymentAmount} where id = (SELECT merchant_id from product where id = (SELECT product_id from merchant_order where order_no = #{orderNO} limit 1))
+    </update>
+</mapper>

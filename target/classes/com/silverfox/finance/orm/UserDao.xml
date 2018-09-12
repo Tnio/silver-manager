@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.UserDao" >
+    <resultMap id="ResultMap" type="UserEntity" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="account_id" property="accountId" jdbcType="VARCHAR" />
+        <result column="name" property="name" jdbcType="VARCHAR" />
+        <result column="idcard" property="idcard" jdbcType="VARCHAR" />
+        <result column="first_trade_time" property="firstTradeTime" jdbcType="TIMESTAMP" />
+        <result column="latest_trade_time" property="latestTradeTime" jdbcType="TIMESTAMP" />
+        <result column="total_trade_amount" property="totalTradeAmount" jdbcType="INTEGER" />
+        <result column="total_trade_money" property="totalTradeMoney" jdbcType="INTEGER" />
+        <result column="total_trade_income" property="totalTradeIncome" jdbcType="DOUBLE" />
+        <result column="open" property="open" jdbcType="TINYINT" />
+        <result column="register_cellphone" property="registerCellphone" jdbcType="VARCHAR" />
+        <result column="cellphone" property="cellphone" jdbcType="VARCHAR" />
+        <result column="register_time" property="registerTime" jdbcType="TIMESTAMP" />
+        <result column="latest_login_time" property="latestLoginTime" jdbcType="TIMESTAMP" />
+        <result column="latest_sign_time" property="latestSignTime" jdbcType="TIMESTAMP" />
+        <result column="latest_login_device" property="latestLoginDevice" jdbcType="VARCHAR" />
+        <result column="silver_number" property="silverNumber" jdbcType="INTEGER" />
+        <result column="send_message" property="sendMessage" jdbcType="INTEGER" />
+        <result column="trade_password" property="tradePassword" jdbcType="VARCHAR" />
+        <result column="login_password" property="loginPassword" jdbcType="VARCHAR" />
+        <result column="investment_style" property="investmentStyle" jdbcType="VARCHAR" />
+        <result column="wrong_times" property="wrongTimes" jdbcType="TINYINT" />
+        <result column="inviter_phone" property="inviterPhone" jdbcType="VARCHAR" />
+        <result column="register_device" property="registerDevice" jdbcType="VARCHAR" />
+        <result column="baobao_trade_income" property="baobaoTradeIncome" jdbcType="DOUBLE" />
+        <result column="source" property="source" jdbcType="TINYINT" />
+        <result column="news_ids" property="newsIds" jdbcType="VARCHAR" />
+        <result column="is_vip" property="isVip" jdbcType="TINYINT" />
+        <result column="vip_level" property="vipLevel" jdbcType="TINYINT" />
+        <association property="channel" javaType="Channel">
+            <id column="channel_id" property="id" />
+            <result column="channel_name" property="name" />
+        </association>
+    </resultMap>
+  <resultMap id="UserResultMap" type="User" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="cellphone" property="cellphone" jdbcType="VARCHAR" />
+    <result column="idcard" property="idcard" jdbcType="VARCHAR" />
+    <result column="news_ids" property="newsIds" jdbcType="VARCHAR" />
+    <result column="account_id" property="accountId" jdbcType="VARCHAR" />
+    <result column="register_time" property="registerTime" jdbcType="TIMESTAMP" />
+    <result column="register_device" property="registerDevice" jdbcType="VARCHAR" />
+    <result column="register_cellphone" property="registerCellphone" jdbcType="VARCHAR" />
+    <result column="latest_login_time" property="latestLoginTime" jdbcType="TIMESTAMP" />
+    <result column="latest_login_device" property="latestLoginDevice" jdbcType="VARCHAR" />
+    <result column="silver_number" property="silverNumber" jdbcType="INTEGER" />
+    <result column="login_password" property="loginPassword" jdbcType="VARCHAR" />
+    <result column="trade_password" property="tradePassword" jdbcType="VARCHAR" />
+    <result column="investment_style" property="investmentStyle" jdbcType="VARCHAR" />
+    <result column="wrong_times" property="wrongTimes" jdbcType="TINYINT" />
+    <result column="inviter_phone" property="inviterPhone" jdbcType="VARCHAR" />
+    <result column="open" property="open" jdbcType="TINYINT" /> 
+    <result column="source" property="source" jdbcType="TINYINT" />
+    <result column="latest_sign_time" property="latestSignTime" jdbcType="TIMESTAMP" />
+    <result column="first_trade_time" property="firstTradeTime" jdbcType="TIMESTAMP" />
+  	<association property="channel" javaType="Channel">
+		<id column="channel_id" property="id" />
+		<result column="channel_name" property="name" />
+	</association>
+  </resultMap>
+  <sql id="columns" >
+    u.id, u.name, u.cellphone, u.idcard, u.news_ids, u.account_id, u.register_time, u.register_device, u.register_cellphone,
+    u.latest_login_time, u.latest_login_device, u.silver_number, u.login_password, u.trade_password, u.channel_id, u.investment_style, 
+    u.wrong_times, u.inviter_phone, u.open, u.source, u.latest_sign_time, u.first_trade_time
+  </sql>
+  <sql id="column" >
+    cr.id, cr.name, cr.cellphone, cr.idcard, cr.silver_number, cr.register_time, cr.channel_id, cr.first_trade_time, latest_trade_time, cr.is_vip,
+    IFNULL(co.principal,0) total_trade_income, total_trade_money, latest_sign_time
+  </sql>
+   <select id="selectByCellphone" parameterType="java.lang.String" resultMap="UserResultMap">
+    select 
+    <include refid="columns" />
+    from user u
+    where cellphone = #{cellphone, jdbcType=VARCHAR} limit 1
+  </select>
+   <select id="selectByCellphones" resultType="int">
+    select id from user 
+    where cellphone in <foreach collection="cellphones" item="cellphone" index="index" 
+	open="(" separator="," close=")">#{cellphone}</foreach>
+  </select>
+  <select id="selectByAccounts" resultType="string">
+    select cellphone from user
+    where id in <foreach collection="ids" item="id" index="index" 
+	open="(" separator="," close=")">#{id}</foreach>
+  </select>
+   <select id="selectByUserId" resultMap="UserResultMap">
+    select 
+    <include refid="columns" />, cl.name channel_name
+    from user u 
+    left join channel cl on u.channel_id = cl.id
+    where u.id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectUsers" resultMap="UserResultMap" >
+    select <include refid="columns" />
+    from user u
+    where u.id in <foreach collection="ids" item="id" index="index" 
+	open="(" separator="," close=")">#{id}</foreach>
+  </select>
+  <select id="selectCellphones" resultType="string">
+    select cellphone from user 
+    where cellphone in <foreach collection="cellphones" item="cellphone" index="index" 
+	open="(" separator="," close=")">#{cellphone}</foreach>
+  </select>
+    <select id="queryForCount" resultType="int">
+        <if test="startAmount >= 0 and endAmount >= 0">
+            select count(*)
+            from user cr
+            left join customer cor on cor.id = cr.id
+            <where>
+                <![CDATA[ and cor.total_trade_amount >= '${startAmount}' and cor.total_trade_amount <= '${endAmount}']]>
+                <choose> 
+                  <when test="vipLevel > 0">
+                	and cor.vip_level = ${vipLevel}
+                  </when>
+                  <when test="vipLevel == -1" >
+                    
+                  </when>
+                  <otherwise>
+                    and cor.vip_level is null
+                  </otherwise>    
+                </choose>
+                <if test="name != null and name != ''" >
+                    and cr.name like '${name}%'
+                </if>
+                <if test="cellphone != null and cellphone != '' ">
+                    and cr.cellphone like '${cellphone}%'
+                </if>
+                <if test="idcard != null and idcard != ''">
+                    and cr.idcard like '${idcard}%'
+                </if>
+                <if test="channelId > -1">
+                    and cr.channel_id = ${channelId}
+                </if>
+                <if test="beginTime != null and endTime != null">
+                    and cr.${timeType} BETWEEN #{beginTime} and #{endTime}
+                </if>
+            </where>
+        </if>
+        <if test="0 > startAmount or 0 > endAmount">
+            select count(*)
+            from user cr left join customer cor on cor.id = cr.id
+            <where>
+            	<choose> 
+                  <when test="vipLevel > 0">
+                	and cor.vip_level = ${vipLevel}
+                  </when>
+                  <when test="vipLevel == -1" >
+                    
+                  </when>
+                  <otherwise>
+                    and cor.vip_level is null
+                  </otherwise>    
+                </choose>
+                <if test="name != null and name != ''" >
+                    and cr.name like '${name}%'
+                </if>
+                <if test="cellphone != null and cellphone != '' ">
+                    and cr.cellphone like '${cellphone}%'
+                </if>
+                <if test="idcard != null and idcard != ''">
+                    and cr.idcard like '${idcard}%'
+                </if>
+                <if test="channelId > -1">
+                    and cr.channel_id = ${channelId}
+                </if>
+                <if test="timeType == 'first_trade_time'">
+                    and (cr.first_trade_time is not null or cr.first_trade_time != '')
+                </if>
+                <if test="beginTime != null and endTime != null">
+                    <if test="timeType == 'first_trade_time'">
+                        and cr.${timeType} BETWEEN #{beginTime} and #{endTime}
+                    </if>
+                    <if test="timeType != 'first_trade_time'">
+                        and ${timeType} BETWEEN #{beginTime} and #{endTime}
+                    </if>
+                </if>
+            </where>
+        </if>
+    </select>
+    <select id="queryForList" resultMap="ResultMap">
+        select
+        <include refid="column" />, cl.name channel_name, cr.vip_level
+        from (select cr.id, cr.name, cr.idcard, cr.cellphone, cr.silver_number, cr.register_time, cr.channel_id, cr.first_trade_time, cor.latest_trade_time ,
+        cor.total_trade_money, cr.latest_sign_time, cr.is_vip, cor.vip_level
+        from user cr
+        left join customer cor  on cor.id = cr.id
+        <where>
+            <choose> 
+                  <when test="vipLevel > 0">
+                	and cor.vip_level = ${vipLevel}
+                  </when>
+                  <when test="vipLevel == -1" >
+                    
+                  </when>
+                  <otherwise>
+                    and cor.vip_level is null
+                  </otherwise>    
+                </choose>
+                <if test="name != null and name != ''" >
+                    and cr.name like '${name}%'
+                </if>
+                <if test="cellphone != null and cellphone != '' ">
+                    and cr.cellphone like '${cellphone}%'
+                </if>
+                <if test="idcard != null and idcard != ''">
+                    and cr.idcard like '${idcard}%'
+                </if>
+            <if test="channelId > -1">
+                and cr.channel_id = ${channelId}
+            </if>
+            <if test="beginTime != null and endTime != null">
+                and cr.${timeType} BETWEEN #{beginTime} and #{endTime}
+            </if>
+            <if test="startAmount >= 0 and endAmount >= 0">
+                <![CDATA[ and cor.total_trade_amount >= '${startAmount}' and cor.total_trade_amount <= '${endAmount}']]>
+            </if>
+        </where>
+        order by
+        <if test="sort != null and sort != '' ">
+            ${sort} desc
+        </if>
+        <if test="sort == null or sort == ''">
+            cr.register_time desc
+        </if>
+        <choose>
+            <when test="offset > 0 and size > 0">
+                <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+            </when>
+            <when test="size > 0">
+                <![CDATA[
+      limit 0, #{size}
+      ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+	  ]]>
+            </otherwise>
+        </choose>) cr
+        left join channel cl on cr.channel_id = cl.id
+        LEFT JOIN (select SUM(principal) principal, customer_id from customer_order where is_payback in (0,4) group by customer_id) co on cr.id=co.customer_id
+        group by cr.id
+        order by
+        <if test="sort != null and sort != '' ">
+            ${sort} desc
+        </if>
+        <if test="sort == null or sort == ''">
+            register_time desc
+        </if>
+    </select>
+    <select id="countInvitorReward" resultType="DOUBLE">
+        select sum(amount) from customer_invite_coupon_log
+        where cellphone in
+        <foreach collection="cellphones" item="cellphone" index="index"
+                 open="(" separator="," close=")">#{cellphone}</foreach>
+        and amount > 0
+    </select>
+    <select id="selectByInviterPhone" resultType="string">
+        select cellphone from user where inviter_phone = #{cellphone,jdbcType=VARCHAR}
+    </select>
+    <select id="countInviteNumber" resultType="int">
+        select count(*)
+        from user
+        where inviter_phone = #{cellphone,jdbcType=VARCHAR}
+    </select>
+  <select id="countCustomerByDate" resultType="int">
+    select count(*) from user
+    where DATE_FORMAT(first_trade_time, '%Y-%m-%d') >= #{date,jdbcType=VARCHAR} and #{date,jdbcType=VARCHAR} >= DATE_FORMAT(first_trade_time, '%Y-%m-%d')
+  </select>
+    <select id="countBeforThisMonth" resultType="int">
+    <![CDATA[ 
+    SELECT count(*)
+	from customer
+	where first_trade_time  <= #{lastDate}
+    ]]>
+  </select>
+  <select id="countInSomeday" resultType="int">
+    select count(*) 
+    from user
+    where register_time BETWEEN CONCAT(#{systemDate,jdbcType=VARCHAR}, ' 00:00:00') AND CONCAT(#{systemDate,jdbcType=VARCHAR}, ' 23:59:59') 
+  </select>
+  <select id="countCustomerInSomeday" resultType="int">
+    select count(*) from customer where #{systemDate,jdbcType=VARCHAR}=date_format(first_trade_time,'%Y-%m-%d')
+  </select>
+  <select id="countCustomerByTradeTime" resultType="int">
+  	<![CDATA[ select count(*) from customer where first_trade_time < #{firstTradeTime} ]]>
+  </select>
+  <select id="countAllCustomerInSometime" resultType="java.util.HashMap">
+    select DATE_FORMAT(first_trade_time,'%H') timePoint, count(*) value
+    from user
+    where first_trade_time BETWEEN CONCAT(#{systemDate,jdbcType=VARCHAR}, ' 00:00:00') AND CONCAT(#{systemDate,jdbcType=VARCHAR}, ' 23:59:59') 
+    GROUP BY DATE_FORMAT(first_trade_time,'%Y-%m-%d %H')
+    ORDER BY first_trade_time
+  </select>
+  <select id="countAllInSometime" resultType="java.util.HashMap">
+    select DATE_FORMAT(register_time,'%H') timePoint, count(*) value
+    from user 
+    where register_time BETWEEN CONCAT(#{systemDate,jdbcType=VARCHAR}, ' 00:00:00') AND CONCAT(#{systemDate,jdbcType=VARCHAR}, ' 23:59:59') 
+    GROUP BY DATE_FORMAT(register_time,'%Y-%m-%d %H')
+    ORDER BY register_time
+  </select>
+  <update id="giveSilverInBatch" >
+    <foreach collection="dispatchingLogs" item="dispatchingLog" index="index" separator=";">
+      update user set silver_number = silver_number + #{silverNumber,jdbcType=INTEGER} where cellphone = #{dispatchingLog.cellphone}
+    </foreach>
+  </update>
+  <update id="update" parameterType="User" >
+    update user
+    <set >
+      <if test="name != null">
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="idcard != null">
+        idcard = #{idcard,jdbcType=VARCHAR},
+      </if>
+      <if test="cellphone != null">
+        cellphone = #{cellphone,jdbcType=VARCHAR},
+      </if>
+      <if test="latestLoginTime != null">
+        latest_login_time = #{latestLoginTime,jdbcType=VARCHAR},
+      </if>
+      <if test="firstTradeTime != null">
+        first_trade_time = #{firstTradeTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="latestSignTime != null">
+        latest_sign_time = #{latestSignTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="latestLoginDevice != null">
+        latest_login_device = #{latestLoginDevice,jdbcType=VARCHAR},
+      </if>
+      <if test="tradePassword != null">
+        trade_password = #{tradePassword,jdbcType=VARCHAR},
+      </if>
+      <if test="loginPassword != null">
+        login_password = #{loginPassword,jdbcType=VARCHAR},
+      </if>
+      <if test="investmentStyle != null">
+        investment_style = #{investmentStyle,jdbcType=VARCHAR},
+      </if>
+      <if test="silverNumber >= 0">
+        silver_number = #{silverNumber,jdbcType=INTEGER},
+      </if>
+      <if test="newsIds != null">
+        news_ids = #{newsIds,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateInviteCellphone">
+    update user set inviter_phone = #{newCellphone,jdbcType=VARCHAR} where inviter_phone = #{oldCellphone,jdbcType=VARCHAR}
+  </update>
+    <update id="changeToVip">
+        update user set is_vip = 1 where id = #{userId,jdbcType=INTEGER}
+    </update>
+</mapper>

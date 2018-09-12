@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.ChannelDao" >
+	<resultMap type="Channel" id="resultMap">
+	    <id column="id" property="id" jdbcType="INTEGER"/>
+	    <result column="name" property="name" jdbcType="VARCHAR"/>
+	    <result column="category" property="category" jdbcType="INTEGER"/>
+	    <result column="register_url" property="registerUrl" jdbcType="VARCHAR"/>
+	    <result column="spread_url" property="spreadUrl" jdbcType="VARCHAR"/>
+	    <result column="download_url" property="downloadUrl" jdbcType="VARCHAR"/>
+	    <result column="banner" property="banner" jdbcType="VARCHAR"/>
+	    <result column="rule" property="rule" jdbcType="VARCHAR"/>
+	    <result column="forward_category" property="forwardCategory" jdbcType="VARCHAR"/>
+	    <result column="all_trade_money" property="allTradeMoney" jdbcType="DOUBLE"/>    
+	    <result column="all_register_count" property="allRegisterCount" jdbcType="INTEGER"/>
+	    <result column="status" property="status" jdbcType="INTEGER"/>
+	    <result column="all_customer_count" property="allCustomerCount" jdbcType="INTEGER"/>       
+	    <result column="all_convert_rates" property="allConvertRates" jdbcType="FLOAT"/>
+	    <result column="new_register_count" property="newRegisterCount" jdbcType="INTEGER"/>    
+	    <result column="new_customer_count" property="newCustomerCount" jdbcType="INTEGER"/>
+	    <result column="total_trade_money" property="totalTradeMoney" jdbcType="INTEGER"/>
+	    <result column="new_convert_rates" property="newConvertRates" jdbcType="FLOAT"/>
+	    <result column="date_time" property="dateTime" jdbcType="TIMESTAMP"/>
+	    <result column="background_color" property="backgroundColor" jdbcType="VARCHAR"/>
+	    <result column="text_color" property="textColor" jdbcType="VARCHAR"/>
+	    <result column="background_url" property="backgroundUrl" jdbcType="VARCHAR"/>
+	    <result column="active_customer_count" property="activeCustomerCount" jdbcType="FLOAT"/>
+	    <association property="coupon" javaType="Coupon">
+	    	<id column="coupon_id" property="id" jdbcType="INTEGER" />
+	    	<result column="coupon_name" property="name" jdbcType="VARCHAR" />
+	    	<result column="coupon_amount" property="amount" jdbcType="VARCHAR" />
+	    	<result column="coupon_category" property="category" jdbcType="VARCHAR" />
+	    	<result column="coupon_source" property="source" jdbcType="TINYINT" />
+	    	<result column="coupon_condition" property="condition" jdbcType="VARCHAR" />
+	    	<result column="coupon_finance_period" property="financePeriod" jdbcType="INTEGER" />
+	    	<result column="coupon_increase_days" property="increaseDays" jdbcType="INTEGER" />
+	  	</association>            
+	</resultMap>
+	
+	<resultMap type="ChannelVisitLog" id="channelVisitMap">
+	  <result column="channel_id" property="channelId" jdbcType="INTEGER"/>
+	  <result column="type" property="type" jdbcType="INTEGER"/>    
+	  <result column="quantity" property="quantity" jdbcType="INTEGER"/>
+	</resultMap>
+	
+    <select id="queryUsedForList" resultMap="resultMap">
+        select  c.id,c.name,c.register_url,c.spread_url
+        from channel c where c.name != "" or c.name != null
+    </select>
+    <select id="queryForList" resultMap="resultMap">
+        select id, name, category, register_url, spread_url, status from channel 
+		<where>
+			<if test="channelName != null">
+            	name = #{channelName}
+            </if>
+            <if test="category > -1">
+                and category = #{category}
+            </if>
+        </where>
+		 <choose>
+		  <when test="offset > 0 and size > 0">
+		     <![CDATA[
+		     limit #{offset}, #{size}
+		     ]]>
+		  </when>
+		  <when test="size > 0">
+		     <![CDATA[
+		     limit 0, #{size}
+		     ]]>
+		  </when>
+		  <otherwise>
+		  <![CDATA[
+		   limit 0, 15
+		  ]]>
+		  </otherwise>
+		</choose> 
+    </select>
+    <select id="queryForCount" resultType="int">
+        select count(id) from channel 
+        <where>
+            <if test="channelName != null">
+                name like '%${channelName}%'
+            </if>
+            <if test="category > -1">
+                and category = #{category}
+            </if>
+        </where>
+    </select>	
+    <select id="selectByChannelIds" resultMap="resultMap">
+    	select c.`id`, new_register_count, new_convert_rates, new_customer_count, IFNULL(tradeMoney, 0) total_trade_money, customers active_customer_count from channel c left join (
+			select ur.channel_id,
+					SUM(ur.register_time >= #{beginTime} and #{endTime} >= ur.register_time) new_register_count,
+             		SUM(ur.register_time >= #{beginTime} and #{endTime} >= ur.register_time and ur.first_trade_time >= #{beginTime} and #{endTime} >= ur.first_trade_time) new_convert_rates,
+             		SUM(ur.first_trade_time >= #{beginTime} and #{endTime} >= ur.first_trade_time) new_customer_count
+				from user ur 
+				left join customer cr on cr.id = ur.id 
+				where ur.channel_id in 
+				    <foreach collection="ids" item="channel" index="index" open="(" separator="," close=")" >    
+			         #{channel.id}
+			        </foreach> 
+				group by ur.channel_id ) uc on c.`id`  = uc.channel_id left join (
+                    SELECT cr.channel_id, SUM(principal) tradeMoney, count(DISTINCT co.customer_id) customers
+				from customer_order co 
+				left join customer cr on cr.id = co.customer_id
+				where cr.`channel_id` in 
+					<foreach collection="ids" item="channel" index="index" open="(" separator="," close=")" >    
+			         #{channel.id}
+			        </foreach>  
+			    and co.order_time >= #{beginTime} and #{endTime} >= co.order_time
+				GROUP BY cr.channel_id 
+    	) cl on c.`id` = cl.channel_id where c.`id` IN 					
+    				<foreach collection="ids" item="channel" index="index" open="(" separator="," close=")" >    
+			         #{channel.id}
+			        </foreach>
+    </select>
+    
+     <select id="selectById" parameterType="int" resultMap="resultMap">
+        select  c.id,c.name, c.category, c.register_url,c.spread_url, c.download_url, c.banner, c.rule, c.forward_category, 
+        c.coupon_id, cn.name as coupon_name, c.status, cn.category coupon_category, cn.amount coupon_amount,
+        cn.condition coupon_condition, cn.finance_period coupon_finance_period, cn.increase_days coupon_increase_days,
+        c.background_color, c.text_color, c.background_url
+        from channel c 
+        left join coupon cn on cn.id = c.coupon_id 
+        where c.id = #{id,jdbcType=INTEGER}
+    </select>
+    <select id="selectByChannelId"  parameterType="int" resultMap="channelVisitMap">
+	    select channel_id, type, sum(quantity) quantity from  channel_visit_log where channel_id = #{channelId} group by type 
+	</select>
+	<select id="checkChannelName" resultType="Channel">
+	  select c.id as id, c.name as name from channel c where id != ${id} and name = #{channelName}
+	</select>
+	<update id="update" parameterType="Goods">
+	    update channel
+	    <set>
+	       <if test="name != null">
+	    		name = #{name,jdbcType=VARCHAR},    
+	    	</if>
+	       <if test="category >= 0">
+	    		category = #{category,jdbcType=INTEGER},    
+	    	</if>
+	    	<if test="registerUrl != null">
+	    		register_url = #{registerUrl,jdbcType=VARCHAR},    
+	    	</if>
+	    	<if test="spreadUrl != null">
+	    		spread_url = #{spreadUrl,jdbcType=VARCHAR},    
+	    	</if>
+	    	<if test="downloadUrl != null">
+	    	    download_url = #{downloadUrl,jdbcType=VARCHAR},
+	    	</if>
+	    	<if test="banner != null">
+	    	    banner = #{banner,jdbcType=VARCHAR},
+	    	</if>
+	    	<if test="rule != null">
+	    	    rule = #{rule,jdbcType=VARCHAR},
+	    	</if>
+	    	<if test="coupon != null and coupon.id >= 0">
+	    	    coupon_id = #{coupon.id,jdbcType=VARCHAR},
+	    	</if>
+	    	<if test="forwardCategory >= 0">
+	    	    forward_category = #{forwardCategory,jdbcType=VARCHAR},
+	    	</if>
+	    	<if test="backgroundColor != null">
+	    	    background_color = #{backgroundColor,jdbcType=VARCHAR},
+	    	</if>
+	    	<if test="textColor != null">
+	    	    text_color = #{textColor,jdbcType=VARCHAR},
+	    	</if>
+	    	<if test="backgroundUrl != null">
+	    	    background_url = #{backgroundUrl,jdbcType=VARCHAR},
+	    	</if>
+	    </set>
+	    where id = #{id,jdbcType=INTEGER}
+	</update>
+	
+	
+	
+	
+	
+	
+	
+	
+</mapper>

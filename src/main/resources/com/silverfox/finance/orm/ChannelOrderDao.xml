@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.ChannelOrderDao" >
+  <resultMap id="ResultMap" type="ChannelOrder" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="request_no" property="requestNO" jdbcType="VARCHAR" />
+    <result column="detail" property="detail" jdbcType="VARCHAR" />
+    <result column="result" property="result" jdbcType="VARCHAR" />
+    <result column="cellphone" property="cellphone" jdbcType="VARCHAR" />
+    <result column="goods" property="goods" jdbcType="VARCHAR" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <association property="channel" javaType="Channel">
+   	  <id column="channel_id" property="id" />
+   	  <result column="channel_name" property="name" />
+    </association>
+  </resultMap>
+  
+  <sql id="columns" >
+	cr.id, cr.request_no, cr.detail, cr.result, cr.cellphone, cr.create_time, cr.goods, cr.channel_id, c.name channel_name
+  </sql>
+  <select id="queryForList" resultMap="ResultMap">
+    select 
+    <include refid="columns" />
+    from channel_order cr
+    left join channel c on cr.channel_id = c.id
+    <where>
+      <if test="requestNO != null and requestNO != ''">
+	    cr.request_no like '%${requestNO}%'
+	  </if>
+	  <if test="cellphone != null and cellphone != ''">
+	    and cr.cellphone like '%${cellphone}%'
+	  </if>
+	  <if test="channelID > 0">
+	    and cr.channel_id = #{channelID}
+	  </if>
+    </where>
+    ORDER BY cr.create_time DESC
+    <choose>
+	  <when test="offset > 0 and size > 0">
+      <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+	  </when>
+	  <when test="size > 0">
+      <![CDATA[
+      limit 0, #{size}
+      ]]>
+	  </when>
+	  <otherwise>
+	  <![CDATA[
+	  limit 0, 15
+	  ]]>
+	  </otherwise>
+	</choose>
+  </select>
+ 
+  <select id="queryRequestNoForCount" resultType="int">
+  	select count(id) 
+  	from channel_order
+     <where>
+      <if test="requestNO != null and requestNO != ''">
+	    request_no like '%${requestNO}%'
+	  </if>
+	  <if test="cellphone != null and cellphone != ''">
+	    and cellphone like '%${cellphone}%'
+	  </if>
+	  <if test="channelID >0">
+	    and channel_id = #{channelID}
+	  </if>
+    </where>
+  </select>
+  
+</mapper>

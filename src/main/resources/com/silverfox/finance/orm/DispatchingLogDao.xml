@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.DispatchingLogDao" >
+	<resultMap id="ResultMap" type="DispatchingLog" >
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="cellphone" property="cellphone" jdbcType="VARCHAR" />
+		<result column="dispatching_date" property="dispatchingDate" jdbcType="INTEGER" />
+		<association property="dispatchingBonusLog" javaType="DispatchingBonusLog">
+			<result column="dispatching_coupon_log_id" property="id" jdbcType="INTEGER" />
+			<result column="quantity" property="quantity" jdbcType="INTEGER" />
+		</association>
+	</resultMap>
+	<sql id="column" >
+		dl.id, dl.cellphone, dl.dispatching_date, dl.dispatching_coupon_log_id, dbl.quantity
+	</sql>
+	<select id="queryForCount" resultType="int">
+		select count(dl.id) from dispatching_log dl left join dispatching_bonus_log dbl on dbl.id = dl.dispatching_coupon_log_id
+		<where>
+			<if test="dispatchingBonusLogId > 0">
+				dl.dispatching_coupon_log_id = #{dispatchingBonusLogId}
+			</if>
+			<if test="cellphone != null">
+				and dl.cellphone = #{cellphone}
+			</if>
+			<if test="beginDate != null and endDate != null">
+				<![CDATA[ and (DATE_FORMAT(dl.dispatching_date ,'%Y-%m-%d') >= '${beginDate}' and '${endDate}' >= DATE_FORMAT(dl.dispatching_date,'%Y-%m-%d'))]]>
+			</if>
+		</where>
+	</select>
+	<select id="queryForList" resultMap="ResultMap">
+		select <include refid="column" /> from dispatching_log dl left join dispatching_bonus_log dbl on dbl.id = dl.dispatching_coupon_log_id
+		<where>
+			<if test="dispatchingBonusLogId > 0">
+				dl.dispatching_coupon_log_id = #{dispatchingBonusLogId}
+			</if>
+			<if test="cellphone != null">
+				and dl.cellphone = #{cellphone}
+			</if>
+			<if test="beginDate != null and endDate != null">
+				<![CDATA[ and (DATE_FORMAT(dl.dispatching_date ,'%Y-%m-%d') >= '${beginDate}' and '${endDate}' >= DATE_FORMAT(dl.dispatching_date,'%Y-%m-%d'))]]>
+			</if>
+		</where>
+		<choose>
+			<when test="offset > 0 and size > 0">
+				<![CDATA[ limit #{offset}, #{size} ]]>
+			</when>
+			<when test="size > 0">
+				<![CDATA[ limit 0, #{size} ]]>
+			</when>
+			<otherwise>
+				<![CDATA[ limit 0, 15 ]]>
+			</otherwise>
+		</choose>
+	</select>
+	<select id="countCellphones" resultType="int">
+		<if test="type == 0">
+			select if(cor.customer_id > 0,1,0) from customer_order cor
+			<if test="beginDate != null and endDate != null">
+				<![CDATA[ where principal >= #{amount} and cor.order_time BETWEEN #{beginDate} and #{endDate} ]]>
+			</if>
+			group by cor.customer_id
+		</if>
+		<if test="type == 1">
+			select if(sum(`principal`)>= #{amount},1,0) from customer_order cor
+			<if test="beginDate != null and endDate != null">
+				<![CDATA[ where cor.order_time BETWEEN #{beginDate} and #{endDate} ]]>
+			</if>
+			GROUP BY customer_id
+		</if>
+	</select>
+	<select id="listCellphones" resultType="DispatchingLog">
+		<if test="type == 0">
+			select c.cellphone from customer_order cor
+			left join customer c on c.id = cor.customer_id
+			<if test="beginDate != null and endDate != null">
+				<![CDATA[ where principal >= #{amount} and cor.order_time BETWEEN #{beginDate} and #{endDate}]]>
+			</if>
+			group by cor.customer_id
+		</if>
+		<if test="type == 1">
+			select if(sum(`principal`) >= #{amount}, c.cellphone, '') cellphone
+			from customer_order cor
+			left join customer c on c.id = cor.customer_id
+			<if test="beginDate != null and endDate != null">
+				<![CDATA[ where cor.order_time BETWEEN #{beginDate} and #{endDate} ]]>
+			</if>
+			group by cor.customer_id
+		</if>
+		<choose>
+			<when test="offset > 0 and size > 0">
+				<![CDATA[ limit #{offset}, #{size} ]]>
+			</when>
+			<when test="size > 0">
+				<![CDATA[ limit 0, #{size} ]]>
+			</when>
+			<otherwise>
+				<![CDATA[ limit 0, 15 ]]>
+			</otherwise>
+		</choose>
+	</select>
+	<insert id="insertDispatchingLogBatch">
+		INSERT INTO dispatching_log (dispatching_coupon_log_id, cellphone, dispatching_date) values
+		<foreach collection="dispatchingLogs" item="dispatchingLog" index="index" separator=",">
+			(
+			#{dispatchingBonusLogId},
+			#{dispatchingLog.cellphone},
+			NOW()
+			)
+		</foreach>
+	</insert>
+	<delete id="delete" parameterType="int">
+        delete from dispatching_log where dispatching_coupon_log_id = #{dispatchingBonusLogId}
+    </delete>
+</mapper>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.LogPaymentDao" >
+  <resultMap id="ResultMap" type="LogPayment" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="order_no" property="orderNo" jdbcType="VARCHAR" />
+    <result column="product_name" property="productName" jdbcType="VARCHAR" />
+    <result column="customer_name" property="customerName" jdbcType="VARCHAR" />
+    <result column="amount" property="amount" jdbcType="FLOAT" />
+    <result column="bank_code" property="bankCode" jdbcType="VARCHAR" />
+    <result column="bank_name" property="bankName" jdbcType="VARCHAR" />
+    <result column="bank_card" property="bankCard" jdbcType="VARCHAR" />
+    <result column="flag" property="flagCard" jdbcType="INTEGER" />
+    <result column="voucher" property="voucher" jdbcType="VARCHAR" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="result" property="result" jdbcType="VARCHAR" />
+  </resultMap>
+  
+  <sql id="columns" >
+	id, order_no, product_name, customer_name, amount, bank_code, bank_name, bank_card, flag, voucher, create_time, result
+  </sql>
+  <select id="queryForList" resultMap="ResultMap">
+    select 
+    <include refid="columns" />
+    from log_payment
+    <where>
+      <if test="orderNo != null and orderNo != ''">
+	    order_no like '%${orderNo}%'
+	  </if>
+	  <if test="productName != null and productName != ''">
+	    and product_name like '%${productName}%'
+	  </if>
+	  <if test="customerName != null and customerName != ''">
+	    and customer_name like '%${customerName}%'
+	  </if>
+    </where>
+    ORDER BY id desc
+    <choose>
+	  <when test="offset > 0 and size > 0">
+      <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+	  </when>
+	  <when test="size > 0">
+      <![CDATA[
+      limit 0, #{size}
+      ]]>
+	  </when>
+	  <otherwise>
+	  <![CDATA[
+	  limit 0, 15
+	  ]]>
+	  </otherwise>
+	</choose>
+  </select>
+  <select id="queryForCount" resultType="int">
+  	select count(id) 
+  	from log_payment
+    <where>
+      <if test="orderNo != null and orderNo != ''">
+	    order_no like '%${orderNo}%'
+	  </if>
+	  <if test="productName != null and productName != ''">
+	    and product_name like '%${productName}%'
+	  </if>
+	  <if test="customerName != null and customerName != ''">
+	    and customer_name like '%${customerName}%'
+	  </if>
+    </where>
+  </select>
+  <insert id="insert" parameterType="LogPayment" useGeneratedKeys="true" keyProperty="id" >
+    insert into log_payment (order_no, product_name, customer_name, amount, bank_code, bank_name, bank_card, flag, voucher, create_time, result) values 
+    (#{orderNo,jdbcType=VARCHAR}, #{productName,jdbcType=VARCHAR}, #{customerName,jdbcType=VARCHAR}, #{amount,jdbcType=FLOAT}, #{bankCode,jdbcType=VARCHAR}, #{bankName,jdbcType=VARCHAR}, 
+    #{bankCard,jdbcType=VARCHAR}, #{flagCard,jdbcType=INTEGER}, 
+    <if test="voucher == null">
+    	'',
+    </if>
+    <if test="voucher != null">
+    	#{voucher,jdbcType=VARCHAR},     
+    </if>
+   	#{createTime,jdbcType=TIMESTAMP}, #{result,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertBatch" parameterType="java.util.List">
+	insert into log_payment (order_no, product_name, customer_name, amount, bank_code, bank_name, bank_card, flag, voucher, create_time, result) values
+	<foreach collection="logPayments" item="logPayment" index="index" separator="," >    
+      (#{logPayment.orderNo,jdbcType=VARCHAR}, #{logPayment.productName,jdbcType=VARCHAR}, #{logPayment.customerName,jdbcType=VARCHAR}, #{logPayment.amount,jdbcType=FLOAT}, #{logPayment.bankCode,jdbcType=VARCHAR}, 
+      #{logPayment.bankName,jdbcType=VARCHAR}, #{logPayment.bankCard,jdbcType=VARCHAR}, #{logPayment.flagCard,jdbcType=INTEGER}, #{logPayment.voucher,jdbcType=VARCHAR}, #{logPayment.createTime,jdbcType=TIMESTAMP}, #{logPayment.result,jdbcType=VARCHAR})    
+    </foreach>
+  </insert>
+</mapper>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.RoleDao" >
+  <resultMap id="ResultMap" type="Role" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="status" property="status" jdbcType="TINYINT" />
+    <result column="privacy" property="privacy" jdbcType="TINYINT" />
+    <result column="remark" property="remark" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="columns" >
+    id, name, status, privacy, remark
+  </sql>
+  <select id="listAll" resultMap="ResultMap">
+    select 
+    <include refid="columns" />
+    from role order by id desc
+  </select>
+  <select id="selectUsingList" resultMap="ResultMap" >
+    select 
+    <include refid="columns" />
+    from role where status = 1 order by id
+  </select>
+  <select id="selectById" resultMap="ResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="columns" />
+    from role where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="duplicate" resultType="int">
+    select count(id) from role where name = #{name,jdbcType=VARCHAR}
+    <if test="id > 0">
+    	and id != #{id,jdbcType=INTEGER}
+    </if>
+  </select>
+  <insert id="insert" parameterType="Role">
+    insert into role
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="name != null" >
+        name,
+      </if>
+      	privacy,
+      <if test="remark != null" >
+        remark,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="name != null" >
+        #{name,jdbcType=VARCHAR},
+      </if>
+        #{privacy,jdbcType=INTEGER},
+      <if test="remark != null" >
+        #{remark,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="update" parameterType="Role" >
+    update role
+    <set >
+      <if test="name != null" >
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      	privacy = #{privacy,jdbcType=INTEGER},
+      <if test="remark != null" >
+        remark = #{remark,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="enable">
+  	update role set status = #{status,jdbcType=TINYINT} where id = #{id,jdbcType=INTEGER}
+  </update>
+  <delete id="delete" parameterType="java.lang.Integer" >
+    delete from role where id = #{id,jdbcType=INTEGER}
+  </delete>
+</mapper>

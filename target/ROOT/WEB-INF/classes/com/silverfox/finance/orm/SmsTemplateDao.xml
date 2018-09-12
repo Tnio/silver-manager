@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.SmsTemplateDao" >
+  <resultMap id="ResultMap" type="SmsTemplate" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="content" property="content" jdbcType="VARCHAR" />
+    <result column="status" property="status" jdbcType="TINYINT" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="columns" >
+    id, content, status, create_time
+  </sql>
+  <select id="queryForList" resultMap="ResultMap">
+    select 
+    <include refid="columns" />
+    from sms_template t 
+    <where>
+        <if test="status >= 0">
+            t.status = #{status}
+        </if>
+    </where>
+    order by create_time desc
+    <choose>
+	  <when test="offset > 0 and size > 0">
+      <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+	  </when>
+	  <when test="size > 0">
+      <![CDATA[
+      limit 0, #{size}
+      ]]>
+	  </when>
+	  <otherwise>
+	  <![CDATA[
+	    limit 0, 15
+	  ]]>
+	  </otherwise>
+	</choose>
+  </select>
+  <select id="selectById" parameterType="int" resultMap="ResultMap">
+	  select <include refid="columns" /> from sms_template t where t.id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="queryForCount" resultType="int">
+  	select count(t.id) from sms_template t
+  	<where>
+        <if test="status >= 0">
+            t.status = #{status}
+        </if>
+    </where>
+  </select>
+  <insert id="insert" parameterType="SmsTemplate">
+    insert into sms_template
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="content != null" >
+        content,
+      </if>
+        create_time
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="content != null" >
+        #{content,jdbcType=VARCHAR},
+      </if>
+        now()
+    </trim>
+  </insert>
+  <update id="update">
+  	update sms_template set status = #{status,jdbcType=TINYINT} where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

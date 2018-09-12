@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.InviteActivityDao" >
+  <resultMap id="ResultMap" type="InviteActivity" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="begin_date" property="beginDate" jdbcType="VARCHAR" />
+    <result column="end_date" property="endDate" jdbcType="VARCHAR" />
+    <result column="first_trade_amount" property="firstTradeAmount" jdbcType="INTEGER" />
+    <result column="audit_status" property="auditStatus" jdbcType="TINYINT" />
+    <result column="rule_content" property="ruleContent" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="columns" >
+    id, name, begin_date, end_date, first_trade_amount, audit_status, rule_content
+  </sql>
+  
+  <select id="duplicateInviteActivityName" resultType="int">
+    select count(id) from invite_activity where name = #{name,jdbcType=VARCHAR} 
+    <if test="id > 0">
+    	and id != #{id,jdbcType=INTEGER}
+    </if>
+  </select>
+  
+  <select id="selectById" resultMap="ResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="columns" />
+    from invite_activity where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectOverlapDate" resultType="int">
+  	select COUNT(id) from invite_activity where audit_status = 1 and 
+  	<![CDATA[
+		((begin_date >= #{beginDate,jdbcType=VARCHAR} AND begin_date <= #{endDate,jdbcType=VARCHAR}) OR  
+        (begin_date <= #{beginDate,jdbcType=VARCHAR} AND end_date >= #{endDate,jdbcType=VARCHAR}) OR  
+        (end_date >= #{beginDate,jdbcType=VARCHAR} AND end_date <= #{endDate,jdbcType=VARCHAR}))
+    ]]>
+  </select>
+  <select id="queryForList" resultMap="ResultMap">
+    select 
+    <include refid="columns" />
+    from invite_activity order by 
+    IF(audit_status =0,0,IF(audit_status = 1,2,1)),  
+    end_date DESC
+    <choose>
+	  <when test="offset > 0 and size > 0">
+      <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+	  </when>
+	  <when test="size > 0">
+      <![CDATA[
+      limit 0, #{size}
+      ]]>
+	  </when>
+	  <otherwise>
+	  <![CDATA[
+	    limit 0, 15
+	  ]]>
+	  </otherwise>
+	</choose>
+  </select>
+  <select id="queryForCount" resultType="int">
+  	select count(id) from invite_activity
+  </select>
+  <update id="update" parameterType="InviteActivity" >
+    update invite_activity
+    <set>
+      <if test="name != null" >
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="beginDate != null" >
+        begin_date = #{beginDate,jdbcType=VARCHAR},
+      </if>
+      <if test="endDate != null" >
+        end_date = #{endDate,jdbcType=VARCHAR},
+      </if>
+      <if test="firstTradeAmount >= 0" >
+        first_trade_amount = #{firstTradeAmount,jdbcType=INTEGER},
+      </if>
+      <if test="ruleContent != null" >
+        rule_content = #{ruleContent,jdbcType=VARCHAR},
+      </if>
+      <if test="auditStatus >= 0" >
+        audit_status = #{auditStatus,jdbcType=TINYINT},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+   <insert id="insert" parameterType="InviteActivity" useGeneratedKeys="true" keyProperty="id">
+    insert into invite_activity
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="name != null" >
+        name,
+      </if>
+      <if test="beginDate != null" >
+        begin_date,
+      </if>
+      <if test="endDate != null" >
+        end_date,
+      </if>
+      <if test="firstTradeAmount > 0" >
+        first_trade_amount,
+      </if>
+      <if test="ruleContent != null" >
+        rule_content,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="name != null" >
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="beginDate != null" >
+        #{beginDate,jdbcType=VARCHAR},
+      </if>
+      <if test="endDate != null" >
+        #{endDate,jdbcType=VARCHAR},
+      </if>
+      <if test="firstTradeAmount > 0" >
+        #{firstTradeAmount,jdbcType=INTEGER},
+      </if>
+      <if test="ruleContent != null" >
+        #{ruleContent,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+   <update id="audit">
+  	update invite_activity set audit_status = #{status,jdbcType=TINYINT} where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

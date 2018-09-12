@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.SignInDao" >
+    <resultMap type="SignIn" id="resultMap">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="silver" property="silver" jdbcType="INTEGER"/>
+        <result column="increment" property="increment" jdbcType="INTEGER"/>
+        <result column="ceiling" property="ceiling" jdbcType="INTEGER"/>
+        <result column="start_date" property="startDate" jdbcType="DATE"/>
+        <result column="end_date" property="endDate" jdbcType="DATE"/>
+        <result column="rule_desc" property="ruleDesc" jdbcType="VARCHAR"/>
+        <collection property="signInPrizes" ofType="SignInPrize">
+            <id column="sign_in_prize_id" property="id" jdbcType="INTEGER"/>
+            <result column="days" property="days" jdbcType="INTEGER"/>
+            <result column="question" property="question" jdbcType="VARCHAR"/>
+            <result column="answer_a" property="answerA" jdbcType="VARCHAR"/>
+            <result column="answer_b" property="answerB" jdbcType="VARCHAR"/>
+            <result column="answer_c" property="answerC" jdbcType="VARCHAR"/>
+            <result column="answer_d" property="answerD" jdbcType="VARCHAR"/>
+            <result column="right_answer" property="rightAnswer" jdbcType="INTEGER"/>
+            <result column="give_num" property="giveNum" jdbcType="INTEGER"/>
+            <result column="give_type" property="giveType" jdbcType="INTEGER"/>
+            <association property="coupon" javaType="Coupon">
+                <id column="coupon_id" property="id" jdbcType="INTEGER" />
+                <result column="category" property="category" jdbcType="TINYINT" />
+                <result column="name" property="name" jdbcType="VARCHAR" />
+            </association>
+        </collection>
+    </resultMap>
+    <resultMap type="SignInPrize" id="PrizeMap">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="days" property="days" jdbcType="INTEGER"/>
+        <result column="question" property="question" jdbcType="VARCHAR"/>
+        <result column="answer_a" property="answerA" jdbcType="VARCHAR"/>
+        <result column="answer_b" property="answerB" jdbcType="VARCHAR"/>
+        <result column="answer_c" property="answerC" jdbcType="VARCHAR"/>
+        <result column="answer_d" property="answerD" jdbcType="VARCHAR"/>
+        <result column="right_answer" property="rightAnswer" jdbcType="INTEGER"/>
+        <result column="give_num" property="giveNum" jdbcType="INTEGER"/>
+        <result column="give_type" property="giveType" jdbcType="INTEGER"/>
+        <association property="coupon" javaType="Coupon">
+            <id column="coupon_id" property="id" jdbcType="INTEGER" />
+            <result column="category" property="category" jdbcType="TINYINT" />
+            <result column="name" property="name" jdbcType="VARCHAR" />
+        </association>
+    </resultMap>
+    <resultMap type="customerSigninPrizeLog" id="RecordMap">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
+        <result column="award_date" property="awardDate" jdbcType="TIMESTAMP"/>
+        <association property="signInPrize" javaType="SignInPrize">
+            <id column="sign_in_prize_id" property="id" jdbcType="INTEGER" />
+        </association>
+    </resultMap>
+    <sql id="columns">
+        s.id as id, s.silver as silver, s.increment as increment, s.ceiling as ceiling,
+        s.start_date as start_date, s.end_date as end_date, s.rule_desc as rule_desc,
+        si.id as sign_in_prize_id, si.days, si.question, si.answer_a, si.answer_b,
+        si.answer_c, si.answer_d, si.right_answer, si.give_num, si.give_type, cn.id as coupon_id,
+        cn.category, cn.name
+    </sql>
+    <sql id="prizeColumus">
+        si.id, si.days, si.question, si.answer_a, si.answer_b,
+        si.answer_c, si.answer_d, si.right_answer, si.give_num, si.give_type, cn.id as coupon_id,
+        cn.category, cn.name
+    </sql>
+    <select id="selectAll" resultMap="PrizeMap">
+        select <include refid="prizeColumus"/>
+        from sign_in_prize si left join coupon cn on cn.id = si.coupon_id
+    </select>
+    <select id="selectById" parameterType="int" resultMap="resultMap">
+        select <include refid="columns"/>
+        from sign_in s
+        left join sign_in_prize si on si.sign_id = s.id
+        left join coupon cn on cn.id = si.coupon_id
+        where s.id = #{id,jdbcType=INTEGER}
+    </select>
+    <insert id="insertSignInPrizes" parameterType="SignInPrize" >
+        insert into sign_in_prize (sign_id, days, question, answer_a, answer_b, answer_c, answer_d, right_answer, give_num, give_type, coupon_id ) values
+        <foreach collection="toSaveList" item="signInPrize" index="index" separator="," >
+            (
+            #{signInPrize.signIn.id},
+            #{signInPrize.days},
+            #{signInPrize.question},
+            #{signInPrize.answerA},
+            #{signInPrize.answerB},
+            #{signInPrize.answerC},
+            #{signInPrize.answerD},
+            #{signInPrize.rightAnswer},
+            #{signInPrize.giveNum},
+            #{signInPrize.giveType},
+            #{signInPrize.coupon.id}
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateSignInPrizes" parameterType="SignInPrize" >
+        <foreach collection="toUpdateList" item="signInPrize" index="index" separator=";">
+            update sign_in_prize
+            <set>
+                sign_id = #{signInPrize.signIn.id},
+                days = #{signInPrize.days},
+                question = #{signInPrize.question},
+                answer_a = #{signInPrize.answerA},
+                answer_b = #{signInPrize.answerB},
+                answer_c = #{signInPrize.answerC},
+                answer_d = #{signInPrize.answerD},
+                right_answer = ${signInPrize.rightAnswer},
+                give_num = #{signInPrize.giveNum},
+                give_type = #{signInPrize.giveType},
+                coupon_id = #{signInPrize.coupon.id}
+            </set>
+            where id = #{signInPrize.id}
+        </foreach>
+    </update>
+    <insert id="insert" parameterType="SignIn" useGeneratedKeys="true" keyProperty="id">
+        insert into sign_in
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="silver >= 0" >
+                silver,
+            </if>
+            <if test="increment >= 0" >
+                increment,
+            </if>
+            <if test="ceiling >= 0" >
+                ceiling,
+            </if>
+            start_date,
+            end_date,
+            <if test="ruleDesc != null">
+                rule_desc
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="silver >= 0">
+                #{silver,jdbcType=INTEGER},
+            </if>
+            <if test="increment >= 0">
+                #{increment,jdbcType=INTEGER},
+            </if>
+            <if test="ceiling >= 0">
+                #{ceiling,jdbcType=INTEGER},
+            </if>
+            NOW(),
+            NOW(),
+            <if test="ruleDesc != null">
+                #{ruleDesc,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="update" parameterType="SignIn" >
+        update sign_in
+        <set>
+            <if test="silver > 0">
+                silver = #{silver,jdbcType=INTEGER},
+            </if>
+            <if test="increment > -1">
+                increment = #{increment,jdbcType=INTEGER},
+            </if>
+            <if test="ceiling > -1">
+                ceiling = #{ceiling,jdbcType=INTEGER},
+            </if>
+            <if test="startDate != null">
+                start_date = #{startDate,jdbcType=DATE},
+            </if>
+            <if test="endDate != null">
+                end_date = #{endDate,jdbcType=DATE},
+            </if>
+            <if test="ruleDesc != null">
+                rule_desc = #{ruleDesc,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+</mapper>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.CustomerSilverLogDao" >
+    <resultMap id="resultMap" type="CustomerSilverLog">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="source_id" property="sourceId" jdbcType="INTEGER"/>
+        <result column="channel" property="channel" jdbcType="VARCHAR"/>
+        <result column="amount" property="amount" jdbcType="INTEGER"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <association property="user" javaType="User">
+            <id column="user_id" property="id" jdbcType="INTEGER" />
+            <result column="user_name" property="name" jdbcType="VARCHAR" />
+            <result column="cellphone" property="cellphone" jdbcType="VARCHAR" />
+        </association>
+    </resultMap>
+    <sql id="columns">
+        sd.id, sd.source as source_id, sd.channel, sd.amount, sd.create_time, c.name as user_name, c.id user_id, c.cellphone
+    </sql>
+    <select id="countRecentData" resultType="int" >
+        select count(id) from customer_silver_log
+        where user_id = #{customerId,jdbcType=INTEGER}
+        <if test="pastTime != null and pastTime != ''">
+            and create_time >= #{pastTime}
+        </if>
+    </select>
+    <select id="selectRecentDataByCustomerId" resultMap="resultMap">
+        select id, source as source_id, channel, amount, create_time
+        from customer_silver_log
+        where user_id = #{customerId,jdbcType=INTEGER} and amount != 0
+        <if test="pastTime != null and pastTime != ''">
+            and create_time >= #{pastTime}
+        </if>
+        order by create_time desc
+        <choose>
+            <when test="offset > 0 and size > 0">
+                <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+            </when>
+            <when test="size > 0">
+                <![CDATA[
+      limit 0, #{size}
+      ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+	    limit 0, 15
+	  ]]>
+            </otherwise>
+        </choose>
+    </select>
+    <select id="selectAll" resultMap="resultMap">
+        select id, source as  source_id, channel, SUM(amount) amount from customer_silver_log
+        <where>
+            <if test="beginTime != null and endTime != null">
+                <![CDATA[
+          create_time >= #{beginTime} and #{endTime} >= create_time
+      	]]>
+            </if>
+        </where>
+        GROUP BY source
+    </select>
+    <insert id="insert" parameterType="CustomerSilverLog">
+        insert into customer_silver_log
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="sourceId > 0" >
+                source,
+            </if>
+            <if test="channel != null" >
+                channel,
+            </if>
+            <if test="user != null and user.id > 0" >
+                user_id,
+            </if>
+            <if test="createTime != null" >
+                create_time,
+            </if>
+            amount
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="sourceId > 0" >
+                #{sourceId,jdbcType=INTEGER},
+            </if>
+            <if test="channel != null" >
+                #{channel,jdbcType=VARCHAR},
+            </if>
+            <if test="user != null and user.id > 0" >
+                #{user.id,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null" >
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            #{amount,jdbcType=INTEGER},
+        </trim>
+    </insert>
+    <insert id="insertSilverLogInBatch">
+        INSERT INTO customer_silver_log (user_id, source,channel, amount, create_time)
+        select id, #{sourceId}, #{channel}, #{silverNum}, now()
+        from user where cellphone in <foreach collection="dispatchingLogs" item="dispatchingLog" index="index"
+                                              open="(" separator="," close=")">#{dispatchingLog.cellphone}</foreach>
+    </insert>
+</mapper>

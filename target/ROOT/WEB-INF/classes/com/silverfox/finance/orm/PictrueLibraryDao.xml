@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.PictrueLibraryDao" >
+    <resultMap id="ResultMap" type="PictrueLibrary" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="name" property="name" jdbcType="VARCHAR" />
+        <result column="url" property="url" jdbcType="VARCHAR" />
+        <result column="link_category" property="linkCategory" jdbcType="TINYINT" />
+        <result column="content" property="content" jdbcType="VARCHAR" />
+        <result column="status" property="status" jdbcType="TINYINT" />
+        <result column="sort_number" property="sortNumber" jdbcType="TINYINT" />
+        <result column="display_platform" property="displayPlatform" jdbcType="TINYINT" />
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="category" property="category" jdbcType="TINYINT" />
+        <result column="share_desc" property="shareDesc" jdbcType="VARCHAR" />
+        <result column="remark" property="remark" jdbcType="VARCHAR" />
+    </resultMap>
+    <sql id="columns" >
+        id, name, url, link_category, content, status, sort_number, display_platform, create_time, category, share_desc, remark
+    </sql>
+    <select id="queryForList" resultMap="ResultMap">
+        select <include refid="columns" />
+        from pictrue_library
+        <where>
+            <if test="category == -2" >
+                and category in (2,3)
+            </if>
+            <if test="category == -1" >
+                and category in (0,1,2,3)
+            </if>
+            <if test="category > -1" >
+                and category = #{category}
+            </if>
+            <if test="displayPlatform > -1">
+                and display_platform = #{displayPlatform}
+            </if>
+            <if test="status >= 0">
+                and status = #{status}
+            </if>
+        </where>
+        order by status desc, sort_number desc
+        <choose>
+            <when test="offset > 0 and size > 0">
+                <![CDATA[
+	    limit #{offset}, #{size}
+	    ]]>
+            </when>
+            <when test="size > 0">
+                <![CDATA[
+	    limit 0, #{size}
+	    ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+		limit 0, 15
+		]]>
+            </otherwise>
+        </choose>
+    </select>
+    <select id="queryForCount" resultType="int">
+        select count(id) from pictrue_library
+        <where>
+            <if test="category == -2" >
+                and category in (2,3)
+            </if>
+            <if test="category == -1" >
+                and category in (0,1,2,3)
+            </if>
+            <if test="category > -1" >
+                and category = #{category}
+            </if>
+            <if test="displayPlatform > -1">
+                and display_platform = #{displayPlatform}
+            </if>
+            <if test="status >= 0">
+                and status = #{status}
+            </if>
+        </where>
+    </select>
+    <select id="selectChart" resultMap="ResultMap">
+        select
+        <include refid="columns" />
+        <![CDATA[ from pictrue_library where category = #{category} and status = 1  order by sort_number asc,id desc ]]>
+    </select>
+    <select id="selectByName" resultType="int">
+        <![CDATA[ select count(id) from pictrue_library]]>
+        <where>
+            category = #{category}
+            <if test="name != null">
+                and name = #{name,jdbcType=VARCHAR}
+            </if>
+            <if test="id > 0">
+                and id != #{id,jdbcType=INTEGER}
+            </if>
+        </where>
+    </select>
+    <select id="selectById" resultMap="ResultMap">
+        select
+        <include refid="columns" />
+        from pictrue_library where id = #{id}
+    </select>
+    <insert id="insert" parameterType="PictrueLibrary">
+        insert into pictrue_library
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="name != null" >
+                name,
+            </if>
+            <if test="url != null" >
+                url,
+            </if>
+            <if test="linkCategory >= 0" >
+                link_category,
+            </if>
+            <if test="content != null" >
+                content,
+            </if>
+            <if test="status >= 0" >
+                status,
+            </if>
+            sort_number,
+            <if test="displayPlatform >= 0 " >
+                display_platform,
+            </if>
+            create_time,
+            <if test="category >= 0" >
+                category,
+            </if>
+            <if test="shareDesc != null" >
+                share_desc,
+            </if>
+            <if test="remark != null" >
+                remark,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="name != null" >
+                #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="url != null" >
+                #{url,jdbcType=VARCHAR},
+            </if>
+            <if test="linkCategory >= 0" >
+                #{linkCategory,jdbcType=TINYINT},
+            </if>
+            <if test="content != null" >
+                #{content,jdbcType=TINYINT},
+            </if>
+            <if test="status >= 0" >
+                #{status,jdbcType=TINYINT},
+            </if>
+            (select t.sortNumber from (select IF(max(id) is not null ,max(id)+1,999) sortNumber from pictrue_library) t),
+            <if test="displayPlatform >= 0 " >
+                #{displayPlatform,jdbcType=INTEGER},
+            </if>
+            now(),
+            <if test="category >= 0" >
+                #{category,jdbcType=TINYINT},
+            </if>
+            <if test="shareDesc != null" >
+                #{shareDesc,jdbcType=VARCHAR},
+            </if>
+            <if test="remark != null" >
+                #{remark,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="update" parameterType="PictrueLibrary" >
+        update pictrue_library
+        <set >
+            <if test="name != null" >
+                name = #{name},
+            </if>
+            <if test="url != null" >
+                url = #{url},
+            </if>
+            <if test="linkCategory >= 0" >
+                link_category = #{linkCategory},
+            </if>
+            <if test="content != null" >
+                content = #{content},
+            </if>
+            <if test="status >= 0" >
+                status = #{status},
+            </if>
+            <if test="sortNumber > 0 " >
+                sort_number = #{sortNumber},
+            </if>
+            <if test="displayPlatform >= 0 " >
+                display_platform = #{displayPlatform},
+            </if>
+            <if test="category >= 0" >
+                category = #{category},
+            </if>
+            <if test="shareDesc != null" >
+                share_desc = #{shareDesc},
+            </if>
+            <if test="remark != null" >
+                remark = #{remark},
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="updateStatus">
+        update pictrue_library set status = #{status,jdbcType=TINYINT} where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="updateSort">
+        <foreach collection="pictrueLibraries" item="pictrueLibrarie" index="index" separator=";">
+            update pictrue_library
+            <set>
+                sort_number = #{pictrueLibrarie.sortNumber}
+            </set>
+            where id = ${pictrueLibrarie.id}
+        </foreach>
+    </update>
+    <delete id="delete" parameterType="java.lang.Integer" >
+        delete from pictrue_library where id = #{id,jdbcType=INTEGER}
+    </delete>
+</mapper>

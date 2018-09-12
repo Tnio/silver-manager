@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.LianlianCNCodeDao" >
+    <resultMap id="ResultMap" type="UnionPayCNCode" >
+        <result column="city" property="city" jdbcType="VARCHAR" />
+        <result column="city_code" property="cityCode" jdbcType="VARCHAR" />
+        <result column="province" property="province" jdbcType="VARCHAR" />
+        <result column="province_code" property="provinceCode" jdbcType="VARCHAR" />
+    </resultMap>
+
+    <sql id="columns" >
+        city, city_code, province, province_code
+    </sql>
+
+    <select id="selectAll" resultMap="ResultMap">
+        select
+        <include refid="columns" />
+        from lianlian_cn_code order by province_code
+    </select>
+    <select id="selectProvince" resultMap="ResultMap">
+        select
+        <include refid="columns" />
+        from lianlian_cn_code group by province_code
+    </select>
+    <select id="selectCityByProvinceCode" resultMap="ResultMap">
+        select
+        <include refid="columns" />
+        from lianlian_cn_code
+        where province_code = #{provinceCode,jdbcType=VARCHAR}
+    </select>
+</mapper>

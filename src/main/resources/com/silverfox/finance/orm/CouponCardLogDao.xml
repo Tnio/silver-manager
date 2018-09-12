@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.CouponCardLogDao" >
+    <resultMap id="ResultMap" type="CouponCardLog" >
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+	    <result column="card_NO" property="cardNO" jdbcType="VARCHAR"/>
+	    <result column="password" property="password" jdbcType="VARCHAR"/>
+	    <result column="amount" property="amount" jdbcType="INTEGER"/>
+	    <result column="cellphone" property="cellphone" jdbcType="VARCHAR"/>
+	    <result column="order_NO" property="orderNO" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    </resultMap>
+    <sql id="column">
+        id, name, card_NO, password, amount, cellphone, order_NO, create_time
+    </sql>
+    <select id="selectById" resultMap="ResultMap">
+		select 
+	    <include refid="column" />
+	    from coupon_card_log where id = #{id,jdbcType=INTEGER}
+	</select>
+    <select id="queryForRecordCount" resultType="int">
+        select count(id) from coupon_card_log
+        <where>
+        	<if test="name != null">
+                and name = #{name}
+            </if>
+            <if test="amount > 0">
+                and amount = #{amount}
+            </if>
+            <if test="cardNO != null">
+                and card_NO = #{cardNO}
+            </if>
+            <if test="cellphone != null">
+                and cellphone = #{cellphone}
+            </if>
+            <if test="used == 0">
+                and cellphone = ''
+            </if>
+            <if test="used == 1">
+                and cellphone != ''
+            </if>
+            <if test="beginTime != null and endTime != null">
+            	<![CDATA[ and create_time >= #{beginTime,jdbcType=VARCHAR} AND create_time <= #{endTime,jdbcType=VARCHAR} ]]>
+		    </if>
+        </where>
+    </select>
+    <select id="queryForRecordList" resultMap="ResultMap">
+        select <include refid="column"/> from coupon_card_log 
+        <where>
+        	<if test="name != null">
+                and name = #{name}
+            </if>
+            <if test="amount > 0">
+                and amount = #{amount}
+            </if>
+            <if test="cardNO != null">
+                and card_NO = #{cardNO}
+            </if>
+            <if test="cellphone != null">
+                and cellphone = #{cellphone}
+            </if>
+            <if test="used == 0">
+                and cellphone = ''
+            </if>
+            <if test="used == 1">
+                and cellphone != ''
+            </if>
+            <if test="beginTime != null and endTime != null">
+            	<![CDATA[ and create_time >= #{beginTime,jdbcType=VARCHAR} AND create_time <= #{endTime,jdbcType=VARCHAR} ]]>
+		    </if>
+        </where>
+        order by create_time DESC , id DESC
+        <choose>
+		  <when test="offset > 0 and size > 0">
+		     <![CDATA[
+		     limit #{offset}, #{size}
+		     ]]>
+		  </when>
+		  <when test="size > 0">
+		     <![CDATA[
+		     limit 0, #{size}
+		     ]]>
+		  </when>
+		  <otherwise>
+		  <![CDATA[
+		   limit 0, 15
+		  ]]>
+		  </otherwise>
+		</choose>
+    </select>
+    
+    <select id="queryForList" resultMap="ResultMap">
+        select id, name, card_NO, password, amount, cellphone, sum(IF(cellphone='',1,0)) order_NO from coupon_card_log 
+        <where>
+            <if test="cardNO != null">
+                and card_NO = #{cardNO}
+            </if>
+            <if test="cellphone != null">
+                and cellphone = #{cellphone}
+            </if>
+            <if test="used >= 0">
+                <if test="used == 0">
+                    and cellphone = ''
+                </if>
+                <if test="used == 1">
+                    and cellphone != ''
+                </if>
+            </if>
+        </where>
+        GROUP BY name, amount order by id desc 
+        <choose>
+		  <when test="offset > 0 and size > 0">
+		     <![CDATA[
+		     limit #{offset}, #{size}
+		     ]]>
+		  </when>
+		  <when test="size > 0">
+		     <![CDATA[
+		     limit 0, #{size}
+		     ]]>
+		  </when>
+		  <otherwise>
+		  <![CDATA[
+		   limit 0, 15
+		  ]]>
+		  </otherwise>
+		</choose>
+    </select>
+    <select id="queryForCount" resultType="int">
+        select count(id) from (select id from coupon_card_log 
+        <where>
+            <if test="cardNO != null">
+                and card_NO = #{cardNO}
+            </if>
+            <if test="cellphone != null">
+                and cellphone = #{cellphone}
+            </if>
+            <if test="used >= 0">
+                <if test="used == 0">
+                    and cellphone = ''
+                </if>
+                <if test="used == 1">
+                    and cellphone != ''
+                </if>
+            </if>
+        </where> 
+        GROUP BY name, amount ) ccl
+    </select>
+   <insert id="insertCouponCardLogs" parameterType="CouponCardLog" >
+		insert into coupon_card_log (name, card_NO, password, amount, cellphone, order_NO, create_time) values
+		<foreach collection="couponCardLogs" item="couponCardLog" index="index" separator="," >
+         (
+         	#{couponCardLog.name},
+         	#{couponCardLog.cardNO},
+	        #{couponCardLog.password},
+	        #{couponCardLog.amount},
+	        <choose>
+			  <when test="couponCardLog.cellphone != null"> 
+		      	#{couponCardLog.cellphone},
+			  </when>
+			  <otherwise>
+			  	'',
+			  </otherwise>
+			</choose>
+			<choose>
+			  <when test="couponCardLog.orderNO != null"> 
+		      	#{couponCardLog.orderNO},
+			  </when>
+			  <otherwise>
+			  	'',
+			  </otherwise>
+			</choose>
+			now()
+         )    
+        </foreach>
+	</insert>
+	
+	<update id="update" parameterType="CouponCardLog">
+	    update coupon_card_log set 
+	    <if test="cellphone != null and cellphone !='' ">
+	    	cellphone = #{cellphone},
+	    </if>
+	    <if test="cellphone != null and cellphone !=''">
+	    	order_NO = #{orderNO},
+	    </if>
+	      create_time = #{createTime} where id = #{id}
+	</update>
+</mapper>

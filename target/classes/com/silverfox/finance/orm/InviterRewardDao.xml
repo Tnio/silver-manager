@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.InviterRewardDao" >
+  <resultMap id="ResultMap" type="InviterReward" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="order_no" property="orderNo" jdbcType="VARCHAR" />
+    <result column="customer_id" property="customerId" jdbcType="INTEGER"/>
+    <result column="customer_phone" property="customerPhone" jdbcType="VARCHAR" />
+    <result column="be_inviter_id" property="beInviterId" jdbcType="INTEGER" />
+    <result column="be_inviter_phone" property="beInviterPhone" jdbcType="VARCHAR" />
+    <result column="amount" property="amount" jdbcType="DOUBLE" />
+    <result column="source" property="source" jdbcType="TINYINT" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="inviter_level" property="inviterLevel" jdbcType="TINYINT" />
+  </resultMap>
+  <resultMap id="InviterEntityMap" type="InviterEntity" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="order_no" property="orderNo" jdbcType="VARCHAR" />
+    <result column="customer_id" property="customerId" jdbcType="INTEGER"/>
+    <result column="customer_phone" property="customerPhone" jdbcType="VARCHAR" />
+    <result column="amount" property="amount" jdbcType="DOUBLE" />
+    <result column="source" property="source" jdbcType="TINYINT" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="inviter_level" property="inviterLevel" jdbcType="TINYINT" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+  </resultMap>
+  <resultMap id="InviterRewardMap" type="InviterRewardEntity" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="customer_id" property="inviterId" jdbcType="INTEGER" />
+    <result column="customer_phone" property="cellphone" jdbcType="VARCHAR" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="inviter_level" property="inviterLevel" jdbcType="TINYINT" />
+    <result column="principal" property="principal" jdbcType="VARCHAR" />
+    <result column="finance_period" property="financePeriod" jdbcType="VARCHAR" />
+    <result column="productName" property="productName" jdbcType="VARCHAR" />
+    <result column="order_time" property="orderTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  
+  <resultMap id="InviteesMap" type="InviteesEntity" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="inviter_phone" property="inviterPhone" jdbcType="VARCHAR" />
+    <result column="cellphone" property="cellphone" jdbcType="VARCHAR" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="total_trade_money" property="totalTradeMoney" jdbcType="INTEGER" />
+    <result column="register_time" property="registerTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  
+  <select id ="queryInviterRewardList"  resultMap="InviterEntityMap">
+    select ir.id, ir.order_no, ir.customer_id, ir.customer_phone, ir.amount, ir.source ,ir.create_time, ir.inviter_level,ur.name
+    from inviter_reward ir 
+    LEFT JOIN user ur 
+    ON ir.customer_id = ur.id
+    <where>
+        <if test="customerId != null" >
+		    ur.customer_id = #{customerId}
+		</if>
+		<if test="userName != null" >
+		    and ur.name like '${userName}%'
+		</if>
+		<if test="cellphone != null">
+			and ir.customer_phone = '${cellphone}'
+		</if>
+		<if test="startTime != null and endTime != null">
+			and (DATE_FORMAT(ir.create_time,'%Y-%m-%d') >= #{startTime}
+			and #{endTime}>= DATE_FORMAT(ir.create_time,'%Y-%m-%d'))
+		</if>
+     </where> 
+     ORDER BY ir.create_time DESC
+     <choose>
+	    <when test="offset > 0 and size > 0">
+          <![CDATA[
+           limit #{offset}, #{size}
+          ]]>
+	    </when>
+	    <when test="size > 0">
+            <![CDATA[
+               limit 0, #{size}
+            ]]>
+	    </when>
+	    <otherwise>
+	       <![CDATA[
+	           limit 0, 15
+	       ]]>
+	    </otherwise>
+	</choose>
+  </select>
+  <select id ="queryInviteesEntities" resultMap="InviteesMap">
+    select u.id ,u.inviter_phone, u.cellphone ,u.`name`,c.total_trade_money ,u.register_time from `user` u
+    LEFT JOIN customer c on u.id = c.id
+    <if test="inviterLevel == 1">
+      where inviter_phone = #{cellphone,jdbcType=VARCHAR }
+    </if>
+    <if test="inviterLevel == 2">
+      where inviter_phone in (select cellphone from user where inviter_phone = #{cellphone,jdbcType=VARCHAR })
+    </if>
+    ORDER BY u.register_time DESC
+    <choose>
+	    <when test="offset > 0 and size > 0">
+          <![CDATA[
+           limit #{offset}, #{size}
+          ]]>
+	    </when>
+	    <when test="size > 0">
+            <![CDATA[
+               limit 0, #{size}
+            ]]>
+	    </when>
+	    <otherwise>
+	       <![CDATA[
+	           limit 0, 15
+	       ]]>
+	    </otherwise>
+	</choose>
+  </select>  
+  <select id = "queryInviterRewardEntities" resultMap="InviterRewardMap">
+    <![CDATA[
+    select ir.id, ir.be_inviter_id customer_id ,  ir.be_inviter_phone  customer_phone, u.name, ir.inviter_level, co.principal, pt.finance_period, pt.name productName, co.order_time
+    from customer_order co  
+    left join user u on u.id = co.customer_id 
+    left join  product pt on co.product_id = pt.id 
+    left join  product_category  pc on pt.category_id = pc.id
+    left join  inviter_reward  ir on u.id = ir.be_inviter_id 
+    WHERE pc.property != 'NOVICE'  and  co.order_time < DATE_FORMAT(ir.create_time,'%Y-%m-%d') and ir.id = #{id}
+    ORDER BY  ir.be_inviter_id DESC ,co.order_time DESC
+    ]]>
+   </select>
+  <select id="queryForCount" resultType="int">
+    select count(ir.id) from inviter_reward ir 
+    LEFT JOIN user ur 
+    ON ir.customer_id = ur.id
+    <where>
+		<if test="userName != null" >
+		    ur.name like '${userName}%'
+		</if>
+		<if test="cellphone != null">
+			and ir.customer_phone = '${cellphone}'
+		</if>
+		<if test="startTime != null and endTime != null">
+			and (DATE_FORMAT(ir.create_time,'%Y-%m-%d') >= #{startTime}
+			and #{endTime}>= DATE_FORMAT(ir.create_time,'%Y-%m-%d'))
+		</if>
+    </where> 
+  </select>
+  <select id="queryForSum" resultType="java.lang.Double">
+   select sum(ir.amount) from inviter_reward ir 
+    LEFT JOIN user ur ON ir.customer_id = ur.id
+    <where>
+		<if test="userName != null" >
+		    ur.name like '${userName}%'
+		</if>
+		<if test="cellphone != null">
+			and ir.customer_phone = '${cellphone}'
+		</if>
+		<if test="startTime != null and endTime != null">
+			and (DATE_FORMAT(ir.create_time,'%Y-%m-%d') >= #{startTime}
+			and #{endTime}>= DATE_FORMAT(ir.create_time,'%Y-%m-%d'))
+		</if>
+    </where> 
+  </select>
+  <select id="queryInviterRewardByid" resultMap="ResultMap">
+     select id, order_no,customer_id,customer_phone,be_inviter_id,be_inviter_phone,amount,source,inviter_level,create_time
+     FROM   inviter_reward where id = #{id, jdbcType=INTEGER};
+  </select>
+  <select id="queryInviterRewardEntitieByOrderNo"  resultMap="InviterRewardMap">
+    select ir.id, ir.be_inviter_id customer_id ,  ir.be_inviter_phone  customer_phone, u.name, ir.inviter_level, co.principal, pt.finance_period, pt.name productName, co.order_time
+    from customer_order co  
+    left join user u on u.id = co.customer_id 
+    left join  product pt on co.product_id = pt.id 
+    left join  product_category  pc on pt.category_id = pc.id
+    left join  inviter_reward  ir on co.order_no = ir.order_no  
+    WHERE co.order_no = #{orderNo,jdbcType=VARCHAR}
+  </select>
+  <select id="querySumInviteAmount" resultType="java.lang.Double">
+    select sum(amount) from inviter_reward where customer_id = #{userId, jdbcType=INTEGER}
+  </select>
+  <select id="countBeInviterByCellphone" resultType="int">
+    select count(u.id) from `user` u
+    LEFT JOIN customer c on u.id = c.id
+    <if test="inviterLevel == 2">
+      where inviter_phone in  (select cellphone from user where inviter_phone = #{cellphone,jdbcType=VARCHAR })
+    </if>
+    <if test="inviterLevel == 1">
+      where inviter_phone = #{cellphone,jdbcType=VARCHAR }
+    </if>  
+  </select>
+    <select id ="queryLevelTwoInviterRewardEntities" resultMap="InviterRewardMap">
+    <![CDATA[
+       select ir.id, ir.be_inviter_id customer_id ,  ir.be_inviter_phone  customer_phone, c.name, ir.inviter_level, co.principal, pt.finance_period, pt.name productName, co.order_time 
+  		from inviter_reward ir  
+ 		LEFT JOIN invite_order io on io.customer_id = ir.be_inviter_id 
+   		LEFT JOIN customer c on c.id = ir.be_inviter_id 
+   		LEFT JOIN customer_order co on co.order_no= io.order_no 
+   		LEFT JOIN product pt on pt.id=co.product_id 
+    	WHERE ir.source =1 and ir.id = #{id, jdbcType=INTEGER} 
+    	ORDER BY  co.order_time DESC 
+     ]]> 
+  </select> 
+  
+</mapper>

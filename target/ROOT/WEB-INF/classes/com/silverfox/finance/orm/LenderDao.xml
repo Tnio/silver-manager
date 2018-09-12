@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.LenderDao" >
+    <resultMap id="ResultMap" type="Lender" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="product_id" property="productId" jdbcType="INTEGER" />
+        <result column="name" property="name" jdbcType="VARCHAR" />
+        <result column="idcard" property="idcard" jdbcType="VARCHAR" />
+        <result column="cellphone" property="cellphone" jdbcType="VARCHAR" />
+        <result column="loan_amount" property="loanAmount" jdbcType="INTEGER" />
+        <result column="loan_period" property="loanPeriod" jdbcType="INTEGER" />
+        <result column="sex" property="sex" jdbcType="TINYINT" />
+        <result column="age" property="age" jdbcType="TINYINT" />
+        <result column="work_unit" property="workUnit" jdbcType="VARCHAR" />
+        <result column="address" property="address" jdbcType="VARCHAR" />
+        <result column="other_data" property="otherData" jdbcType="VARCHAR" />
+        <result column="idcard_url" property="idcardUrl" jdbcType="VARCHAR" />
+        <result column="monthly_income" property="monthlyIncome" jdbcType="INTEGER" />
+        <result column="type" property="type" jdbcType="INTEGER" />
+        <result column="status" property="status" jdbcType="INTEGER" />
+    </resultMap>
+    <sql id="columns" >
+        id, product_id, name, other_data, idcard_url, type, status, idcard, cellphone, round(loan_amount/100)*500 loan_amount, if (30 >= loan_period, 30, if (90 >= loan_period, 90, 180)) loan_period, sex, age, work_unit, address, monthly_income
+    </sql>
+    <select id="queryForList" resultMap="ResultMap">
+        select
+        <if test="projectType == 1">
+            id, product_id, name, other_data, idcard_url, type, status, idcard, cellphone, round(loan_amount/100)*500 loan_amount, if (30 >= loan_period, 30, if (90 >= loan_period, 90, 180)) loan_period, sex, age, work_unit, address, monthly_income
+        </if>
+        <if test="projectType == 2">
+            id, product_id, name, other_data, idcard_url, type, status, idcard, cellphone, loan_amount, loan_period, sex, age, work_unit, address, monthly_income
+        </if>
+        from lender
+        <where>
+            <if test="projectType > -1">
+                type = #{projectType,jdbcType=INTEGER}
+                <if test="projectType == 2">
+                    and loan_period = #{loanPeriod}
+                </if>
+            </if>
+            <if test="productId > -1">
+                and product_id = #{productId,jdbcType=INTEGER}
+            </if>
+        </where>
+        <if test="loanPeriod > 0">
+            order by id
+        </if>
+        <if test="loanPeriod == 0">
+            order by id DESC
+        </if>
+        <choose>
+            <when test="offset > 0 and size > 0">
+                <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+            </when>
+            <when test="size > 0">
+                <![CDATA[
+      limit 0, #{size}
+      ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+	    limit 0, 15
+	  ]]>
+            </otherwise>
+        </choose>
+    </select>
+    <select id="queryForCount" resultType="int">
+        select count(id) from lender
+        <where>
+            <if test="projectType > -1">
+                type = #{projectType,jdbcType=INTEGER}
+                <if test="projectType == 2">
+                    and loan_period = #{loanPeriod}
+                </if>
+            </if>
+            <if test="productId > -1">
+                and product_id = #{productId,jdbcType=INTEGER}
+            </if>
+        </where>
+    </select>
+     <select id="queryLenderLoanCount" resultType="int" parameterType="int">
+       SELECT count(id) FROM `lender` where idcard = (select idcard from lender where id = #{lenderId})
+    </select>
+    <select id="queryLenderForList" resultMap="ResultMap">
+        select
+        <if test="type == 1">
+            id, product_id, name, other_data, idcard_url, type, status, idcard, cellphone, round(loan_amount/100)*500 loan_amount, if (30 >= loan_period, 30, if (90 >= loan_period, 90, 180)) loan_period, sex, age, work_unit, address, monthly_income
+        </if>
+        <if test="type == 2">
+            id, product_id, name, other_data, idcard_url, type, status, idcard, cellphone, loan_amount, loan_period, sex, age, work_unit, address, monthly_income
+        </if>
+        from lender
+        <where>
+            <if test="type > 0">
+                type = #{type,jdbcType=INTEGER}
+            </if>
+            <if test="productId > 0">
+                and product_id = #{productId,jdbcType=INTEGER}
+            </if>
+            <if test="name">
+                and trim(name) = #{name}
+            </if>
+            <if test="cellphone">
+                and cellphone = #{cellphone}
+            </if>
+            <if test="startNum >= 0 and endNum >= startNum">
+                and loan_period >= #{startNum} and #{endNum} >= loan_period
+            </if>
+            <if test="status >= 0">
+                and status = #{status}
+            </if>
+        </where>
+        order by status asc, id desc
+        <choose>
+            <when test="offset > 0 and size > 0">
+                <![CDATA[
+			      limit #{offset}, #{size}
+			      ]]>
+            </when>
+            <when test="size > 0">
+                <![CDATA[
+			      limit 0, #{size}
+			      ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+	    limit 0, 15
+	  ]]>
+            </otherwise>
+        </choose>
+    </select>
+    <select id="queryLenderForCount" resultType="int">
+        select count(*)
+        from lender l
+        <where>
+            <if test="type > 0">
+                l.type = #{type,jdbcType=INTEGER}
+            </if>
+            <if test="productId > 0">
+                and l.product_id = #{productId,jdbcType=INTEGER}
+            </if>
+            <if test="name">
+                and l.name = #{name}
+            </if>
+            <if test="cellphone">
+                and l.cellphone = #{cellphone}
+            </if>
+            <if test="startNum >=0 and endNum >= startNum">
+                and l.loan_period >= #{startNum} and #{endNum} >= l.loan_period
+            </if>
+            <if test="status >= 0">
+                and l.status = #{status}
+            </if>
+        </where>
+    </select>
+    <select id="selectNameByProductId" resultType="string">
+        select GROUP_CONCAT(DISTINCT name) from lender where product_id = #{productId,jdbcType=INTEGER} order by id DESC
+    </select>
+    <select id="selectAllByProductId" resultMap="ResultMap">
+        select <include refid="columns" /> from lender where product_id = #{productId,jdbcType=INTEGER}
+    </select>
+    <select id="selectByProductId" resultMap="ResultMap" >
+        select
+        <if test="1 >= projectType">
+            <include refid="columns" />
+        </if>
+        <if test="projectType > 1">
+            id, product_id, name, other_data, idcard_url, type, status, idcard, cellphone, loan_amount, loan_period, sex, age, work_unit, address, monthly_income
+        </if>
+        from lender where product_id = #{productId,jdbcType=INTEGER} order by id DESC
+    </select>
+    <select id="selectById" resultMap="ResultMap" >
+        select id, product_id, name, other_data, idcard_url, type, status, idcard, cellphone, loan_amount, loan_period, loan_period, sex, age, work_unit, address, monthly_income
+        from lender
+        where id = #{id,jdbcType=INTEGER}
+    </select>
+    <insert id="insert" parameterType="Lender">
+        insert into lender
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="name != null">
+                name,
+            </if>
+            <if test="idcard != null" >
+                idcard,
+            </if>
+            <if test="cellphone != null">
+                cellphone,
+            </if>
+            <if test="loanAmount > 0" >
+                loan_amount,
+            </if>
+            <if test="loanPeriod > 0">
+                loan_period,
+            </if>
+            <if test="sex != null and sex >= 0">
+                sex,
+            </if>
+            <if test="age != null and age > 0">
+                age,
+            </if>
+            <if test="workUnit != null">
+                work_unit,
+            </if>
+            <if test="address != null">
+                address,
+            </if>
+            <if test="type > 0">
+                type,
+            </if>
+            <if test="otherData != null">
+                other_data,
+            </if>
+            <if test="idcardUrl != null">
+                idcard_url,
+            </if>
+            <if test="orderNO != null">
+                order_no,
+            </if>
+            <if test="monthlyIncome != null and monthlyIncome > 0">
+                monthly_income
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null">
+                #{name, jdbcType=VARCHAR},
+            </if>
+            <if test="idcard != null" >
+                #{idcard, jdbcType=VARCHAR},
+            </if>
+            <if test="cellphone != null">
+                #{cellphone, jdbcType=VARCHAR},
+            </if>
+            <if test="loanAmount > 0" >
+                #{loanAmount, jdbcType=INTEGER},
+            </if>
+            <if test="loanPeriod > 0">
+                #{loanPeriod, jdbcType=INTEGER},
+            </if>
+            <if test="sex != null and sex >= 0">
+                #{sex, jdbcType=INTEGER},
+            </if>
+            <if test="age != null and age > 0">
+                #{age, jdbcType=INTEGER},
+            </if>
+            <if test="workUnit != null">
+                #{workUnit, jdbcType=VARCHAR},
+            </if>
+            <if test="address != null">
+                #{address, jdbcType=VARCHAR},
+            </if>
+            <if test="type > 0">
+                #{type, jdbcType=INTEGER},
+            </if>
+            <if test="otherData != null">
+                #{otherData, jdbcType=VARCHAR},
+            </if>
+            <if test="idcardUrl != null">
+                #{idcardUrl, jdbcType=VARCHAR},
+            </if>
+            <if test="orderNO != null">
+                #{orderNO, jdbcType=VARCHAR},
+            </if>
+            <if test="monthlyIncome != null and monthlyIncome > 0">
+                #{monthlyIncome, jdbcType=INTEGER}
+            </if>
+        </trim>
+    </insert>
+    <update id="updateLender" parameterType="Lender" >
+        update lender
+        <set >
+            <if test="name != null" >
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="idcard != null" >
+                idcard = #{idcard, jdbcType=VARCHAR},
+            </if>
+            <if test="cellphone != null">
+                cellphone = #{cellphone, jdbcType=VARCHAR},
+            </if>
+            <if test="loanAmount > 0" >
+                loan_amount = #{loanAmount, jdbcType=INTEGER},
+            </if>
+            <if test="loanPeriod > 0">
+                loan_period = #{loanPeriod, jdbcType=INTEGER},
+            </if>
+            <if test="sex != null and sex >= 0">
+                sex = #{sex, jdbcType=INTEGER},
+            </if>
+            <if test="age != null and age > 0">
+                age = #{age, jdbcType=INTEGER},
+            </if>
+            <if test="workUnit != null">
+                work_unit = #{workUnit, jdbcType=VARCHAR},
+            </if>
+            <if test="address != null">
+                address = #{address, jdbcType=VARCHAR},
+            </if>
+            <if test="type > 0">
+                type = #{type, jdbcType=INTEGER},
+            </if>
+            <if test="otherData != null">
+                other_data = #{otherData, jdbcType=VARCHAR},
+            </if>
+            <if test="idcardUrl != null">
+                idcard_url = #{idcardUrl, jdbcType=VARCHAR}
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="update">
+        update lender set product_id = ${productId} where id in
+        <foreach collection="lenderIds" item="id" index="index" open="(" separator="," close=")">#{id}</foreach>
+    </update>
+    <update id="updateProductId">
+        update lender set product_id = 0 where product_id = ${productId}
+    </update>
+</mapper>

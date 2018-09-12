@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.ProductDetailDao">
+	<resultMap type="ProductDetail" id="resultMap">
+  		<id column="id" property="id" jdbcType="INTEGER"/>
+  		<result column="refund" property="refund" jdbcType="VARCHAR"/>
+  		<result column="risk" property="risk" jdbcType="VARCHAR"/>
+  		<result column="remark" property="remark" jdbcType="VARCHAR"/>
+  		<result column="protocol_ids" property="protocolIds" jdbcType="VARCHAR"/>
+  		<result column="institution_desc" property="institutionDesc" jdbcType="VARCHAR"/>
+  		<result column="service_protocol" property="serviceProtocol" jdbcType="VARCHAR"/>
+  		<result column="obligatory_right" property="obligatoryRight" jdbcType="VARCHAR"/>
+  		<result column="poundage" property="poundage" jdbcType="VARCHAR"/>
+  		<association property="project" javaType="Project">
+	    	<id column="project_id" property="id" jdbcType="INTEGER" />
+	    	<result column="project_name" property="name" jdbcType="VARCHAR"/>
+	    	<result column="project_type" property="type" jdbcType="INTEGER"/>
+	    	<result column="project_introduce" property="introduce" jdbcType="VARCHAR" />
+	    	<result column="project_fund_purpose" property="fundPurpose" jdbcType="VARCHAR" />
+	    	<result column="project_core_enterprise" property="coreEnterprise" jdbcType="VARCHAR" />
+	    	<result column="secured_party_desc" property="securedPartyDesc" jdbcType="VARCHAR" />
+	    	<result column="security_desc" property="securityDesc" jdbcType="VARCHAR" />
+	    	<result column="data_auditing" property="dataAuditing" jdbcType="VARCHAR" />
+	    	<result column="project_assets_safety" property="assetsSafety" jdbcType="VARCHAR" />
+	    	<result column="buy_back_attachment" property="buyBackAttachment" jdbcType="VARCHAR" />
+	    	<result column="guarantee_attachment" property="guaranteeAttachment" jdbcType="VARCHAR" />
+	    	<association property="merchant" javaType="Merchant">
+		     	<id column="merchant_id" property="id" jdbcType="INTEGER" />
+		    </association>
+	  </association>
+	</resultMap>
+ 	<sql id="columns">
+   		pd.id as id, pd.refund, pd.risk,pt.security_desc, pt.secured_party_desc, pd.remark, pt.data_auditing, pd.poundage,
+   		pd.protocol_ids, pd.institution_desc, pd.service_protocol, pd.obligatory_right,
+   		pt.id project_id, pt.name project_name, pt.introduce project_introduce, pt.core_enterprise project_core_enterprise,
+   		pt.buy_back_attachment, pt.fund_purpose project_fund_purpose, pt.assets_safety project_assets_safety, 
+   		pt.guarantee_attachment, pt.type project_type, pt.merchant_id
+ 	</sql>
+	<select id="selectById" resultMap="resultMap">
+   		select <include refid="columns"/> 
+   		from product_detail pd 
+   		left join project pt on pt.id = pd.project_id
+   		where pd.id = #{id}
+ 	</select>
+   <insert id="insert"  parameterType="ProductDetail"> 
+    	insert into product_detail
+    	<trim prefix="(" suffix=")" suffixOverrides="," >
+      		<if test="id > 0" >
+        		id,
+      		</if>
+      		<if test="refund != null">
+        		refund,
+      		</if>
+      		<if test="risk != null">
+        		risk,
+      		</if>
+      		<if test="remark != null">
+        		remark,
+      		</if>
+      		<if test="contract != null and contract.id > 0">
+        		contract_id,  
+      		</if>
+       		<if test="protocolIds != null">
+        		protocol_ids,
+      		</if>
+      		<if test="institutionDesc != null">
+        		institution_desc,
+      		</if>
+      		<if test="serviceProtocol != null">
+        		service_protocol,
+      		</if>
+      		<if test="obligatoryRight != null">
+        		obligatory_right,
+      		</if>
+      		<if test="poundage != null">
+        		poundage,
+      		</if>
+      		<if test="project != null and project.id > 0">
+        		project_id,
+      		</if>
+    	</trim>
+    	<trim prefix="values (" suffix=")" suffixOverrides="," >
+      		<if test="id > 0" >
+        		#{id,jdbcType=INTEGER},
+      		</if>
+      		<if test="refund != null">
+        		#{refund,jdbcType=VARCHAR},
+      		</if>
+      		<if test="risk != null">
+        		#{risk,jdbcType=VARCHAR},
+      		</if>
+      		<if test="remark != null">
+        		#{remark,jdbcType=VARCHAR},
+      		</if>
+      		<if test="contract != null and contract.id > 0">
+        		#{contract.id,jdbcType=INTEGER},
+      		</if>
+      		<if test="protocolIds != null">
+        		#{protocolIds,jdbcType=VARCHAR},
+      		</if>
+      		<if test="institutionDesc != null">
+        		#{institutionDesc,jdbcType=VARCHAR},
+      		</if>
+      		<if test="serviceProtocol != null">
+        		#{serviceProtocol,jdbcType=VARCHAR},
+      		</if>
+      		<if test="obligatoryRight != null">
+        		#{obligatoryRight,jdbcType=VARCHAR},
+      		</if>
+      		<if test="poundage != null">
+        		#{poundage,jdbcType=VARCHAR},
+      		</if>
+      		<if test="project != null and project.id > 0">
+        		#{project.id,jdbcType=INTEGER},
+      		</if>
+    	</trim>
+  	</insert>
+ 	<update id="update" parameterType="ProductDetail" >
+    	update product_detail
+    	<set>
+  			<if test="refund != null">
+    			refund = #{refund,jdbcType=VARCHAR},
+  			</if>
+  			<if test="risk != null">
+    			risk = #{risk,jdbcType=VARCHAR},
+  			</if>
+  			<if test="remark">
+    			remark = #{remark,jdbcType=VARCHAR},
+  			</if>
+  			<if test="contract != null and contract.id > 0">
+    			contract_id = #{contract.id,jdbcType=INTEGER},
+  			</if>
+  			<if test="protocolIds != null">
+    			protocol_ids = #{protocolIds,jdbcType=VARCHAR},
+  			</if>
+  			<if test="institutionDesc">
+    			institution_desc = #{institutionDesc,jdbcType=VARCHAR},
+  			</if>
+  			<if test="serviceProtocol">
+    			service_protocol = #{serviceProtocol},
+  			</if>
+  			<if test="obligatoryRight">
+    			obligatory_right = #{obligatoryRight,jdbcType=VARCHAR},
+  			</if>
+      		<if test="poundage != null">
+        		poundage = #{poundage,jdbcType=VARCHAR},
+      		</if>
+      		<if test="project != null and project.id > 0">
+        		project_id = #{project.id,jdbcType=INTEGER}
+      		</if>
+    	</set>
+    	where id = #{id,jdbcType=INTEGER}
+  	</update> 
+</mapper>

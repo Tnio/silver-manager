@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.AttachmentDao">
+	<resultMap type="Attachment" id="resultMap">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="category" property="category" jdbcType="VARCHAR" />
+		<result column="url" property="url" jdbcType="VARCHAR" />
+	</resultMap>
+	<sql id="columns">
+		id, category, url
+	</sql>
+	<select id="selectByIds" resultMap="resultMap">
+		select
+		<include refid="columns" />
+		from attachment where id in
+		<foreach collection="ids" item="id" index="index" open="("
+			separator="," close=")">
+			#{id}
+		</foreach>
+	</select>
+	
+	<insert id="insert" parameterType="Attachment" >
+		insert into attachment(category, product_id, guarantee_id, contract_id, url) values
+		<foreach collection="list" item="attachment" index="index" separator="," >    
+         (#{attachment.category},
+         #{attachment.productId},
+         #{attachment.guaranteeId},
+         <choose>
+		  <when test="attachment.contract != null and attachment.contract.id > 0"> 
+	      	#{attachment.contract.id},
+		  </when>
+		  <otherwise>
+		  	0,
+		  </otherwise>
+		</choose>
+         #{attachment.url})    
+        </foreach>
+	</insert>
+	<delete id="deleteMore">
+	  	delete from attachment where id in 
+	  	<foreach collection="ids" item="id" index="index" open="(" separator="," close=")">
+			#{id,jdbcType=INTEGER}
+		</foreach>
+    </delete>
+    
+    <select id="selectByProductId" resultMap="resultMap">
+	    select <include refid="columns" /> 
+	    from attachment where product_id = #{productId} order by id ASC
+	</select>
+	<select id="selectByAttachmentId" resultType="Attachment" parameterType="java.lang.Integer">
+		select <include refid="columns" />
+		from attachment where id = #{id}
+	</select>
+	<insert id="insertSingle" parameterType="Attachment" useGeneratedKeys="true" keyProperty="id">
+		insert into attachment
+		<trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="category >= 0" >
+				category,
+			</if>
+			<if test="productId > 0" >
+				product_id,
+			</if>
+			<if test="guaranteeId > 0" >
+				guarantee_id,
+			</if>
+			<if test="url != null" >
+				url,
+			</if>
+			<if test="contract != null and contract.id > 0 " >
+				contract_id,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="category >= 0" >
+				#{category,jdbcType=INTEGER},
+			</if>
+			<if test="productId > 0" >
+				#{productId,jdbcType=INTEGER},
+			</if>
+			<if test="guaranteeId > 0" >
+				#{guaranteeId,jdbcType=INTEGER},
+			</if>
+			<if test="url != null" >
+				#{url,jdbcType=VARCHAR},
+			</if>
+			<if test="contract != null and contract.id > 0" >
+				#{contract.id,jdbcType=INTEGER},
+			</if>
+		</trim>
+	</insert>
+	 <delete id="delete">
+	  	delete from attachment where id = #{attachmentId} 
+    </delete>
+</mapper>

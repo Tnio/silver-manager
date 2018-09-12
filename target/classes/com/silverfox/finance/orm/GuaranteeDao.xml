@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.GuaranteeDao" >
+  <resultMap id="BaseResultMap" type="Guarantee" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="status" property="status" jdbcType="TINYINT" />
+    <collection property="attachments" ofType="Attachment">
+        <id column="attachment_id" property="id" jdbcType="INTEGER"/>
+        <result column="category" property="category" jdbcType="VARCHAR"/>
+        <result column="url" property="url" jdbcType="VARCHAR"/>
+    </collection>
+  </resultMap>
+  <sql id="columns" >
+    ge.id, name, status
+  </sql>
+  <select id="queryForList" resultMap="BaseResultMap">
+    select 
+    <include refid="columns" />
+    from guarantee ge 
+    <where>
+      <if test="status >= 0">
+        status = #{status,jdbcType=INTEGER}
+      </if>
+    </where>
+    ORDER BY id desc
+  </select>
+  <select id="queryForCount" resultType="int">
+  	select count(ge.id) from guarantee ge
+  	<where>
+      <if test="status >= 0">
+        status = #{status,jdbcType=INTEGER}
+      </if>
+    </where>
+  </select>
+  <select id="selectById" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select <include refid="columns" /> , at.id attachment_id, category, url
+    from guarantee ge left join attachment at on ge.id = at.guarantee_id where ge.id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="duplicate" resultType="int">
+    select count(ge.id) from guarantee ge
+    <where>
+      <if test="name != null">
+      	name = #{name,jdbcType=VARCHAR}
+      </if>
+      <if test="id > 0">
+        and id != #{id,jdbcType=INTEGER}
+      </if>
+    </where>
+  </select>
+  <insert id="insert" parameterType="Guarantee" useGeneratedKeys="true" keyProperty="id">
+    insert into guarantee
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="name != null">
+        name,
+      </if>
+      <if test="status >= 0">
+        status
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+       <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="status >= 0">
+        #{status,jdbcType=INTEGER}
+      </if>
+    </trim>
+  </insert>
+  <update id="update" parameterType="Guarantee" >
+    update guarantee
+    <set >
+      <if test="name != null">
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="status >= 0">
+        status = #{status,jdbcType=INTEGER}
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateStatus">
+    update guarantee set status=#{status,jdbcType=TINYINT} where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

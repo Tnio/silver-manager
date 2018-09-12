@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.BonusDao" >
+    <resultMap id="ResultMap" type="Bonus" >
+        <id column="id" property="id" jdbcType="INTEGER" />
+        <result column="name" property="name" jdbcType="VARCHAR" />
+        <result column="status" property="status" jdbcType="TINYINT" />
+        <result column="give_type" property="giveType" jdbcType="TINYINT" />
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="first_order" property="firstOrder" jdbcType="VARCHAR" />
+        <result column="last_order" property="lastOrder" jdbcType="INTEGER" />
+         <result column="cash_type" property="cashType" />
+          <result column="cash_amount" property="cashAmount" />
+        <collection property="bonusStrategy" javaType="BonusStrategy">
+            <result column="strategy_id" property="id" jdbcType="INTEGER" />
+            <result column="quota" property="quota" jdbcType="INTEGER" />
+            <result column="give1" property="giveAmount" jdbcType="VARCHAR" />
+            <result column="coupon_card_name" property="couponCardName" jdbcType="VARCHAR" />
+            <association property="coupon" javaType="Coupon">
+                <id column="coupon_id" property="id" jdbcType="INTEGER" />
+                <result column="coupon_category"  property="category" jdbcType="TINYINT" />
+                <result column="coupon_life_cycle"  property="lifeCycle" jdbcType="TINYINT" />
+                <result column="coupon_expires_point"  property="expiresPoint" jdbcType="VARCHAR" />
+                <result column="increase_days" property="increaseDays" jdbcType="INTEGER" />
+            </association>
+        </collection>
+    </resultMap>
+    <sql id="columns" >
+        bo.id, bo.name, bo.status, bo.give_type, bo.create_time, bo.first_order, bo.last_order
+    </sql>
+    <sql id="columns_coupon_strategy" >
+        bo.id, bo.name, bo.status, bo.give_type, bo.create_time, bo.first_order, bo.last_order, bs.coupon_card_name,
+        bs.quota,bs.give_amount give1, bs.id strategy_id, bs.coupon_id, cn.increase_days ,bo.cash_type,bo.cash_amount
+    </sql>
+    <select id="queryForList" resultMap="ResultMap">
+        select
+        <include refid="columns" />
+        from bonus bo
+
+        order by  bo.id desc
+        <choose>
+            <when test="offset > 0 and size > 0">
+                <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+            </when>
+            <when test="size > 0">
+                <![CDATA[
+      limit 0, #{size}
+      ]]>
+            </when>
+            <otherwise>
+                <![CDATA[
+	    limit 0, 15
+	  ]]>
+            </otherwise>
+        </choose>
+    </select>
+    <select id="queryForListByEndTimeAndEnable" resultMap="ResultMap">
+        select
+        <include refid="columns" />
+        from bonus bo
+        <where>
+            <if test="enable >= 0">
+                bo.status = #{enable}
+            </if>
+        </where>
+    </select>
+    <select id="queryForCount" resultType="int">
+        select count(bo.id) from bonus bo
+    </select>
+    <select id="selectById" parameterType="java.lang.Integer" resultMap="ResultMap">
+        select
+        <include refid="columns_coupon_strategy" />,
+        cn.id coupon_id, cn.category coupon_category, cn.life_cycle coupon_life_cycle,
+        cn.expires_point coupon_expires_point
+        from bonus bo
+        left join bonus_strategy bs on bo.id = bs.bonus_id
+        left join coupon cn on cn.id = bs.coupon_id
+        where bo.id = #{id,jdbcType=INTEGER} ORDER BY bs.id
+    </select>
+    <select id="duplicate" resultType="int">
+        select count(id) from bonus bo where name = #{name,jdbcType=VARCHAR}
+        <if test="id > 0">
+            and bo.id != #{id,jdbcType=INTEGER}
+        </if>
+    </select>
+    <select id="selectStrategiesByBonusId" resultType="bonusStrategy">
+        select id, quota, give_amount
+        from bonus_strategy
+        where bonus_id = #{bonusId,jdbcType=INTEGER}
+        ORDER BY quota
+    </select>
+    <insert id="insert" parameterType="Bonus" useGeneratedKeys="true" keyProperty="id">
+        insert into bonus
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="name != null" >
+                name,
+            </if>
+            <if test="giveType >= 0" >
+                give_type,
+            </if>
+            <if test="firstOrder != null" >
+                first_order,
+            </if>
+            <if test="lastOrder > 0" >
+                last_order,
+            </if>
+             <if test="cashType > 0" >
+                cash_type,
+            </if>
+             <if test="cashAmount > 0" >
+                cash_amount,
+            </if>
+            create_time
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="name != null" >
+                #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="giveType >= 0" >
+                #{giveType,jdbcType=TINYINT},
+            </if>
+            <if test="firstOrder != null" >
+                #{firstOrder,jdbcType=VARCHAR},
+            </if>
+            <if test="lastOrder > 0" >
+                #{lastOrder,jdbcType=INTEGER},
+            </if>
+             <if test="cashType > 0" >
+                 #{cashType,jdbcType=TINYINT},
+            </if>
+             <if test="cashAmount > 0" >
+                 #{cashAmount},
+            </if>
+            now()
+        </trim>
+    </insert>
+    <update id="update" parameterType="Bonus" >
+        update bonus
+        <set >
+            <if test="name != null" >
+                name = #{name,jdbcType=VARCHAR},
+            </if>
+            <if test="giveType >= 0 " >
+                give_type = #{giveType,jdbcType=TINYINT},
+            </if>
+            <if test="firstOrder != null" >
+                first_order = #{firstOrder,jdbcType=VARCHAR},
+            </if>
+            <if test="lastOrder >= 0 " >
+                last_order = #{lastOrder,jdbcType=INTEGER},
+            </if>
+             <if test="cashType >= 0" >
+                cash_type = #{cashType,jdbcType=TINYINT},
+            </if>
+             <if test="cashAmount >= 0" >
+                cash_amount = #{cashAmount},
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="enable">
+        update bonus set status = #{enable,jdbcType=TINYINT} where id = #{id,jdbcType=INTEGER}
+    </update>
+    <delete id="delete" parameterType="java.lang.Integer" >
+        delete from bonus bo where bo.id = #{id,jdbcType=INTEGER}
+    </delete>
+</mapper>

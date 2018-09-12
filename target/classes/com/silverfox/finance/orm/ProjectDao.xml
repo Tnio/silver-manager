@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.ProjectDao">
+ <resultMap type="Project" id="resultMap">
+  <id column="id" property="id" jdbcType="INTEGER"/>
+  <result column="name" property="name" jdbcType="VARCHAR"/>
+  <result column="status" property="status" jdbcType="INTEGER"/>
+  <result column="type" property="type" jdbcType="INTEGER"/> 
+  <result column="introduce" property="introduce" jdbcType="VARCHAR"/>
+  <result column="fund_purpose" property="fundPurpose" jdbcType="VARCHAR"/>
+  <result column="core_enterprise" property="coreEnterprise" jdbcType="VARCHAR"/>
+  <result column="assets_safety" property="assetsSafety" jdbcType="VARCHAR"/>
+  <result column="buy_back_attachment" property="buyBackAttachment" jdbcType="VARCHAR"/>
+  <result column="guarantee_attachment" property="guaranteeAttachment" jdbcType="VARCHAR"/>
+  <result column="secured_party_desc" property="securedPartyDesc" jdbcType="VARCHAR"/>
+  <result column="security_desc" property="securityDesc" jdbcType="VARCHAR"/>
+  <result column="data_auditing" property="dataAuditing" jdbcType="VARCHAR"/>
+  <result column="risk_warning" property="riskWarning" jdbcType="VARCHAR"/>
+  <result column="other_data" property="otherData" jdbcType="VARCHAR"/>
+  <association property="merchant" javaType="Merchant">
+     <id column="merchant_id" property="id" jdbcType="INTEGER" />
+  </association>
+ </resultMap>
+ <sql id="columns">
+   id, name, type, assets_safety, buy_back_attachment, core_enterprise, fund_purpose, introduce, `status`, guarantee_attachment, secured_party_desc, security_desc, data_auditing, risk_warning, other_data, merchant_id
+ </sql>
+ <select id="queryForList" resultMap="resultMap">
+   select
+   <include refid="columns"/>
+   from project
+   where status in (0, 1, 2)
+   order by if(status= 1,3,status), id desc
+   <choose>
+	  <when test="offset > 0 and size > 0">
+	     <![CDATA[
+	     limit #{offset}, #{size}
+	     ]]>
+	  </when>
+	  <when test="size > 0">
+	     <![CDATA[
+	     limit 0, #{size}
+	     ]]>
+	  </when>
+	  <otherwise>
+	  <![CDATA[
+	   limit 0, 15
+	  ]]>
+	  </otherwise>
+	</choose>
+ </select>
+ <select id="queryForCount" resultType="int">
+	select count(*) 
+	from project
+	where status in (0, 1, 2)
+ </select>
+ <select id="selectById" resultMap="resultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="columns" />
+    from project
+    where id = #{id,jdbcType=INTEGER}
+ </select>
+ <insert id="insert"  parameterType="Project">
+    insert into project
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="name != null" >
+        name,
+      </if>
+      <if test="type >= 0" >
+        type,
+      </if>
+      <if test="introduce != null" >
+        introduce,
+      </if>
+      <if test="fundPurpose != null" >
+        fund_purpose,
+      </if>
+      <if test="coreEnterprise != null" >
+        core_enterprise,
+      </if>
+      <if test="assetsSafety != null" >
+        assets_safety,
+      </if>
+      <if test="buyBackAttachment != null">
+        buy_back_attachment,
+      </if>
+      <if test="guaranteeAttachment != null">
+        guarantee_attachment,
+      </if>
+      <if test="securedPartyDesc != null">
+        secured_party_desc,
+      </if>
+      <if test="securityDesc != null">
+        security_desc,
+      </if>
+      <if test="merchant != null and merchant.id >= 0">
+        merchant_id,
+      </if>
+      <if test="otherData != null">
+        other_data,
+      </if>
+      <if test="riskWarning != null">
+        risk_warning,
+      </if>
+      <if test="dataAuditing != null ">
+        data_auditing
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="name != null" >
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="type >= 0" >
+        #{type,jdbcType=INTEGER},
+      </if>
+      <if test="introduce != null" >
+        #{introduce,jdbcType=VARCHAR},
+      </if>
+      <if test="fundPurpose != null" >
+        #{fundPurpose,jdbcType=VARCHAR},
+      </if>
+      <if test="coreEnterprise != null" >
+        #{coreEnterprise,jdbcType=VARCHAR},
+      </if>
+      <if test="assetsSafety != null" >
+        #{assetsSafety,jdbcType=VARCHAR},
+      </if>
+      <if test="buyBackAttachment != null">
+        #{buyBackAttachment,jdbcType=VARCHAR},
+      </if>
+      <if test="guaranteeAttachment != null">
+        #{guaranteeAttachment,jdbcType=VARCHAR},
+      </if>
+      <if test="securedPartyDesc != null">
+        #{securedPartyDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="securityDesc != null">
+        #{securityDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="merchant != null and merchant.id >= 0">
+        #{merchant.id,jdbcType=INTEGER},
+      </if>
+      <if test="otherData">
+        #{otherData,jdbcType=VARCHAR},
+      </if>
+      <if test="riskWarning != null">
+        #{riskWarning,jdbcType=VARCHAR},
+      </if>
+      <if test="dataAuditing != null ">
+        #{dataAuditing,jdbcType=VARCHAR}
+      </if>
+    </trim>
+  </insert>
+ <update id="update" parameterType="Project" >
+    update project
+    <set >
+      <if test="name != null" >
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="type >= 0" >
+        type = #{type,jdbcType=INTEGER},
+      </if>
+      <if test="introduce != null" >
+        introduce = #{introduce,jdbcType=VARCHAR},
+      </if>
+      <if test="fundPurpose != null" >
+        fund_purpose = #{fundPurpose,jdbcType=VARCHAR},
+      </if>
+      <if test="coreEnterprise != null" >
+        core_enterprise = #{coreEnterprise,jdbcType=VARCHAR},
+      </if>
+      <if test="assetsSafety != null" >
+        assets_safety = #{assetsSafety,jdbcType=VARCHAR},
+      </if>
+      <if test="buyBackAttachment">
+        buy_back_attachment = #{buyBackAttachment,jdbcType=VARCHAR},
+      </if>
+      <if test="guaranteeAttachment">
+        guarantee_attachment = #{guaranteeAttachment,jdbcType=VARCHAR},
+      </if>
+      <if test="securedPartyDesc != null">
+        secured_party_desc = #{securedPartyDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="securityDesc != null">
+        security_desc = #{securityDesc,jdbcType=VARCHAR},
+      </if>
+      <if test="merchant != null and merchant.id >= 0">
+        merchant_id = #{merchant.id,jdbcType=INTEGER},
+      </if>
+      <if test="otherData ">
+        other_data = #{otherData,jdbcType=VARCHAR},
+      </if>
+      <if test="riskWarning != null">
+        risk_warning = #{riskWarning,jdbcType=VARCHAR},
+      </if>
+      <if test="dataAuditing != null ">
+        data_auditing = #{dataAuditing,jdbcType=VARCHAR},
+      </if>
+      status = 0
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateStatus">
+  	update project set status = #{status,jdbcType=TINYINT} where id = #{id,jdbcType=INTEGER}
+  </update>
+  
+  <select id="queryForCountTreasure" resultType="int">
+	select count(p.id) 
+	from product p 
+   left join product_category pc on p.category_id = pc.id  
+   left join bonus b on b.id=p.bonus_id
+   <where>
+       pc.property = 'TREASURE'
+  	  <if test="name != null">
+   	   and p.name like '%${name}%'
+      </if>
+      <if test="auditStatus != null and auditStatus >= 0 ">
+	      and p.status = ${auditStatus}
+	  </if>
+	   <if test="merchantId > 0">
+        and p.merchant_id = #{merchantId}
+      </if>
+      <choose>
+          <when test="status == 'NOTSTARTED'">
+             <![CDATA[ and p.shipped_time >  DATE_FORMAT(#{systemTime}, '%Y-%m-%d %H:%i:%s') and p.status = 1 and (p.total_amount > p.actual_amount)  ]]>
+          </when>
+          <when test="status == 'INTHESALE'">
+             <![CDATA[ and DATE_FORMAT(#{systemTime}, '%Y-%m-%d %H:%i:%s') >= p.shipped_time  and p.status = 1 and (p.total_amount > p.actual_amount) ]]>
+          </when>
+          <when test="status == 'SOLDOUT'">
+             <![CDATA[ and (p.actual_amount >= p.total_amount) ]]>
+          </when>
+      </choose>
+   </where> 
+ </select>
+ 
+</mapper>

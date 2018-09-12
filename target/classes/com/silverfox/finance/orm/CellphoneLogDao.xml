@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.CellphoneLogDao">
+  <resultMap type="CellphoneLog" id="resultMap">
+    <id column="id" property="id" jdbcType="INTEGER"/>
+	<result column="new_cellphone" property="newCellphone" jdbcType="VARCHAR"/>
+	<result column="old_cellphone" property="oldCellphone" jdbcType="VARCHAR"/>
+	<result column="user_id" property="userId" jdbcType="INTEGER"/>
+	<result column="idcard_facade" property="idcardFacade" jdbcType="VARCHAR"/>
+	<result column="idcard_back" property="idcardBack" jdbcType="VARCHAR"/>
+	<result column="idcard_photo" property="idcardPhoto" jdbcType="VARCHAR"/>	
+	<result column="status" property="status" jdbcType="TINYINT"/>
+  </resultMap>
+	<sql id="column">
+	  id, new_cellphone, old_cellphone, user_id, idcard_facade, idcard_back,idcard_photo, status
+	</sql>
+	<select id="selectById" resultMap="resultMap">
+	  select <include refid="column"/>
+	  from cellphone_log
+      where	id = #{id,jdbcType=INTEGER}
+	</select>
+	<select id="queryForList" resultMap="resultMap">
+	  select <include refid="column"/>
+	  from cellphone_log
+	  <where>
+        <if test="oldCellphone != null">
+          old_cellphone = #{oldCellphone} 
+        </if>
+      </where>
+      order by id desc
+      <choose>
+		  <when test="offset > 0 and size > 0">
+		     <![CDATA[
+		     limit #{offset}, #{size}
+		     ]]>
+		  </when>
+		  <when test="size > 0">
+		     <![CDATA[
+		     limit 0, #{size}
+		     ]]>
+		  </when>
+		  <otherwise>
+		  <![CDATA[
+		   limit 0, 15
+		  ]]>
+		  </otherwise>
+		</choose> 
+	</select>
+	<select id="queryForCount" resultType="int">
+	     select count(a.id) from cellphone_log a 
+	     <where>
+	         <if test="oldCellphone != null">
+	            a.old_cellphone like '%${oldCellphone}%'     
+	         </if>
+	     </where>
+	</select>
+	<select id="selectHandlingLog" resultMap="resultMap">
+	    select <include refid="column"/>
+	    from cellphone_log 
+		where old_cellphone = #{cellphone} and `status` = 0
+		ORDER BY id DESC limit 1
+	</select>
+	<select id="selectNewCellphone" resultMap="resultMap">
+	    select <include refid="column"/>
+	    from cellphone_log 
+		where new_cellphone = #{cellphone} and `status` = 0
+		ORDER BY id DESC limit 1
+	</select>
+	<insert id="insert" parameterType="CellphoneLog" >
+	  insert into cellphone_log 
+	  <trim prefix="(" suffix=")" suffixOverrides=",">
+	    <if test="newCellphone != null">
+	      new_cellphone,  
+	    </if>
+	    <if test="oldCellphone != null">
+	      old_cellphone,     
+	    </if>
+	    <if test="userId > 0">
+	       user_id, 
+	    </if>
+	    <if test="idcardFacade != null">
+	      idcard_facade, 
+	    </if>
+	    <if test="idcardBack != null ">
+	      idcard_back,
+	    </if>
+	    <if test="idcardPhoto != null">
+	      idcard_photo,
+	    </if>
+	    <if test="status">
+	      status, 
+	    </if>	    
+	  </trim>
+	  <trim prefix="values (" suffix=")" suffixOverrides=",">
+	    <if test="newCellphone != null">
+	      #{newCellphone,jdbcType=VARCHAR},  
+	    </if>	    
+	    <if test="oldCellphone != null">
+	      #{oldCellphone,jdbcType=VARCHAR},   
+	    </if>
+	    <if test="userId > 0">
+	       #{userId,jdbcType=INTEGER},  
+	    </if>    
+	    <if test="idcardFacade != null">
+	      #{idcardFacade,jdbcType=VARCHAR},
+	    </if>
+	    <if test="idcardBack != null">
+	      #{idcardBack,jdbcType=VARCHAR},
+	    </if>
+	    <if test="idcardPhoto != null">
+	      #{idcardPhoto,jdbcType=VARCHAR},
+	    </if>	    
+	    <if test="status">
+	      #{status,jdbcType=TINYINT},
+	    </if>	    
+	  </trim>
+	</insert>
+	<update id="update" parameterType="CellphoneLog">
+	  update cellphone_log
+	  <set>
+	  <if test="newCellphone != null">
+	    new_cellphone = #{newCellphone,jdbcType=VARCHAR}, 
+	  </if>
+	  <if test="oldCellphone != null">
+	    old_cellphone = #{oldCellphone,jdbcType=VARCHAR},    
+	  </if>
+	  <if test="userId > 0">
+	     user_id =  #{userId,jdbcType=INTEGER}, 
+	  </if>
+	  <if test="idcardFacade != null ">
+	    idcard_facade = #{idcardFacade,jdbcType=VARCHAR},    
+	  </if>	   
+	  <if test="idcardBack != null ">
+	    idcard_back = #{idcardBack,jdbcType=VARCHAR},    
+	  </if>	    	  	  	   
+	  <if test="idcardPhoto != null">
+	    idcard_photo= #{idcardPhoto,jdbcType=VARCHAR}, 
+	  </if>
+	   status = #{status,jdbcType=TINYINT}        
+	 </set>
+	 where id = #{id,jdbcType=INTEGER}
+   </update>
+</mapper>

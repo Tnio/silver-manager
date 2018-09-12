@@ -1,0 +1,938 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.MerchantOrderDao">
+	<resultMap id="ResultMap" type="MerchantOrder" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="order_no" property="orderNO" jdbcType="VARCHAR" />
+    <result column="payment_voucher" property="paymentVoucher" jdbcType="VARCHAR" />
+    <result column="principal" property="principal" jdbcType="FLOAT" />
+    <result column="repament_amount" property="repamentAmount" jdbcType="DOUBLE" />
+    <result column="order_time" property="orderTime" jdbcType="TIMESTAMP" />
+    <result column="trade_time" property="tradeTime" jdbcType="TIMESTAMP" />
+    <result column="type" property="type" jdbcType="TINYINT" />
+    <result column="status" property="status" jdbcType="TINYINT" />
+    <result column="audit_status" property="auditStatus" jdbcType="TINYINT" />
+    <result column="version" property="version" jdbcType="INTEGER" />
+    <result column="loan_name" property="loanName" jdbcType="VARCHAR" />    
+    <association property="product" javaType="Product">
+	    <id column="product_id" property="id" jdbcType="INTEGER" />
+	    <result column="product_name" property="name" jdbcType="VARCHAR" />
+	    <result column="year_income" property="yearIncome" jdbcType="FLOAT"/> 
+	    <result column="total_amount" property="totalAmount" jdbcType="INTEGER"/>
+	    <result column="interest_date" property="interestDate" jdbcType="INTEGER"/>
+	    <result column="actual_amount" property="actualAmount" jdbcType="INTEGER"/>
+	    <result column="finance_period" property="financePeriod" jdbcType="INTEGER"/>
+	    <result column="sold_out_time" property="soldOutTime" jdbcType="TIMESTAMP"/>
+	    <result column="loan_year_income" property="loanYearIncome" jdbcType="INTEGER"/>
+	    <result column="product_status" property="status" jdbcType="TINYINT" />
+	    <result column="payback" property="payback" jdbcType="TINYINT" />
+	    <association property="merchant" javaType="Merchant">
+	      <id column="merchant_id" property="id" jdbcType="INTEGER" />
+	      <result column="merchant_name" property="name" jdbcType="VARCHAR" />
+	      <result column="merchant_cellphone" property="cellphone" jdbcType="VARCHAR" />
+	    </association>
+    </association>
+  </resultMap>
+  <resultMap id="OldResultMap" type="MerchantOrder" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="order_no" property="orderNO" jdbcType="VARCHAR" />
+    <result column="payment_voucher" property="paymentVoucher" jdbcType="VARCHAR" />
+    <result column="principal" property="principal" jdbcType="FLOAT" />
+    <result column="order_time" property="orderTime" jdbcType="TIMESTAMP" />
+    <result column="trade_time" property="tradeTime" jdbcType="TIMESTAMP" />
+    <result column="type" property="type" jdbcType="TINYINT" />
+    <result column="status" property="status" jdbcType="TINYINT" />
+    <result column="version" property="version" jdbcType="INTEGER" />
+    <association property="merchant" javaType="Merchant">
+      <id column="merchant_id" property="id" jdbcType="INTEGER" />
+      <result column="merchant_name" property="name" jdbcType="VARCHAR" />
+      <result column="merchant_cellphone" property="cellphone" jdbcType="VARCHAR" />
+    </association>
+  </resultMap>
+  <resultMap id="ProductResultMap" type="Product" >
+    <id column="id" property="id" jdbcType="INTEGER"/>
+    <result column="name" property="name" jdbcType="VARCHAR"/>
+    <result column="sort_number" property="sortNumber" jdbcType="INTEGER"/>
+    <result column="year_income" property="yearIncome" jdbcType="FLOAT"/> 
+    <result column="total_amount" property="totalAmount" jdbcType="INTEGER"/>
+    <result column="interest_date" property="interestDate" jdbcType="INTEGER"/>
+    <result column="actual_amount" property="actualAmount" jdbcType="INTEGER"/>
+    <result column="finance_period" property="financePeriod" jdbcType="INTEGER"/>
+    <result column="sold_out_time" property="soldOutTime" jdbcType="TIMESTAMP"/>
+    <result column="loan_year_income" property="loanYearIncome" jdbcType="INTEGER"/>
+    <result column="pay_money" property="PayMoney" jdbcType="INTEGER"/>
+    
+    <result column="repament_amount" property="label" jdbcType="VARCHAR" />
+    <association property="merchant" javaType="Merchant">
+      <id column="merchant_id" property="id" jdbcType="INTEGER" />
+      <result column="merchant_name" property="name" jdbcType="VARCHAR" />
+      <result column="merchant_cellphone" property="cellphone" jdbcType="VARCHAR" />
+    </association>
+    <association property="productDetail" javaType="ProductDetail">
+      <association property="project" javaType="Project">
+    	<result column="project_type" property="type" jdbcType="INTEGER"/>
+     </association>
+    </association>
+  </resultMap>
+  
+   <resultMap id="PayProductResultMap" type="PayProductEntity" >
+    <id column="id" property="id" jdbcType="INTEGER"/>
+    <result column="name" property="name" jdbcType="VARCHAR"/>
+    <result column="sort_number" property="sortNumber" jdbcType="INTEGER"/>
+    <result column="year_income" property="yearIncome" jdbcType="FLOAT"/> 
+    <result column="total_amount" property="totalAmount" jdbcType="INTEGER"/>
+    <result column="interest_date" property="interestDate" jdbcType="INTEGER"/>
+    <result column="actual_amount" property="actualAmount" jdbcType="INTEGER"/>
+    <result column="finance_period" property="financePeriod" jdbcType="INTEGER"/>
+    <result column="sold_out_time" property="soldOutTime" jdbcType="TIMESTAMP"/>
+    <result column="loan_year_income" property="loanYearIncome" jdbcType="INTEGER"/>
+    <result column="pay_money" property="payMoney" jdbcType="DOUBLE" />
+    <result column="pay_time" property="payTime" jdbcType="TIMESTAMP" />
+    <result column="pay_success_time" property="paySuccessTime" jdbcType="TIMESTAMP" />
+    <result column="should_payback_time" property="shouldPaybackTime" jdbcType="TIMESTAMP" />
+    <result column="payback_success_time" property="paybackSuccessTime" jdbcType="TIMESTAMP" />
+    <result column="payback_money" property="paybackMoney" jdbcType="DOUBLE" />
+    <result column="trade_amount" property="tradeAmount" jdbcType="DOUBLE" />
+    <result column="service_charge" property="serviceCharge" jdbcType="DOUBLE" />
+    <result column="pay_channel" property="payChannel" jdbcType="VARCHAR" />
+    <association property="merchant" javaType="Merchant">
+      <id column="merchant_id" property="id" jdbcType="INTEGER" />
+      <result column="merchant_name" property="name" jdbcType="VARCHAR" />
+      <result column="merchant_cellphone" property="cellphone" jdbcType="VARCHAR" />
+    </association>
+    <association property="productDetail" javaType="ProductDetail">
+      <association property="project" javaType="Project">
+    	<result column="project_type" property="type" jdbcType="INTEGER"/>
+     </association>
+    </association>
+  </resultMap>
+	
+	
+	<sql id="columns">
+		mor.id, mor.order_no, mor.version, mor.trade_time,
+		mor.principal,
+		mor.order_time, mor.type, mor.status, mor.audit_status,
+		prt.id product_id, prt.name product_name, prt.finance_period,
+		prt.interest_date
+	</sql>
+	<select id="queryOrderForCount" resultType="int">
+		select count(mor.id) from merchant_order mor
+		left join product prt on
+		prt.id = mor.product_id
+		left join product_detail pd on prt.id = pd.id
+		left join project pt on pd.project_id = pt.id
+		where mor.type = #{type}
+		and mor.status = 2
+		<if test="loanType >= 0">
+			and pt.type = #{loanType}
+		</if>
+		<if test="orderNO != null">
+			and mor.order_nO = #{orderNO}
+		</if>
+		<if test="productName != null">
+			and prt.name like '${productName}%'
+		</if>
+		<if test="loanName != null">
+			and mor.loan_name like '${loanName}%'
+		</if>
+		<if test="fromDate != null and toDate != null">
+			and (DATE_FORMAT(mor.trade_time,'%Y-%m-%d') >= #{fromDate}
+			and #{toDate}
+			>= DATE_FORMAT(mor.trade_time,'%Y-%m-%d'))
+		</if>
+	</select>
+	<select id="queryOrderForList" resultMap="ResultMap">
+		select mor.id, mor.order_no, mor.repament_amount, mor.principal,
+		mor.order_time, mor.trade_time, mor.status, prt.id product_id,
+		prt.name product_name, mor.loan_name
+		from merchant_order mor
+		left join
+		product prt on prt.id = mor.product_id
+		left join product_detail pd on
+		prt.id = pd.id
+		left join project pt on pd.project_id = pt.id
+		where   
+		mor.type = #{type} and mor.status = 2
+		<if test="loanType >= 0">
+			and pt.type = #{loanType}
+		</if>
+		<if test="orderNO != null">
+			and mor.order_no = #{orderNO}
+		</if>
+		<if test="productName != null">
+			and prt.name like '${productName}%'
+		</if>
+		<if test="loanName != null">
+			and mor.loan_name like '${loanName}%'
+		</if>
+		<if test="fromDate != null and toDate != null">
+			and (DATE_FORMAT(mor.trade_time,'%Y-%m-%d') >= #{fromDate}
+			and #{toDate}
+			>= DATE_FORMAT(mor.trade_time,'%Y-%m-%d'))
+		</if>
+		ORDER BY mor.order_time DESC
+		<choose>
+			<when test="offset > 0 and size > 0">
+      <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+			</when>
+			<when test="size > 0">
+      <![CDATA[
+      limit 0, #{size}
+      ]]>
+			</when>
+			<otherwise>
+	  <![CDATA[
+	  limit 0, 15
+	  ]]>
+			</otherwise>
+		</choose>
+	</select>
+	<select id="countTotalAmountForOrder" resultType="DOUBLE">
+		select sum(mor.principal)
+		from merchant_order mor
+		left join product prt
+		on prt.id = mor.product_id
+		left join product_detail pd on prt.id =
+		pd.id
+		left join project pt on pd.project_id = pt.id
+		where mor.type =
+		#{type} and mor.status = 2
+		<if test="loanType >= 0">
+			and pt.type = #{loanType}
+		</if>
+		<if test="orderNO != null">
+			and mor.order_nO = #{orderNO}
+		</if>
+		<if test="productName != null">
+			and prt.name like '${productName}%'
+		</if>
+		<if test="loanName != null">
+			and mor.loan_name like '${loanName}%'
+		</if> 
+	    <if test="fromDate != null and toDate != null">
+			and (DATE_FORMAT(mor.trade_time,'%Y-%m-%d') >= #{fromDate}
+			and #{toDate}
+			>= DATE_FORMAT(mor.trade_time,'%Y-%m-%d'))
+		</if> 
+	</select>
+	<select id="selectLoanNames" resultType="string">
+		select name from
+		merchant
+		UNION ALL
+		select name from lender GROUP BY name
+	</select>
+
+	<select id="queryWaitPayPaymentForCount" resultType="int">
+		select count(t1.id)from (
+		select prt.id, t2.auth_code from product prt
+		left join product_detail pd on pd.id = prt.id
+		left join project pj on
+		pj.id = pd.project_id
+		left join merchant mt on mt.id = prt.merchant_id
+		left join lender lr on lr.product_id = prt.id
+		left join merchant_order
+		mor on mor.product_id = prt.id
+		left join (select product_id, auth_code
+		from customer_order group by
+		product_id) t2 on t2.product_id = prt.id
+		where
+		<if test="productStatue == 'WAITPAYMENT'">
+			(mor.order_no is NULL or mor.status = 3) and
+			prt.actual_amount >= prt.total_amount
+			and prt.loan_year_income > 0
+			and
+			DATE_ADD(prt.interest_date,INTERVAL prt.finance_period-1 DAY) >
+			CURRENT_DATE()
+			and prt.id not in (SELECT product_id from
+			merchant_order where
+			product_id > 0 and type = 1 and status in (1,2))
+		</if>
+		<if test="productStatue == 'PAYMENTING'">
+			mor.type = 1 and mor.status = 1
+		</if>
+		<if test="productStatue == 'PAYMENTED'">
+			mor.type = 1 and mor.status = 2
+			<if test="fromDate != null and toDate != null">
+				and (DATE_FORMAT(mor.trade_time,'%Y-%m-%d') >=
+				#{fromDate} and
+				#{toDate} >= DATE_FORMAT(mor.trade_time,'%Y-%m-%d'))
+			</if>
+		</if>
+		<if test="productStatue == 'PAYBACKING'">
+			mor.type = 0 and mor.status = 1
+		</if>
+		<if test="productStatue == 'PAYBACKED'">
+			mor.type = 0 and mor.status = 2
+			<if test="fromDate != null and toDate != null">
+				and (DATE_FORMAT(mor.trade_time,'%Y-%m-%d') >=
+				#{fromDate} and
+				#{toDate} >= DATE_FORMAT(mor.trade_time,'%Y-%m-%d'))
+			</if>
+		</if>
+		<if test="projectType >= 0">
+			and pj.type = #{projectType}
+		</if>
+		<if test="name != null and projectType == 0">
+			and prt.merchant_id in (select id from merchant where name
+			like
+			'%${name}%')
+		</if>
+		<if test="name != null and projectType == 2">
+			and lr.name like '%${name}%'
+		</if>
+		<if test="productName != null">
+			and prt.name like '%${productName}%'
+		</if>
+		<!-- <if test="timeCategory == 0 and fromDate != null and toDate != null"> 
+			and prt.interest_date >= #{fromDate} and #{toDate} >= prt.interest_date </if> -->
+		<if test="timeCategory == 1 and fromDate != null and toDate != null">
+			and DATE_FORMAT(prt.sold_out_time,'%Y-%m-%d') >=
+			#{fromDate} and
+			#{toDate} >= DATE_FORMAT(prt.sold_out_time,'%Y-%m-%d')
+		</if>
+		group by prt.id ) t1
+		<where>
+			<if test="payChannel == 1">
+				t1.auth_code is NULL
+			</if>
+			<if test="payChannel == 2">
+				t1.auth_code is not NULL
+			</if>
+		</where>
+	</select>
+
+	<select id="queryWaitPaymentForList" resultMap="PayProductResultMap">
+		SELECT pt.id, pt.name, pt.sort_number, pt.year_income,
+		pt.sold_out_time, pt.total_amount, pt.actual_amount,
+		pt.loan_year_income,
+		pt.interest_date, pt.finance_period,
+		IFNULL(pj.type,0) project_type,
+		IF(IFNULL(pj.type,0) = 0, mt.id, lr.id)
+		merchant_id,
+		IF(IFNULL(pj.type,0) = 0, mt.name, lr.name) merchant_name,
+		pt.actual_amount pay_money
+		FROM product pt
+		left join product_detail pd
+		on pd.id = pt.id
+		left join project pj on pj.id = pd.project_id
+		left join
+		merchant mt on mt.id = pt.merchant_id
+		left join lender lr on
+		lr.product_id = pt.id
+		left join merchant_order mor on mor.product_id =
+		pt.id
+		where (mor.order_no is NULL or mor.status = 3) and
+		pt.actual_amount >=
+		pt.total_amount and pt.loan_year_income > 0 and
+		DATE_ADD(pt.interest_date,INTERVAL pt.finance_period-1 DAY) >
+		CURRENT_DATE()
+		and pt.id not in (SELECT product_id from merchant_order
+		where product_id
+		> 0 and type = 1 and status in (1,2))
+		GROUP BY pt.id
+		ORDER BY pt.interest_date ASC, pt.id DESC
+		<choose>
+			<when test="offset > 0 and size > 0">
+      <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+			</when>
+			<when test="size > 0">
+      <![CDATA[
+      limit 0, #{size}
+      ]]>
+			</when>
+			<otherwise>
+	  <![CDATA[
+	  limit 0, 15
+	  ]]>
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="queryProductPaymentedForList" resultMap="PayProductResultMap">
+		select pt.id, pt.name, mo.loan_name merchant_name, mo.trade_time
+		payback_success_time, mo.repament_amount payback_money,
+		SUM(IF(cor.auth_code  <![CDATA[ <> ]]>
+		'' ,1,0)) pay_channel
+		, IFNULL(pj.type,0) project_type, mo.principal
+		pay_money,
+		DATE_ADD(pt.interest_date,INTERVAL pt.finance_period-1 DAY)
+		should_payback_time
+		from product pt
+		left join customer_order cor on
+		pt.id = cor.product_id
+		left join merchant_order mo on pt.id =
+		mo.product_id
+		left join product_detail pd on pt.id= pd.id
+		left join
+		project pj on
+		pd.project_id = pj.id
+		<where>
+			mo.type = 1 and pt.id not in (select product_id from merchant_order
+			where type = 0) and mo.status = 2
+			<if test="projectType >= 0">
+				and pj.type = #{projectType}
+			</if>
+			<if test="productName != null">
+				and pt.name like '%${productName}%'
+			</if>
+			<if test="name != null">
+				and mo.loan_name like '%${name}%'
+			</if>
+			<if test="projectTimeType ==1">
+				and (DATE_FORMAT(mo.trade_time,'%Y-%m-%d') >= #{fromDate}
+				and #{toDate}
+				>= DATE_FORMAT(mo.trade_time,'%Y-%m-%d'))
+			</if>
+			<if test="projectTimeType ==2">
+				and (DATE_ADD(pt.interest_date,INTERVAL
+				pt.finance_period-1 DAY) >=
+				#{fromDate} and #{toDate} >=
+				DATE_ADD(pt.interest_date,INTERVAL
+				pt.finance_period-1 DAY))
+			</if>
+		</where>
+		<if test="!(orderType == 1 and orderStatus != 2)">
+			GROUP BY pt.id
+			ORDER BY mo.trade_time desc
+			<if test="payChannel == 1">
+				HAVING pay_channel = 0
+			</if>
+			<if test="payChannel == 2">
+				HAVING pay_channel > 0
+			</if>
+		</if>
+		<choose>
+			<when test="offset > 0 and size > 0">
+      <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+			</when>
+			<when test="size > 0">
+      <![CDATA[
+      limit 0, #{size}
+      ]]>
+			</when>
+			<otherwise>
+	  <![CDATA[
+	  limit 0, 15
+	  ]]>
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="queryProductPaymentingForList" resultMap="PayProductResultMap">
+		select pt.id, pt.name, mo.loan_name merchant_name, mo.order_time
+		payback_success_time, interest_date , mo.principal pay_money,
+		IFNULL(pj.type,0) project_type
+		from product pt
+		left join customer_order
+		cor on pt.id = cor.product_id
+		left join merchant_order mo on pt.id =
+		mo.product_id
+		left join product_detail pd on pt.id= pd.id
+		left join
+		project pj on
+		pd.project_id = pj.id
+		where mo.type = 1 and pt.id not in
+		(select
+		product_id from merchant_order where type = 0) and
+		mo.product_id not
+		in (select product_id from merchant_order where
+		status = 2 and type =
+		1) group by pt.id
+		<choose>
+			<when test="offset > 0 and size > 0">
+      <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+			</when>
+			<when test="size > 0">
+      <![CDATA[
+      limit 0, #{size}
+      ]]>
+			</when>
+			<otherwise>
+	  <![CDATA[
+	  limit 0, 15
+	  ]]>
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="queryProductForList" resultMap="PayProductResultMap">
+		select pe.*
+		,sum(ROUND(co.principal*pe.finance_period*pe.loan_year_income/36500,2))
+		service_charge,
+		IFNULL(sum(co.principal+
+		ROUND(if(co.interest_period >0
+		AND pe.finance_period >= co.interest_period,
+		co.principal*co.interest_period*co.coupon_amount/36500,
+		IF(co.interest_period > 0,
+		co.principal*pe.finance_period*co.coupon_amount/36500, 0)),2)+
+		ROUND(co.principal*pe.year_income*pe.finance_period/36500,2)+
+		ROUND(co.principal*pe.finance_period*pe.increase_interest/36500,2)+
+		ROUND(IF(co.interest_period=0,co.coupon_amount, 0),2)
+		), 0)
+		trade_amount
+		from (select pt.id, pt.name, mo.loan_name merchant_name,
+		mo.repament_amount payback_money, finance_period, year_income,
+		loan_year_income, increase_interest, pj.type project_type
+		<if test="orderStatus != 2">
+			,mo.order_time payback_success_time
+		</if>
+		<if test="orderStatus == 2">
+			,mo.trade_time payback_success_time
+		</if>
+		from product pt
+		left join merchant_order mo on pt.id = mo.product_id
+		left join product_detail pd on pt.id= pd.id
+		left join project pj on
+		pd.project_id = pj.id
+		<where>
+			mo.type =0
+			<if test="orderStatus != 2">
+				and mo.product_id not in (select product_id from
+				merchant_order where
+				status = 2 and type = 0)
+			</if>
+			<if test="orderStatus == 2">
+				and mo.status = 2
+			</if>
+			<if test="projectType >= 0">
+				and pj.type = #{projectType}
+			</if>
+			<if test="productName != null">
+				and pt.name like '%${productName}%'
+			</if>
+			<if test="name != null">
+				and mo.loan_name like '%${name}%'
+			</if>
+			<if test="fromDate != null and toDate != null">
+				and DATE_FORMAT(mo.trade_time,'%Y-%m-%d') >= #{fromDate}
+				and #{toDate}
+				>= DATE_FORMAT(mo.trade_time,'%Y-%m-%d')
+			</if>
+		</where>
+		GROUP BY pt.id order by mo.trade_time desc
+		<choose>
+			<when test="offset > 0 and size > 0">
+      <![CDATA[
+      limit #{offset}, #{size}
+      ]]>
+			</when>
+			<when test="size > 0">
+      <![CDATA[
+      limit 0, #{size}
+      ]]>
+			</when>
+			<otherwise>
+	  <![CDATA[
+	  limit 0, 15
+	  ]]>
+			</otherwise>
+		</choose>
+		) pe left join customer_order co on pe.id = co.product_id GROUP BY
+		pe.id order by pe.payback_success_time desc
+	</select>
+
+	<select id="sumWaitpaymentMoney" resultType="double">
+		select IFNULL(sum(actual_amount),0) from (
+		select prt.id,
+		prt.actual_amount from product prt
+		left join product_detail pd on pd.id
+		= prt.id
+		left join project pj on pj.id = pd.project_id
+		left join
+		merchant mt on mt.id = prt.merchant_id
+		left join lender lr on
+		lr.product_id = prt.id
+		left join merchant_order mor on mor.product_id =
+		prt.id
+		where
+		<if test="productStatue == 'WAITPAYMENT'">
+			(mor.order_no is NULL or mor.status = 3) and
+			prt.actual_amount >= prt.total_amount
+			and prt.loan_year_income > 0
+			and
+			DATE_ADD(prt.interest_date,INTERVAL prt.finance_period-1 DAY) >
+			CURRENT_DATE()
+			and prt.id not in (SELECT product_id from
+			merchant_order where
+			product_id > 0 and type = 1 and status in (1,2))
+		</if>
+		<if test="projectType >= 0">
+			and pj.type = #{projectType}
+		</if>
+		<if test="name != null and projectType == 0">
+			and prt.merchant_id in (select id from merchant where name
+			like
+			'%${name}%')
+		</if>
+		<if test="name != null and projectType == 2">
+			and lr.name like '%${name}%'
+		</if>
+		<if test="productName != null">
+			and prt.name like '%${productName}%'
+		</if>
+		<if test="timeCategory == 0 and fromDate != null and toDate != null">
+			and prt.interest_date >= #{fromDate} and #{toDate} >=
+			prt.interest_date
+		</if>
+		<if test="timeCategory == 1 and fromDate != null and toDate != null">
+			and DATE_FORMAT(prt.sold_out_time,'%Y-%m-%d') >=
+			#{fromDate} and
+			#{toDate} >= DATE_FORMAT(prt.sold_out_time,'%Y-%m-%d')
+		</if>
+		group by prt.id ) t1
+	</select>
+
+	<select id="sumPaymentMoney" resultType="Double">
+		select SUM(mo.principal) from merchant_order mo
+		left join product pt on
+		pt.id = mo.product_id
+		<if test="projectType >= 0">
+			left join product_detail pd on pt.id= pd.id
+			left join
+			project pj on pd.project_id = pj.id
+		</if>
+		where mo.status = 2
+		<if test="orderType == 0">
+			and mo.type =0
+		</if>
+		<if test="orderType == 1">
+			and mo.type = 1 and pt.id not in (select product_id from
+			merchant_order
+			where type = 0)
+		</if>
+		<if test="productName != null">
+			and pt.name like '%${productName}%'
+		</if>
+		<if test="name != null">
+			and mo.loan_name like '%${name}%'
+		</if>
+		<if test="projectTimeType == 1">
+			and (DATE_FORMAT(mo.trade_time,'%Y-%m-%d') >= #{fromDate}
+			and #{toDate}
+			>= DATE_FORMAT(mo.trade_time,'%Y-%m-%d'))
+		</if>
+		<if test="projectTimeType == 2">
+			and (DATE_ADD(pt.interest_date,INTERVAL
+			pt.finance_period-1 DAY) >=
+			#{fromDate} and #{toDate} >=
+			DATE_ADD(pt.interest_date,INTERVAL
+			pt.finance_period-1 DAY))
+		</if>
+		<if test="projectType >= 0">
+			and pj.type = #{projectType}
+		</if>
+	</select>
+
+	<select id="sumShouldPaybackmentMoney" resultType="Double">
+		select SUM(mo.repament_amount) from merchant_order mo
+		left join product
+		pt on pt.id = mo.product_id
+		<if test="projectType >= 0">
+			left join product_detail pd on pt.id= pd.id
+			left join
+			project pj on pd.project_id = pj.id
+		</if>
+		where mo.status = 2
+		<if test="orderType == 0">
+			and mo.type =0
+		</if>
+		<if test="orderType == 1">
+			and mo.type = 1 and pt.id not in (select product_id from
+			merchant_order
+			where type = 0)
+		</if>
+		<if test="productName != null">
+			and pt.name like '%${productName}%'
+		</if>
+		<if test="name != null">
+			and mo.loan_name like '%${name}%'
+		</if>
+
+		<if test="projectTimeType == 1">
+			and (DATE_FORMAT(mo.trade_time,'%Y-%m-%d') >= #{fromDate}
+			and #{toDate}
+			>= DATE_FORMAT(mo.trade_time,'%Y-%m-%d'))
+		</if>
+		<if test="projectTimeType == 2">
+			and (DATE_ADD(pt.interest_date,INTERVAL
+			pt.finance_period-1 DAY) >=
+			#{fromDate} and #{toDate} >=
+			DATE_ADD(pt.interest_date,INTERVAL
+			pt.finance_period-1 DAY))
+		</if>
+		<if test="projectType >= 0">
+			and pj.type = #{projectType}
+		</if>
+	</select>
+
+	<select id="sumTradeAmount" resultType="double">
+		select IFNULL(sum(co.principal+
+		ROUND(if(co.interest_period >0 AND
+		pt.finance_period >= co.interest_period,
+		co.principal*co.interest_period*co.coupon_amount/36500,
+		IF(co.interest_period > 0,
+		co.principal*pt.finance_period*co.coupon_amount/36500, 0)),2)+
+		ROUND(co.principal*pt.year_income*pt.finance_period/36500,2)+
+		ROUND(co.principal*pt.finance_period*pt.increase_interest/36500,2)+
+		ROUND(IF(co.interest_period=0,co.coupon_amount, 0),2)
+		), 0)
+		trade_amount
+		from customer_order co left join product pt on
+		co.product_id = pt.id
+		<if test="projectType >= 0">
+			left join product_detail pd on pt.id= pd.id
+			left join
+			project pj on pd.project_id = pj.id
+		</if>
+		left join merchant_order mo on pt.id = mo.product_id
+		where mo.type = 0
+		and mo.status = 2
+		<if test="productName != null">
+			and pt.name like '%${productName}%'
+		</if>
+		<if test="name != null">
+			and mo.loan_name like '%${name}%'
+		</if>
+		<if test="fromDate != null and toDate != null">
+			and (DATE_FORMAT(mo.trade_time,'%Y-%m-%d') >= #{fromDate}
+			and #{toDate}
+			>= DATE_FORMAT(mo.trade_time,'%Y-%m-%d'))
+		</if>
+		<if test="projectType >= 0">
+			and pj.type = #{projectType}
+		</if>
+	</select>
+
+	<select id="sumServiceCharge" resultType="Double">
+		select
+		sum(ROUND(co.principal*pt.finance_period*pt.loan_year_income/36500,2))
+		from customer_order co left join product pt on co.product_id = pt.id
+		<if test="projectType >= 0">
+			left join product_detail pd on pt.id= pd.id
+			left join
+			project pj on pd.project_id = pj.id
+		</if>
+		left join merchant_order mo on pt.id = mo.product_id
+		where mo.type = 0
+		and mo.status = 2
+		<if test="productName != null">
+			and pt.name like '%${productName}%'
+		</if>
+		<if test="name != null">
+			and mo.loan_name like '%${name}%'
+		</if>
+		<if test="fromDate != null and toDate != null">
+			and (DATE_FORMAT(mo.trade_time,'%Y-%m-%d') >= #{fromDate}
+			and #{toDate}
+			>= DATE_FORMAT(mo.trade_time,'%Y-%m-%d'))
+		</if>
+		<if test="projectType >= 0">
+			and pj.type = #{projectType}
+		</if>
+	</select>
+	<select id="selectByProductIdAntDate" resultMap="ResultMap">
+		select id, order_no, principal, order_time, payment_voucher, type, status, audit_status
+		from merchant_order
+		<where>
+			<if test="productId > 0">
+				product_id = #{productId,jdbcType=INTEGER}
+			</if>
+			<if test="systemDate != null">
+				and DATE_FORMAT(order_time,'%Y-%m-%d') = #{systemDate,jdbcType=VARCHAR}
+			</if>
+			<if test="type >= 0">
+				and type = #{type,jdbcType=TINYINT}
+			</if>
+			<if test="status > 0">
+				and status = #{status,jdbcType=TINYINT}
+			</if>
+			<if test="status == 0">
+				and status > -1
+			</if>
+		</where>
+	</select>
+	<select id="queryProductForCount" resultType="int">
+		select count(pp.id) from (
+		select DISTINCT pt.id,DATE_ADD(pt.interest_date,INTERVAL pt.finance_period-1
+		DAY) should_payback_time from product pt
+		left join merchant_order mo on pt.id = mo.product_id
+		<if test="projectType >= 0">
+			left join product_detail pd on pt.id= pd.id
+			left join
+			project pj on pd.project_id = pj.id
+		</if>
+		<if test="payChannel > 0">
+			left join customer_order cor on pt.id = cor.product_id
+		</if>
+		<where>
+			<if test="orderType == 0">
+				and mo.type = 0
+			</if>
+			<if test="orderType == 1">
+				and mo.type = 1 and pt.id not in (select product_id from merchant_order
+				where type = 0)
+			</if>
+			<if test="orderStatus != 2">
+				and pt.id not in (select product_id from merchant_order where status =
+				2 and type = #{orderType})
+			</if>
+			<if test="orderStatus == 2">
+				and mo.status = 2
+			</if>
+			<if test="projectType >= 0">
+				and pj.type = #{projectType}
+			</if>
+			<if test="productName != null">
+				and pt.name like '%${productName}%'
+			</if>
+			<if test="name != null">
+				and mo.loan_name like '%${name}%'
+			</if>
+			<if test="projectTimeType == 1 and fromDate != null and toDate != null">
+				and DATE_FORMAT(mo.trade_time,'%Y-%m-%d') >= #{fromDate} and #{toDate}
+				>= DATE_FORMAT(mo.trade_time,'%Y-%m-%d')
+			</if>
+			<if test="projectTimeType == 2 and fromDate != null and toDate != null">
+				and DATE_ADD(pt.interest_date,INTERVAL pt.finance_period-1 DAY) >=
+				#{fromDate} and #{toDate} >= DATE_ADD(pt.interest_date,INTERVAL
+				pt.finance_period-1 DAY)
+			</if>
+			<if test="payChannel == 1">
+				group by pt.id having SUM(IF(cor.auth_code <![CDATA[ <> ]]>
+				'' ,1,0)) = 0
+			</if>
+			<if test="payChannel == 2">
+				group by pt.id having SUM(IF(cor.auth_code <![CDATA[ <> ]]>
+				'' ,1,0)) > 0
+			</if>
+		</where>
+		) pp
+	</select>
+
+    <select id="queryForCount" resultType="int">
+    select count(mt.id) from (
+      select m.id, m.`name`,m.`linkman`,m.`cellphone`,m.`status` ,  ifnull(p.pending_repayment_amount,0) pending_repayment_amount
+      from `merchant`  m  left join (
+        select p.`merchant_id` ,sum(p.`total_amount`) pending_repayment_amount from  `product` p 
+         left join `merchant_order` mo on p.id=mo.`product_id`
+         where p.`status` =1 and p.`payback` =0 and p.`actual_amount` >=p.`total_amount` and mo.type=1 and mo.status=2 group by p.merchant_id 
+      ) p on m.id=p.merchant_id  
+      <where>
+        m.type=0
+        <if test="name != null">
+          and m.`name` like '%${name}%' 
+        </if>
+        <if test="cellphone != null">
+          and m.`cellphone` = #{cellphone}
+        </if>
+        <if test="startAmount != null and endAmount !=null">
+          and p.pending_repayment_amount between #{startAmount} and #{endAmount}
+        </if>
+      </where>
+    ) mt
+  </select>
+  
+    <select id="selectMerchantTradeAmount" parameterType="java.lang.Integer" resultType="ReceivablesEntity">
+  	select SUM(principal) as payAmount, DATE_FORMAT(mo.order_time, '%Y-%m') as dueDate 
+  	from merchant_order mo 
+  	left join product pt on mo.product_id=pt.id      
+	where (pt.merchant_id= #{id, jdbcType=INTEGER} or mo.merchant_id= #{id, jdbcType=INTEGER}) and mo.status=2 and mo.type=#{type,jdbcType=INTEGER}
+  	GROUP BY DATE_FORMAT(mo.order_time, '%Y-%m')
+  </select>
+  <select id="selectInAmountById" resultType="FLOAT">
+  	 select COALESCE((select SUM(principal) as payAmount from merchant_order mo
+  	 	left join product pt on mo.product_id=pt.id      
+		where pt.merchant_id= #{id, jdbcType=INTEGER} and mo.status=2 and  type=1 and order_time  &lt;= #{yesterday,jdbcType=VARCHAR} )
+  		-(select SUM(principal) as backAmount from merchant_order mor left join product pct on mor.product_id=pct.id      
+			where pct.merchant_id = #{id, jdbcType=INTEGER} and  mor.status=2 and  type=0 and order_time  &lt;= #{yesterday,jdbcType=VARCHAR} ),0) 
+  		as inAmount
+  </select>
+	<select id="selectByMerchantId" resultMap="ResultMap">
+		select
+		<include refid="columns" />
+		from merchant_order mor
+		left join product prt on prt.id = mor.product_id
+		where prt.merchant_id = #{merchantId} and mor.type = #{type} and mor.status > -1
+		order by mor.product_id desc
+	</select>
+	<insert id="insert" parameterType="MerchantOrder" useGeneratedKeys="true" keyProperty="id">
+		insert into merchant_order
+		<trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="orderNO != null" >
+				order_no,
+			</if>
+			<if test="principal > 0" >
+				principal,
+			</if>
+			<if test="repamentAmount > 0" >
+				repament_amount,
+			</if>
+			<if test="orderTime != null" >
+				order_time,
+			</if>
+			<if test="tradeTime != null" >
+				trade_time,
+			</if>
+			<if test="type >= 0" >
+				type,
+			</if>
+			<if test="status >= 0" >
+				status,
+			</if>
+			<if test="product != null and product.id > 0">
+				product_id,
+			</if>
+			<if test="merchant != null and merchant.id > 0">
+				merchant_id,
+			</if>
+			<if test="loanName != null">
+				loan_name,
+			</if>
+			version
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="orderNO != null" >
+				#{orderNO,jdbcType=VARCHAR},
+			</if>
+			<if test="principal > 0" >
+				#{principal,jdbcType=REAL},
+			</if>
+			<if test="repamentAmount > 0" >
+				#{repamentAmount,jdbcType=DOUBLE},
+			</if>
+			<if test="orderTime != null" >
+				#{orderTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="tradeTime != null" >
+				#{tradeTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="type >= 0" >
+				#{type,jdbcType=TINYINT},
+			</if>
+			<if test="status >= 0" >
+				#{status,jdbcType=TINYINT},
+			</if>
+			<if test="product != null and product.id > 0">
+				#{product.id,jdbcType=INTEGER},
+			</if>
+			<if test="merchant != null and merchant.id > 0">
+				#{merchant.id,jdbcType=INTEGER},
+			</if>
+			<if test="loanName != null">
+				#{loanName,jdbcType=VARCHAR},
+			</if>
+			(select IFNULL(max(mor.version), 0)+1 from merchant_order mor)
+		</trim>
+	</insert>
+	<update id="addVoucher">
+		update merchant_order set payment_voucher = #{voucher}, audit_status = 0 where id = #{id}
+	</update>
+</mapper>

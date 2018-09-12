@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.CouponVipDao" >
+  <resultMap type="CouponVip" id="ResultMap"  >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="vip_level" property="vipLevel" jdbcType="INTEGER" />
+    <result column="coupon_type" property="couponType" jdbcType="INTEGER" />
+	<result column="coupon_id" property="couponId" jdbcType="INTEGER" />
+  </resultMap>
+  <resultMap type="CouponVipEntity" id="couponVipEntity">
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="vip_level" property="vipLevel" jdbcType="INTEGER" />
+    <result column="coupon_type" property="couponType" jdbcType="INTEGER" />
+	<association property="coupon" javaType="Coupon">
+	    <id column="coupon_id" property="id" jdbcType="INTEGER" />
+	   	<result column="coupon_name" property="name" jdbcType="VARCHAR" />
+	   	<result column="coupon_amount" property="amount" jdbcType="VARCHAR" />
+	   	<result column="coupon_category" property="category" jdbcType="VARCHAR" />
+	   	<result column="coupon_condition" property="condition" jdbcType="VARCHAR" />
+	   	<result column="coupon_finance_period" property="financePeriod" jdbcType="INTEGER" />
+	   	<result column="coupon_increase_days" property="increaseDays" jdbcType="INTEGER" />
+	</association>
+
+  </resultMap>
+   <select id="selectByType"  parameterType="int" resultMap="ResultMap">
+    select cv.id , cv.vip_level, cv.coupon_type , cv.coupon_id from coupon_vip  cv
+    where coupon_type = #{couponType,jdbcType=INTEGER}; 
+  </select>
+   <select id="selectByCouponType"  parameterType="int" resultMap="couponVipEntity">
+    select cv.id as id , cv.vip_level as vip_level , cv.coupon_type as coupon_type , cn.id as coupon_id , cn.name as coupon_name , cn.amount as coupon_amount ,cn.category as coupon_category , 
+    cn.condition as coupon_condition, cn.finance_period as coupon_finance_period ,cn.increase_days as coupon_increase_days
+     from coupon_vip  cv
+     left join coupon cn on cv.coupon_id = cn.id
+    where coupon_type = #{couponType,jdbcType=INTEGER}; 
+  </select>
+  <insert id="savecouponVip" parameterType="CouponVip">
+    insert into coupon_vip
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="vipLevel > 0" >
+                vip_level,
+            </if>
+            <if test="couponType > 0" >
+                coupon_type,
+            </if>
+            <if test="couponId > 0" >
+                coupon_id,
+            </if>
+            
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="vipLevel > 0"  >
+                #{vipLevel,jdbcType=INTEGER},
+            </if>
+            <if test="couponType > 0" >
+                #{couponType,jdbcType=INTEGER},
+            </if>
+            <if test="couponId > 0" >
+                #{couponId,jdbcType=INTEGER},
+            </if>
+        </trim>
+  </insert>
+  <update id="updatecouponVip" parameterType="CouponVip" >
+	    update coupon_vip
+	    <set>
+	       <if test="vipLevel > 0">
+	    		vip_level = #{vipLevel, jdbcType=INTEGER},
+	    	</if>
+	    	<if test="couponType > 0">
+	    		coupon_type = #{couponType, jdbcType=INTEGER},  
+	    	</if>
+	    	
+	    		coupon_id = #{couponId, jdbcType=INTEGER},    
+	    			       
+	    </set>
+	    where id = #{id,jdbcType=INTEGER}
+  </update>
+   
+  <select id="selectByVipLevel"  resultMap="ResultMap">
+     select cv.id , cv.vip_level, cv.coupon_type , cv.coupon_id from coupon_vip  cv
+    where coupon_type = #{couponType,jdbcType=INTEGER} and vip_level=#{vipLevel,jdbcType=INTEGER}; 
+  
+  </select>
+  <insert id="insertcouponVips" parameterType="CouponVip">
+		insert into coupon_vip (vip_level, coupon_type, coupon_id ) values
+		<foreach collection="couponVips" item="couponVip" index="index" separator="," >
+         (#{couponVip.vipLevel},
+         #{couponVip.couponType},
+         #{couponVip.couponId})   
+        </foreach>
+  </insert>
+  <delete id="deleteByCouponType" parameterType="int">
+    DELETE FROM coupon_vip WHERE coupon_type = #{couponType};
+  </delete>
+  
+</mapper>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.VipLevelChangeLogDao" >
+    <resultMap type="VipLevelChangeLog" id="ResultMap">
+        <id column="id"  property="id" jdbcType="INTEGER"/>
+	    <result column="customer_id"    property="customerId" jdbcType="INTEGER"/>
+	    <result column="before_vip_level" property="beforeVipLevel" jdbcType="TINYINT"/>
+	    <result column="after_vip_level" property="afterVipLevel" jdbcType="TINYINT"/>
+	    <result column="create_time"  property="createTime"/>
+    </resultMap>
+    
+    <select id="getVipLevelChangeLog" resultMap="ResultMap">
+       select id,customer_id, before_vip_level,after_vip_level,create_time from vip_level_change_log 
+       where customer_id=#{customerId} and after_vip_level=#{vipLevel}
+       and create_time>=date_add(curdate(), interval - day(curdate()) + 1 day) and NOW()>=create_time
+       LIMIT 0,1;
+    </select>
+    
+    
+    <select id="queryForCount" resultType="int">
+  	SELECT count(id) from vip_level_change_log where customer_id=#{customerId}
+  </select>
+    
+    <select id="queryForList"  resultMap="ResultMap">
+      select co.id,customer_id, before_vip_level,after_vip_level,create_time from vip_level_change_log co  where customer_id=#{customerId} 
+       
+      
+    
+    </select>
+   
+</mapper>

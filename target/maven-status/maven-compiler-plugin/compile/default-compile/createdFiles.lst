@@ -1,0 +1,4 @@
+com\silverfox\finance\entity\InviterRewardEntity.class
+com\silverfox\finance\domain\InviterReward.class
+com\silverfox\finance\util\CaptchaUtil$1.class
+com\silverfox\finance\orm\InviterRewardDao.class

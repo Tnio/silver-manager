@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.silverfox.finance.orm.SmsChannelDao" >
+  <resultMap id="ResultMap" type="SmsChannel" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="cost" property="cost" jdbcType="DOUBLE" />
+    <result column="enable" property="enable" jdbcType="SMALLINT" />
+    <result column="sort_number" property="sortNumber" jdbcType="SMALLINT" />
+  </resultMap>
+  <sql id="columns" >
+    id, name, cost, enable, sort_number
+  </sql>
+   <select id="selectByEnable" resultMap="ResultMap">
+    select 
+      <include refid="columns" />
+    from sms_channel 
+    <where>
+      <if test="enable > -1">
+      	enable = #{enable,jdbcType=SMALLINT}
+      </if>
+    </where>
+    order by sort_number, cost asc
+  </select>
+  <select id="selectById" resultMap="ResultMap" parameterType="java.lang.Integer" >
+    select
+    <include refid="columns" />
+    from sms_channel where id = #{id,jdbcType=INTEGER}
+  </select>
+</mapper>

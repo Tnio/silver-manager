@@ -1,0 +1,200 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.silverfox.finance</groupId>
+  <artifactId>master</artifactId>
+  <version>4.0.0</version>
+  <packaging>war</packaging>
+
+  <name>silverfox-master</name>
+  <url>https://www.silverfox-cn.com</url>
+  
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>1.3.3.RELEASE</version>
+    <relativePath/> 
+  </parent>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <spring.boot.mybatis.version>1.1.1</spring.boot.mybatis.version>
+    <springloaded.version>1.2.4.RELEASE</springloaded.version>
+    <com.jcraft.version>0.1.52</com.jcraft.version>
+    <mybatis.version>3.3.0</mybatis.version>
+	<mybatis.spring.version>1.2.3</mybatis.spring.version>
+	<druid.version>1.0.15</druid.version>
+	<fastjson.version>1.2.24</fastjson.version>
+	<oss.version>2.2.3</oss.version>
+	<poi.version>3.12</poi.version>
+    <commons.net.version>3.3</commons.net.version>
+	<json.version>20131018</json.version>
+	<commons.codec.version>1.10</commons.codec.version>
+    <commons.lang3.version>3.4</commons.lang3.version>
+    <commons.io.version>2.4</commons.io.version>
+    <commons.fileupload.version>1.3</commons.fileupload.version>
+	<!-- <netty4.version>4.0.33.Final</netty4.version>
+    <common.logging.version>1.2</common.logging.version>
+    <spring.version>3.2.12.RELEASE</spring.version>
+    <json.lib.version>2.3</json.lib.version> -->
+  </properties>
+  
+  <dependencies>
+    <dependency>
+	  <groupId>commons-codec</groupId>
+	  <artifactId>commons-codec</artifactId>
+	  <version>${commons.codec.version}</version>
+	</dependency>
+	<!-- 
+    <dependency>
+      <groupId>org.freemarker</groupId>
+      <artifactId>freemarker</artifactId>
+    </dependency>
+    -->
+    <dependency>
+	  <groupId>org.apache.commons</groupId>
+	  <artifactId>commons-lang3</artifactId>
+	  <version>${commons.lang3.version}</version>
+    </dependency>
+   <!--  <dependency>
+  	  <groupId>commons-logging</groupId>
+	  <artifactId>commons-logging</artifactId>
+	  <version>${common.logging.version}</version>
+    </dependency> -->
+    <dependency>
+	  <groupId>commons-fileupload</groupId>
+	  <artifactId>commons-fileupload</artifactId>
+	  <version>${commons.fileupload.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>commons-io</groupId>
+	  <artifactId>commons-io</artifactId>
+	  <version>${commons.io.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>commons-net</groupId>
+	  <artifactId>commons-net</artifactId>
+	  <version>${commons.net.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>com.jcraft</groupId>
+	  <artifactId>jsch</artifactId>
+	  <version>${com.jcraft.version}</version>
+	</dependency>
+  	<dependency>
+	  <groupId>com.alibaba</groupId>
+	  <artifactId>fastjson</artifactId>
+	  <version>${fastjson.version}</version>
+	</dependency>
+  	<dependency>
+	  <groupId>com.alibaba</groupId>
+	  <artifactId>druid</artifactId>
+	  <version>${druid.version}</version>
+	</dependency>
+	<dependency>
+	  <groupId>org.json</groupId>
+	  <artifactId>json</artifactId>
+	  </dependency>
+<!--     <dependency>
+      <groupId>org.mybatis</groupId>
+      <artifactId>mybatis</artifactId>
+      <version>${mybatis.version}</version>
+    </dependency>
+ -->    <dependency>
+      <groupId>com.aliyun.oss</groupId>
+      <artifactId>aliyun-sdk-oss</artifactId>
+      <version>${oss.version}</version>
+    </dependency>
+   	<dependency>
+	  <groupId>org.apache.poi</groupId>
+	  <artifactId>poi</artifactId>
+	  <version>${poi.version}</version>
+    </dependency>
+   <!-- <dependency>
+	  <groupId>io.netty</groupId>
+	  <artifactId>netty-all</artifactId>
+	  <version>${netty4.version}</version>
+	</dependency> -->
+   <!--  <dependency>
+      <groupId>org.mybatis</groupId>
+      <artifactId>mybatis-spring</artifactId>
+      <version>${mybatis.spring.version}</version>
+    </dependency> -->
+    <dependency>
+      <groupId>org.mybatis.spring.boot</groupId>
+      <artifactId>mybatis-spring-boot-starter</artifactId>
+      <version>${spring.boot.mybatis.version}</version>
+    </dependency> 
+    <dependency>
+	  <groupId>mysql</groupId>
+	  <artifactId>mysql-connector-java</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>  
+        <artifactId>spring-boot-starter-freemarker</artifactId>  
+    </dependency>
+    <dependency>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-aop</artifactId>
+	</dependency>
+	<dependency>
+	  <groupId>org.springframework.boot</groupId>
+	  <artifactId>spring-boot-starter-tomcat</artifactId>
+	  <scope>provided</scope>
+	</dependency>
+	<dependency>  
+      <groupId>org.apache.tomcat.embed</groupId>  
+      <artifactId>tomcat-embed-jasper</artifactId>  
+      <scope>provided</scope>
+    </dependency> 
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+	    <artifactId>spring-boot-starter-test</artifactId>
+	    <scope>test</scope>
+    </dependency>
+    <dependency>
+	  <groupId>javax.servlet</groupId>
+	  <artifactId>jstl</artifactId>
+	</dependency>
+	<!-- <dependency>
+       <groupId>net.sf.json-lib</groupId>
+       <artifactId>json-lib</artifactId>
+       <classifier>jdk15</classifier>
+       <version>${json.lib.version}</version>
+  	</dependency> -->
+  	<dependency>
+    	<groupId>org.springframework.boot</groupId>
+    	<artifactId>spring-boot-configuration-processor</artifactId>
+    	<optional>true</optional>
+    </dependency>
+  </dependencies>
+  <build>
+  	<finalName>ROOT</finalName>
+	<plugins>
+	  <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+      </plugin>
+	  <plugin>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-maven-plugin</artifactId>
+		<dependencies> 
+            <dependency> 
+                <groupId>org.springframework</groupId> 
+                <artifactId>springloaded</artifactId> 
+                <version>${springloaded.version}</version>
+            </dependency> 
+        </dependencies>
+	  </plugin>
+	</plugins>
+  </build>
+</project>
